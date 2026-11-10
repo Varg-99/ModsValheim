@@ -1,0 +1,108 @@
+# Converte animações do Black Myth: Wukong (.ueanim, exportadas pelo FModel)
+# para FBX, para serem importadas no Unity como Humanoid.
+# Rode no Blender: aba Scripting > Abrir este arquivo > Run Script (Alt+P).
+# Uso pessoal: os FBX gerados vêm de arquivos do jogo e não devem ser publicados.
+
+import bpy, os, sys, importlib, traceback
+
+BASE = r"C:\Users\User\Documents\ModsValheim"
+TOOLS = os.path.join(BASE, "Ferramentas")
+EXPORTS = os.path.join(TOOLS, r"FModel\Output\Exports\b1\Content")
+SKEL = os.path.join(EXPORTS, r"00MainHZ\Characters\Wukong\Meshes\Main\SK_Wukong_Main.uemodel")
+ANIMDIR = os.path.join(EXPORTS, r"00Main\Animation\Player\Wukong\AS\Attack")
+OUT = os.path.join(BASE, r"UnityCeifadora\Assets\Wukong")
+LOGDIR = os.path.join(BASE, "Animacoes")
+os.makedirs(OUT, exist_ok=True)
+LOG = os.path.join(LOGDIR, "conversao.log")
+
+ANIMS = [
+    r"ComboA\AS_Wukong_ComboA_q1", r"ComboA\AS_Wukong_ComboA_q2", r"ComboA\AS_Wukong_ComboA_q3",
+    r"ComboA\AS_Wukong_ComboA_q4", r"ComboA\AS_Wukong_ComboA_q5",
+    r"ComboA\AS_Wukong_ComboA_z_01", r"ComboA\AS_wukong_comboa_z_02",
+    r"ComboA\AS_Wukong_ComboA_z5_attack_0", r"ComboA\AS_Wukong_ComboA_z5_attack_1", r"ComboA\AS_Wukong_ComboA_z5_attack_2",
+    r"ComboA\AS_Wukong_ComboA_z5_attack_3", r"ComboA\AS_Wukong_ComboA_z5_attack_4",
+    r"ComBoB\AS_Wukong_ComboB_q1", r"ComBoB\AS_Wukong_ComboB_q2", r"ComBoB\AS_Wukong_ComboB_q3",
+    r"ComBoB\AS_Wukong_ComboB_q4", r"ComBoB\AS_Wukong_ComboB_z4",
+]
+
+log_lines = []
+def log(msg):
+    print(msg)
+    log_lines.append(str(msg))
+    with open(LOG, "w", encoding="utf-8") as f:
+        f.write("\n".join(log_lines))
+
+def ensure_addon():
+    for name in list(sys.modules):
+        if name.endswith("io_scene_ueformat.importer.import_context"):
+            return importlib.import_module(name.rsplit(".importer", 1)[0])
+    zip_path = os.path.join(TOOLS, "io_scene_ueformat.zip")
+    try:
+        bpy.ops.extensions.package_install_files(filepath=zip_path, repo="user_default", enable_on_install=True)
+        log("addon instalado como extensao")
+    except Exception as e:
+        log("instalacao como extensao falhou: %s; tentando addon_install" % e)
+        bpy.ops.preferences.addon_install(filepath=zip_path, overwrite=True)
+        bpy.ops.preferences.addon_enable(module="io_scene_ueformat")
+    for cand in ("bl_ext.user_default.io_scene_ueformat", "io_scene_ueformat"):
+        try:
+            return importlib.import_module(cand)
+        except ImportError:
+            pass
+    raise RuntimeError("addon UEFormat nao encontrado")
+
+try:
+    pkg = ensure_addon()
+    ic = importlib.import_module(pkg.__name__ + ".importer.import_context")
+    opts = importlib.import_module(pkg.__name__ + ".options")
+    log("addon: " + pkg.__name__)
+    if not hasattr(pkg, "zstd_decompressor"):
+        import zstandard
+        pkg.zstd_decompressor = zstandard.ZstdDecompressor()
+        log("zstd_decompressor criado")
+
+    # cena limpa
+    for o in list(bpy.data.objects):
+        bpy.data.objects.remove(o, do_unlink=True)
+
+    arm = ic.UEFormatImport(opts.UEModelOptions()).import_file(SKEL)
+    if arm is None or arm.type != "ARMATURE":
+        arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    arm.name = "Wukong"
+    log("ossos (%d):" % len(arm.data.bones))
+    for b in arm.data.bones:
+        log("  %s <- %s" % (b.name, b.parent.name if b.parent else "-"))
+
+    for rel in ANIMS:
+        path = os.path.join(ANIMDIR, rel + ".ueanim")
+        name = os.path.basename(rel)
+        if not os.path.exists(path):
+            log("FALTA: " + path); continue
+        try:
+            for o in bpy.context.selected_objects: o.select_set(False)
+            arm.select_set(True)
+            bpy.context.view_layer.objects.active = arm
+            act = ic.UEFormatImport(opts.UEAnimOptions(override_skeleton=arm)).import_file(path)
+            ad = arm.animation_data or arm.animation_data_create()
+            if act is not None:
+                ad.action = act
+            act = ad.action
+            act.name = name
+            if hasattr(ad, "action_slot") and getattr(act, "slots", None) and ad.action_slot is None:
+                ad.action_slot = act.slots[0]
+            bpy.context.scene.render.fps = 60
+            bpy.context.scene.render.fps_base = 1.0
+            f0, f1 = act.frame_range
+            bpy.context.scene.frame_start, bpy.context.scene.frame_end = int(f0), int(f1)
+            fbx = os.path.join(OUT, name + ".fbx")
+            bpy.ops.export_scene.fbx(
+                filepath=fbx, use_selection=True, object_types={"ARMATURE"},
+                add_leaf_bones=False, bake_anim=True, bake_anim_use_all_actions=False,
+                bake_anim_use_nla_strips=False, bake_anim_force_startend_keying=True,
+                apply_scale_options="FBX_SCALE_ALL", axis_forward="-Z", axis_up="Y")
+            log("OK %s (%d-%d) -> %s" % (name, f0, f1, fbx))
+        except Exception:
+            log("ERRO em %s:\n%s" % (name, traceback.format_exc()))
+    log("FIM")
+except Exception:
+    log("ERRO GERAL:\n" + traceback.format_exc())

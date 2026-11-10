@@ -1,0 +1,29 @@
+# Compilacao
+bin/
+obj/
+*.dll
+build.log
+# Material extraido do Black Myth: Wukong (uso pessoal, nao publicar)
+Animacoes/
+UnityCeifadora/Assets/Wukong/
+*.fbx
+*.ueanim
+*.uemodel
+*.usmap
+ceifadora_anims*
+# Ferramentas de terceiros
+Ferramentas/FModel/
+Ferramentas/FModel.zip
+Ferramentas/FModelOutput/
+Ferramentas/LEIA-ME_FModel.txt
+Ferramentas/*.log
+# Unity (arquivos gerados)
+UnityCeifadora/Library/
+UnityCeifadora/Temp/
+UnityCeifadora/Logs/
+UnityCeifadora/Build/
+UnityCeifadora/obj/
+UnityCeifadora/UserSettings/
+*.csproj.user
+# Modelos originais grandes (a versao usada no mod fica em CeifadoraObsidiana/modelo)
+Modelos/

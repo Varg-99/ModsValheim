@@ -1,0 +1,8 @@
+Ceifadora Obsidiana - versao com as animacoes do Black Myth: Wukong (v1.12)
+Guardada em 10/11/2026, quando o mod voltou a usar so os golpes do Valheim (v2).
+
+src\ : codigo dessa versao (golpes do Wukong, carga da postura esmagadora com brilho
+por nivel, bastao de madeira, fotos de diagnostico, encaixe nas maos, avanco dosado).
+Para voltar a ela: copie estes .cs para CeifadoraObsidiana\src e gere o pacote de
+animacoes no Unity (Ferramentas\converter_wukong12.py no Blender, depois o menu
+Ceifadora > Gerar pacote de animacoes). As animacoes extraidas NAO vao para o GitHub.
