@@ -101,30 +101,86 @@ namespace CeifadoraObsidiana
                 else mat.SetColor("_EmissionColor", Color.black);
             }
 
-            var go = new GameObject("foice_modelo");
-            go.layer = attach.gameObject.layer;
-            go.transform.SetParent(attach, false);
-            go.AddComponent<MeshFilter>().sharedMesh = mesh;
-            var mr = go.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = mat;
-            mr.shadowCastingMode = ShadowCastingMode.On;
+            Modelo = CriarModelo(attach, mesh, mat);
 
-            // Rastro branco do golpe: do pe da lamina ate a ponta (medido no modelo).
+            // Nas costas (tecla R): o jogo usa o "attach_back" da foice.
+            var costas = prefab.transform.Find("attach_back");
+            if (costas != null) ModeloCostas = CriarModelo(costas, mesh, mat);
+            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Foice nas costas: {(costas != null ? "sim" : "attach_back nao existe")}.");
+
+            // Rastro: o rastro do jogo (faixa larga) e desligado; fica uma linha fina que sai do fio da lamina.
+            Material matRastro = null;
             foreach (var trail in prefab.GetComponentsInChildren<MeleeWeaponTrail>(true))
             {
-                var tr = HarmonyLib.Traverse.Create(trail);
-                var b = new GameObject("rastro_base").transform; b.SetParent(go.transform, false); b.localPosition = new Vector3(0f, 1.08f, 0.04f);
-                var t = new GameObject("rastro_ponta").transform; t.SetParent(go.transform, false); t.localPosition = new Vector3(0f, 0.83f, 0.47f);
-                tr.Field("_base").SetValue(b);
-                tr.Field("_tip").SetValue(t);
-                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Rastro do golpe alinhado com a lamina.");
+                matRastro = matRastro ?? HarmonyLib.Traverse.Create(trail).Field("_material").GetValue<Material>();
+                trail.enabled = false;
             }
+            var ponta = new GameObject("rastro_fio").transform;
+            ponta.SetParent(Modelo, false);
+            ponta.localPosition = new Vector3(0f, 0.86f, 0.45f); // perto da ponta da lamina
+            var tr = ponta.gameObject.AddComponent<TrailRenderer>();
+            tr.material = matRastro != null ? matRastro : new Material(Shader.Find("Sprites/Default"));
+            tr.time = 0.18f;
+            tr.minVertexDistance = 0.02f;
+            tr.widthMultiplier = 1f;
+            tr.widthCurve = new AnimationCurve(new Keyframe(0f, 0.07f), new Keyframe(1f, 0f));
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(new Color(1f, 0.8f, 0.8f), 1f) },
+                      new[] { new GradientAlphaKey(0.85f, 0f), new GradientAlphaKey(0f, 1f) });
+            tr.colorGradient = g;
+            tr.emitting = false;
+            tr.shadowCastingMode = ShadowCastingMode.Off;
+            tr.receiveShadows = false;
+            ponta.gameObject.AddComponent<RastroFio>();
 
             var props = new System.Collections.Generic.List<string>();
             for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
                 if (mat.shader.GetPropertyType(i) == ShaderPropertyType.Texture) props.Add(mat.shader.GetPropertyName(i));
             Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Modelo novo: {mesh.vertexCount} vertices, {ComprimentoOriginal:0.00} m; shader {mat.shader.name} ({string.Join(",", props)}).");
+            return Modelo;
+        }
+
+        public static Transform Modelo, ModeloCostas;
+
+        static Transform CriarModelo(Transform pai, Mesh mesh, Material mat)
+        {
+            var go = new GameObject("foice_modelo");
+            go.layer = pai.gameObject.layer;
+            go.transform.SetParent(pai, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = mat;
+            mr.shadowCastingMode = ShadowCastingMode.On;
             return go.transform;
+        }
+    }
+
+    /// Liga a linha do fio durante o golpe (quando o jogo liga o rastro da arma).
+    public class RastroFio : MonoBehaviour
+    {
+        static readonly System.Reflection.FieldInfo _emit = HarmonyLib.AccessTools.Field(typeof(MeleeWeaponTrail), "_emit");
+        TrailRenderer _tr;
+        MeleeWeaponTrail _mw;
+        Player _dono;
+
+        void Start()
+        {
+            _tr = GetComponent<TrailRenderer>();
+            _dono = GetComponentInParent<Player>();
+            // procura o rastro do jogo dentro da mesma arma (sobe ate o "attach")
+            var t = transform.parent;
+            for (int i = 0; i < 3 && t != null && _mw == null; i++) { _mw = t.GetComponentInChildren<MeleeWeaponTrail>(true); t = t.parent; }
+            if (!CeifadoraPlugin.CfgRastro.Value) _tr.enabled = false;
+        }
+
+        void LateUpdate()
+        {
+            if (_tr == null || !_tr.enabled) return;
+            bool liga;
+            if (_mw != null && _emit != null) liga = (bool)_emit.GetValue(_mw);
+            else liga = _dono != null && _dono.InAttack();
+            if (_dono == null) liga = false;
+            _tr.emitting = liga;
         }
     }
 }

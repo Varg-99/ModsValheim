@@ -29,13 +29,14 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "2.2.0";
+        public const string PluginVersion = "2.3.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
         private const string BaseVisualPrefab = "Scythe"; // modelo da foice do jogo
 
         public static ConfigEntry<float> CfgBrilho;
+        public static ConfigEntry<bool> CfgRastro;
         public static ConfigEntry<float> CfgSlash, CfgSlashPerLevel, CfgSpecialMultiplier;
         public static ConfigEntry<float> CfgBleedChance, CfgBleedDamagePerTick, CfgBleedDuration;
         public static ConfigEntry<string> CfgArmaNormal, CfgArmaEspecial, CfgArmaEmpunhadura, CfgEfeitoSangue;
@@ -62,6 +63,8 @@ namespace CeifadoraObsidiana
 
             CfgBrilho = Config.Bind("Visual", "BrilhoDaFoice", 0.35f,
                 "Brilho proprio da textura da foice (0 = nenhum). Precisa reiniciar.");
+
+            CfgRastro = Config.Bind("Visual", "LinhaNoFio", true, "Linha fina que segue o fio da lamina durante o golpe. Precisa reiniciar.");
 
             CfgSlash = Config.Bind("Arma", "DanoCorte", 110f,
                 new ConfigDescription("Dano de corte base (nivel 1).", null, admin));
@@ -211,7 +214,11 @@ namespace CeifadoraObsidiana
 
             var pasta = Path.Combine(Path.GetDirectoryName(Info.Location), "modelo");
             var modelo = ModeloFoice.Trocar(item.ItemPrefab, pasta);
-            if (modelo != null) AjusteFoice.Alinhar(modelo, pegada.gameObject);
+            if (modelo != null)
+            {
+                AjusteFoice.Alinhar(modelo, pegada.gameObject, false);
+                if (ModeloFoice.ModeloCostas != null) AjusteFoice.Alinhar(ModeloFoice.ModeloCostas, pegada.gameObject, true);
+            }
             else TintObsidian(item.ItemPrefab);
 
             AdicionarSangue(shared);
