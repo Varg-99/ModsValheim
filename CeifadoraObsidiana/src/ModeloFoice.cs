@@ -103,10 +103,7 @@ namespace CeifadoraObsidiana
 
             Modelo = CriarModelo(attach, mesh, mat);
 
-            // Nas costas (tecla R): o jogo usa o "attach_back" da foice.
-            var costas = prefab.transform.Find("attach_back");
-            if (costas != null) ModeloCostas = CriarModelo(costas, mesh, mat);
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Foice nas costas: {(costas != null ? "sim" : "attach_back nao existe")}.");
+            Malha_ = mesh; Mat_ = mat;
 
             // Rastro: o rastro do jogo (faixa larga) e desligado; fica uma linha fina que sai do fio da lamina.
             Material matRastro = null;
@@ -141,6 +138,28 @@ namespace CeifadoraObsidiana
         }
 
         public static Transform Modelo, ModeloCostas;
+        static Mesh Malha_;
+        static Material Mat_;
+
+        /// Nas costas (tecla R): o jogo procura um "attach_back" na arma. A foice do jogo nao tem,
+        /// entao criamos um igual ao da arma de referencia (atgeir).
+        public static void CriarCostas(GameObject prefab, GameObject referencia)
+        {
+            if (Malha_ == null) return;
+            var costas = prefab.transform.Find("attach_back");
+            if (costas == null)
+            {
+                var refC = referencia.transform.Find("attach_back") ?? referencia.transform.Find("attach");
+                var go = new GameObject("attach_back");
+                go.SetActive(false); // o jogo ativa a copia que poe nas costas
+                go.layer = prefab.transform.Find("attach")?.gameObject.layer ?? prefab.layer;
+                costas = go.transform;
+                costas.SetParent(prefab.transform, false);
+                if (refC != null) { costas.localPosition = refC.localPosition; costas.localRotation = refC.localRotation; costas.localScale = refC.localScale; }
+            }
+            ModeloCostas = CriarModelo(costas, Malha_, Mat_);
+            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Foice nas costas criada (referencia: {referencia.name}, attach_back da referencia: {(referencia.transform.Find("attach_back") != null ? "sim" : "nao")}).");
+        }
 
         static Transform CriarModelo(Transform pai, Mesh mesh, Material mat)
         {

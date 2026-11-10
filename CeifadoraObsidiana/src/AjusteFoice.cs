@@ -12,7 +12,7 @@ namespace CeifadoraObsidiana
 {
     internal static class AjusteFoice
     {
-        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue;
+        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgEspecialComoAtgeir;
         public static ConfigEntry<float> CfgComprimento, CfgMargem, CfgGiro, CfgPalma, CfgMaxMaos, CfgGiroEspecial, CfgGiroCostas;
         public static ConfigEntry<string> CfgAjusteEsq;
 
@@ -31,6 +31,8 @@ namespace CeifadoraObsidiana
                 "Se as maos ficarem mais longe que isso (m), a foice fica so na mao direita.");
             CfgLaminaSegue = c.Bind("Encaixe", "LaminaSegueOGiroNoEspecial", true,
                 "No especial a lamina vira para o lado em que a foice esta indo (o fio vai na frente, para o inimigo).");
+            CfgEspecialComoAtgeir = c.Bind("Encaixe", "EspecialComoAtgeir", true,
+                "No especial a foice fica na posicao da atgeir (haste para fora, alinhada com o giro) em vez de passar pelas duas maos.");
             CfgGiroEspecial = c.Bind("Encaixe", "GiroDaLaminaNoEspecial", 0f,
                 "Ajuste extra (graus) da lamina no especial, se ainda ficar virada errado. Ex.: 180.");
             CfgGiroCostas = c.Bind("Encaixe", "GiroNasCostas", 0f, "Gira a foice nas costas em volta da haste (graus).");
@@ -160,14 +162,19 @@ namespace CeifadoraObsidiana
             }
             if (_r == null || _l == null) return;
 
-            // --- haste pelas duas maos ---
-            if (AjusteFoice.CfgDuasMaos.Value)
+            bool especial = _dono != null && _dono.InAttack() && Golpes.Secundario(_dono) && Golpes.AtaqueAtual(_dono) != null;
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            _pesoEspecial = Mathf.MoveTowards(_pesoEspecial, especial ? 1f : 0f, 6f * dt);
+            float semMaos = AjusteFoice.CfgEspecialComoAtgeir.Value ? _pesoEspecial : 0f;
+
+            // --- haste pelas duas maos (no especial, posicao da atgeir) ---
+            if (AjusteFoice.CfgDuasMaos.Value && semMaos < 1f)
             {
                 var pr = _rd == null ? _r.position : Vector3.Lerp(_r.position, _rd.position, AjusteFoice.CfgPalma.Value);
                 var pl = CentroMaoEsquerda();
                 var d = pl - pr;
                 float dist = d.magnitude;
-                float w = Mathf.Clamp01((AjusteFoice.CfgMaxMaos.Value + 0.15f - dist) / 0.15f);
+                float w = Mathf.Clamp01((AjusteFoice.CfgMaxMaos.Value + 0.15f - dist) / 0.15f) * (1f - semMaos);
                 if (w > 0f && dist > 0.05f)
                 {
                     d /= dist;
@@ -182,16 +189,12 @@ namespace CeifadoraObsidiana
             }
 
             // --- especial: lamina vira para onde a foice esta indo ---
-            bool especial = _dono != null && _dono.InAttack() && Golpes.Secundario(_dono) && Golpes.AtaqueAtual(_dono) != null
-                            && AjusteFoice.CfgLaminaSegue.Value;
             var haste = transform.up;
             var cabeca = transform.position + haste * AjusteFoice.CfgComprimento.Value * 0.9f;
-            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var vel = Vector3.ProjectOnPlane((cabeca - _ultimaCabeca) / dt, haste);
             _ultimaCabeca = cabeca;
             if (vel.magnitude > 1.5f) _dirLamina = Vector3.Slerp(_dirLamina.sqrMagnitude > 0f ? _dirLamina : vel.normalized, vel.normalized, 1f - Mathf.Exp(-20f * dt));
-            _pesoEspecial = Mathf.MoveTowards(_pesoEspecial, especial ? 1f : 0f, 6f * dt);
-            if (_pesoEspecial > 0f && _dirLamina.sqrMagnitude > 0.01f)
+            if (AjusteFoice.CfgLaminaSegue.Value && _pesoEspecial > 0f && _dirLamina.sqrMagnitude > 0.01f)
             {
                 var lado = Vector3.ProjectOnPlane(_dirLamina, haste);
                 if (lado.sqrMagnitude > 1e-4f)

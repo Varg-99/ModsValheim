@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "2.3.0";
+        public const string PluginVersion = "2.4.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -217,7 +217,12 @@ namespace CeifadoraObsidiana
             if (modelo != null)
             {
                 AjusteFoice.Alinhar(modelo, pegada.gameObject, false);
-                if (ModeloFoice.ModeloCostas != null) AjusteFoice.Alinhar(ModeloFoice.ModeloCostas, pegada.gameObject, true);
+                // Nas costas no mesmo lugar da atgeir.
+                var atgeir = PrefabManager.Instance.GetPrefab("AtgeirBlackmetal") ?? pegada.gameObject;
+                var ov = Traverse.Create(atgeir.GetComponent<ItemDrop>().m_itemData.m_shared).Field("m_attachOverride");
+                if (ov.FieldExists()) Traverse.Create(shared).Field("m_attachOverride").SetValue(ov.GetValue());
+                ModeloFoice.CriarCostas(item.ItemPrefab, atgeir);
+                if (ModeloFoice.ModeloCostas != null) AjusteFoice.Alinhar(ModeloFoice.ModeloCostas, atgeir, true);
             }
             else TintObsidian(item.ItemPrefab);
 
