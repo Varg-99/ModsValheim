@@ -13,7 +13,7 @@ namespace CeifadoraObsidiana
     internal static class AjusteFoice
     {
         public static ConfigEntry<bool> CfgDuasMaos;
-        public static ConfigEntry<float> CfgComprimento, CfgMargem, CfgGiro, CfgPalma, CfgMaxMaos;
+        public static ConfigEntry<float> CfgComprimento, CfgMargem, CfgGiro, CfgPalma, CfgPalmaEsq, CfgMaxMaos, CfgGiroEspecial;
 
         public static void Init(ConfigFile c)
         {
@@ -24,7 +24,10 @@ namespace CeifadoraObsidiana
                 "Gira a foice em volta da haste (graus) para a lamina apontar para outro lado. Ex.: 90, 180, -90.");
             CfgDuasMaos = c.Bind("Encaixe", "EncaixarNasDuasMaos", true,
                 "A cada quadro a haste passa pelas duas maos.");
-            CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao: 0 = pulso, 1 = nos dos dedos.");
+            CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao direita: 0 = pulso, 1 = nos dos dedos.");
+            CfgPalmaEsq = c.Bind("Encaixe", "PontoDaPalmaEsquerda", 0.85f, "Onde a haste passa na mao esquerda: 0 = pulso, 1 = nos dos dedos.");
+            CfgGiroEspecial = c.Bind("Encaixe", "GiroDaLaminaNoEspecial", 180f,
+                "No ataque especial a foice gira em volta da haste (graus) para a lamina ficar virada para o inimigo.");
             CfgMaxMaos = c.Bind("Encaixe", "DistanciaMaximaMaos", 1.0f,
                 "Se as maos ficarem mais longe que isso (m), a foice fica so na mao direita.");
         }
@@ -78,8 +81,11 @@ namespace CeifadoraObsidiana
         Transform _r, _l, _rd, _ld;
         bool _procurou;
 
-        static Vector3 Palma(Transform mao, Transform dedo) =>
-            dedo == null ? mao.position : Vector3.Lerp(mao.position, dedo.position, AjusteFoice.CfgPalma.Value);
+        static Vector3 Palma(Transform mao, Transform dedo, float t) =>
+            dedo == null ? mao.position : Vector3.Lerp(mao.position, dedo.position, t);
+
+        Player _dono;
+        float _giroExtra;
 
         /// Posicao base, presa a mao direita.
         public void Aplicar()
@@ -87,13 +93,17 @@ namespace CeifadoraObsidiana
             if (AjusteFoice.CfgComprimento == null) return;
             float esc = AjusteFoice.CfgComprimento.Value / Mathf.Max(0.1f, ModeloFoice.ComprimentoOriginal);
             transform.localScale = Vector3.one * esc;
-            var rot = Base * Quaternion.AngleAxis(AjusteFoice.CfgGiro.Value, Vector3.up);
+            var rot = Base * Quaternion.AngleAxis(AjusteFoice.CfgGiro.Value + _giroExtra, Vector3.up);
             transform.localRotation = rot;
             transform.localPosition = -(rot * Vector3.up) * AjusteFoice.CfgMargem.Value;
         }
 
         void LateUpdate()
         {
+            // No especial a lamina vira para o lado de fora (giro suave).
+            if (_dono == null) _dono = GetComponentInParent<Player>();
+            bool especial = _dono != null && _dono.InAttack() && Golpes.Secundario(_dono) && Golpes.AtaqueAtual(_dono) != null;
+            _giroExtra = Mathf.MoveTowards(_giroExtra, especial ? AjusteFoice.CfgGiroEspecial.Value : 0f, 900f * Time.deltaTime);
             Aplicar();
             if (!AjusteFoice.CfgDuasMaos.Value) return;
             if (!_procurou)
@@ -110,8 +120,8 @@ namespace CeifadoraObsidiana
             }
             if (_r == null || _l == null) return;
 
-            var pr = Palma(_r, _rd);
-            var pl = Palma(_l, _ld);
+            var pr = Palma(_r, _rd, AjusteFoice.CfgPalma.Value);
+            var pl = Palma(_l, _ld, AjusteFoice.CfgPalmaEsq.Value);
             var d = pl - pr;
             float dist = d.magnitude;
             float w = Mathf.Clamp01((AjusteFoice.CfgMaxMaos.Value + 0.15f - dist) / 0.15f);

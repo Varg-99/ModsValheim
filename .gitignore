@@ -27,3 +27,4 @@ UnityCeifadora/UserSettings/
 *.csproj.user
 # Modelos originais grandes (a versao usada no mod fica em CeifadoraObsidiana/modelo)
 Modelos/
+github.log

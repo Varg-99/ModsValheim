@@ -16,6 +16,7 @@ using Jotunn.Entities;
 using Jotunn.Managers;
 using Jotunn.Utils;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -28,15 +29,16 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "2.1.0";
+        public const string PluginVersion = "2.2.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
         private const string BaseVisualPrefab = "Scythe"; // modelo da foice do jogo
 
+        public static ConfigEntry<float> CfgBrilho;
         public static ConfigEntry<float> CfgSlash, CfgSlashPerLevel, CfgSpecialMultiplier;
         public static ConfigEntry<float> CfgBleedChance, CfgBleedDamagePerTick, CfgBleedDuration;
-        public static ConfigEntry<string> CfgArmaNormal, CfgArmaEspecial, CfgArmaEmpunhadura;
+        public static ConfigEntry<string> CfgArmaNormal, CfgArmaEspecial, CfgArmaEmpunhadura, CfgEfeitoSangue;
 
         private FileSystemWatcher _watcher;
         private volatile bool _recarregar;
@@ -54,6 +56,12 @@ namespace CeifadoraObsidiana
             CfgArmaEmpunhadura = Config.Bind("Golpes", "ArmaDaEmpunhadura", "AtgeirBlackmetal",
                 "Como o personagem segura a foice parado e andando (postura de qual arma do jogo). " +
                 "AtgeirBlackmetal = como atgeir; Battleaxe = como machado; Scythe = a pegada original da foice. Precisa reiniciar o jogo.");
+
+            CfgEfeitoSangue = Config.Bind("Visual", "EfeitoDeSangue", "auto",
+                "Efeito extra quando a foice acerta: auto = respingo de sangue do jogo; vazio = nenhum; ou o nome de um efeito (vfx_...). Precisa reiniciar.");
+
+            CfgBrilho = Config.Bind("Visual", "BrilhoDaFoice", 0.35f,
+                "Brilho proprio da textura da foice (0 = nenhum). Precisa reiniciar.");
 
             CfgSlash = Config.Bind("Arma", "DanoCorte", 110f,
                 new ConfigDescription("Dano de corte base (nivel 1).", null, admin));
@@ -206,8 +214,35 @@ namespace CeifadoraObsidiana
             if (modelo != null) AjusteFoice.Alinhar(modelo, pegada.gameObject);
             else TintObsidian(item.ItemPrefab);
 
+            AdicionarSangue(shared);
             ItemManager.Instance.AddItem(item);
             Jotunn.Logger.LogInfo($"[{PluginName}] Ceifadora adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
+        }
+
+        /// Respingo de sangue (efeito do proprio jogo) quando a foice acerta.
+        private static void AdicionarSangue(ItemDrop.ItemData.SharedData shared)
+        {
+            string nome = (CfgEfeitoSangue.Value ?? "").Trim();
+            if (nome.Length == 0) return;
+            GameObject fx = null;
+            var todos = PrefabManager.Cache.GetPrefabs(typeof(GameObject));
+            var sangue = todos.Keys.Where(k => k.StartsWith("vfx_", System.StringComparison.OrdinalIgnoreCase)
+                                               && k.IndexOf("blood", System.StringComparison.OrdinalIgnoreCase) >= 0).OrderBy(k => k).ToList();
+            Jotunn.Logger.LogInfo($"[{PluginName}] Efeitos de sangue do jogo: {string.Join(", ", sangue)}");
+            if (nome != "auto") fx = PrefabManager.Instance.GetPrefab(nome);
+            else
+            {
+                string escolhido = new[] { "vfx_blood_hit", "vfx_BloodHit", "vfx_bloodhit" }.FirstOrDefault(n => todos.ContainsKey(n))
+                                   ?? sangue.FirstOrDefault(k => k.IndexOf("hit", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                                   ?? sangue.FirstOrDefault();
+                if (escolhido != null) fx = todos[escolhido] as GameObject;
+            }
+            if (fx == null) { Jotunn.Logger.LogWarning($"[{PluginName}] Efeito de sangue nao encontrado."); return; }
+            if (shared.m_hitEffect == null) shared.m_hitEffect = new EffectList();
+            var lista = (shared.m_hitEffect.m_effectPrefabs ?? new EffectList.EffectData[0]).ToList();
+            lista.Add(new EffectList.EffectData { m_prefab = fx, m_enabled = true });
+            shared.m_hitEffect.m_effectPrefabs = lista.ToArray();
+            Jotunn.Logger.LogInfo($"[{PluginName}] Efeito de sangue no acerto: {fx.name}");
         }
 
         /// Deixa o modelo preto vitreo com um brilho vermelho.

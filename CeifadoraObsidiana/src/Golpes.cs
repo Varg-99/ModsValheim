@@ -20,9 +20,9 @@ namespace CeifadoraObsidiana
 
         public static void Init(ConfigFile c)
         {
-            CfgVelNormal = c.Bind("Golpes", "VelocidadeGolpes", 1.35f, "Velocidade dos golpes normais (1 = como o machado do jogo; 1.35 = 35% mais rapido).");
+            CfgVelNormal = c.Bind("Golpes", "VelocidadeGolpes", 1.25f, "Velocidade dos golpes normais (1 = como o machado do jogo; 1.25 = 25% mais rapido).");
             CfgTrocarUltimo = c.Bind("Golpes", "UltimoGolpeGiratorio", true, "O ultimo golpe do combo vira um giro em volta do personagem.");
-            CfgVelGiro = c.Bind("Golpes", "VelocidadeGiro", 1.5f, "Velocidade do giro do ultimo golpe.");
+            CfgVelGiro = c.Bind("Golpes", "VelocidadeGiro", 1.4f, "Velocidade do giro do ultimo golpe.");
             CfgEspelhar = c.Bind("Golpes", "GiroNoSentidoContrario", true, "O giro do ultimo golpe vai no sentido contrario do giro do especial.");
             CfgAlcanceExtraGiro = c.Bind("Golpes", "AlcanceExtraGiro", 0.5f, "Alcance extra (m) do giro do ultimo golpe.");
             CfgClipeUltimo = c.Bind("Golpes", "ClipeDoUltimoGolpe", "BattleAxe_Combo3", "Animacao do jogo que e trocada pelo giro (precisa reiniciar).");

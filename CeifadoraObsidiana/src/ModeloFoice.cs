@@ -72,7 +72,9 @@ namespace CeifadoraObsidiana
             Material baseMat = null;
             foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
             {
-                if (baseMat == null && r.sharedMaterial != null) baseMat = r.sharedMaterial;
+                if (baseMat == null && (r is MeshRenderer || r is SkinnedMeshRenderer) && r.sharedMaterial != null
+                    && !r.sharedMaterial.shader.name.Contains("Particle"))
+                    baseMat = r.sharedMaterial;
                 r.enabled = false;
             }
             var mat = baseMat != null ? new Material(baseMat) : new Material(Shader.Find("Standard"));
@@ -86,7 +88,18 @@ namespace CeifadoraObsidiana
             if (met != null && mat.HasProperty("_MetallicGlossMap")) { mat.SetTexture("_MetallicGlossMap", met); mat.EnableKeyword("_METALLICGLOSSMAP"); }
             if (mat.HasProperty("_Metallic")) mat.SetFloat("_Metallic", 0.6f);
             if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.6f);
-            if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", Color.black);
+            // Brilho leve da propria textura (detalhes vermelhos visiveis a noite).
+            float brilho = CeifadoraPlugin.CfgBrilho.Value;
+            if (mat.HasProperty("_EmissionColor"))
+            {
+                if (brilho > 0f && cor != null && mat.HasProperty("_EmissionMap"))
+                {
+                    mat.SetTexture("_EmissionMap", cor);
+                    mat.SetColor("_EmissionColor", Color.white * brilho);
+                    mat.EnableKeyword("_EMISSION");
+                }
+                else mat.SetColor("_EmissionColor", Color.black);
+            }
 
             var go = new GameObject("foice_modelo");
             go.layer = attach.gameObject.layer;
@@ -95,6 +108,17 @@ namespace CeifadoraObsidiana
             var mr = go.AddComponent<MeshRenderer>();
             mr.sharedMaterial = mat;
             mr.shadowCastingMode = ShadowCastingMode.On;
+
+            // Rastro branco do golpe: do pe da lamina ate a ponta (medido no modelo).
+            foreach (var trail in prefab.GetComponentsInChildren<MeleeWeaponTrail>(true))
+            {
+                var tr = HarmonyLib.Traverse.Create(trail);
+                var b = new GameObject("rastro_base").transform; b.SetParent(go.transform, false); b.localPosition = new Vector3(0f, 1.08f, 0.04f);
+                var t = new GameObject("rastro_ponta").transform; t.SetParent(go.transform, false); t.localPosition = new Vector3(0f, 0.83f, 0.47f);
+                tr.Field("_base").SetValue(b);
+                tr.Field("_tip").SetValue(t);
+                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Rastro do golpe alinhado com a lamina.");
+            }
 
             var props = new System.Collections.Generic.List<string>();
             for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
