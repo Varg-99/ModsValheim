@@ -1,0 +1,9 @@
+Ceifadora Obsidiana v2.5.1 - versao que mais deu certo ate agora (10/11/2026).
+
+- Golpes normais: duas maos no meio do cabo.
+- Especial e 3o golpe: giro com a foice para fora do corpo, duas maos, lamina na frente.
+- Problemas conhecidos: foice nas costas nao aparece; rastro risca a tela quando a foice troca de pose.
+
+Para voltar a esta versao:
+  copie src\*.cs para ..\..\CeifadoraObsidiana\src\ e rode compilar.bat,
+  ou copie CeifadoraObsidiana.dll direto para Valheim\BepInEx\plugins\CeifadoraObsidiana\.

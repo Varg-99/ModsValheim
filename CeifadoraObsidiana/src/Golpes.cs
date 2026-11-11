@@ -15,7 +15,10 @@ namespace CeifadoraObsidiana
     internal static class Golpes
     {
         public static ConfigEntry<float> CfgVelNormal, CfgVelGiro, CfgAlcanceExtraGiro;
-        public static ConfigEntry<string> CfgClipeUltimo, CfgClipeGiro;
+        public static ConfigEntry<string> CfgClipeUltimo, CfgClipeGiro, CfgEstilo, CfgClipeCeifada;
+        public static ConfigEntry<float> CfgVelCeifada;
+        public static bool Ceifada => CfgTrocarUltimo.Value && string.Equals((CfgEstilo.Value ?? "").Trim(), "ceifada", System.StringComparison.OrdinalIgnoreCase);
+        static string ClipeAlvo => Ceifada ? (CfgClipeCeifada.Value ?? "").Trim() : CfgClipeGiro.Value;
         public static ConfigEntry<bool> CfgEspelhar, CfgTrocarUltimo;
 
         public static void Init(ConfigFile c)
@@ -27,6 +30,11 @@ namespace CeifadoraObsidiana
             CfgAlcanceExtraGiro = c.Bind("Golpes", "AlcanceExtraGiro", 0.5f, "Alcance extra (m) do giro do ultimo golpe.");
             CfgClipeUltimo = c.Bind("Golpes", "ClipeDoUltimoGolpe", "BattleAxe_Combo3", "Animacao do jogo que e trocada pelo giro (precisa reiniciar).");
             CfgClipeGiro = c.Bind("Golpes", "ClipeDoGiro", "Atgeir360Attack", "Animacao do jogo usada no giro (precisa reiniciar).");
+            CfgEstilo = c.Bind("Golpes", "EstiloDoUltimoGolpe", "ceifada",
+                "ceifada = a foice faz arcos largos (sobe por cima e ceifa baixo puxando para o corpo), nas duas maos. giro = giro de 360 graus antigo.");
+            CfgClipeCeifada = c.Bind("Golpes", "ClipeDoCorpoNaCeifada", "",
+                "Animacao do corpo na ceifada. Vazio = a do proprio machado (BattleAxe_Combo3). Precisa reiniciar.");
+            CfgVelCeifada = c.Bind("Golpes", "VelocidadeCeifada", 1.15f, "Velocidade do ultimo golpe no estilo ceifada.");
         }
 
         public static bool ComFoice(Humanoid h)
@@ -47,7 +55,7 @@ namespace CeifadoraObsidiana
             if (!(h is Player p) || p != Player.m_localPlayer || !ComFoice(h)) return 1f;
             var a = AtaqueAtual(h);
             if (a == null || Secundario(h)) return 1f;
-            if (CfgTrocarUltimo.Value && Ultimo(a)) return CfgVelGiro.Value;
+            if (CfgTrocarUltimo.Value && Ultimo(a)) return Ceifada ? CfgVelCeifada.Value : CfgVelGiro.Value;
             return CfgVelNormal.Value;
         }
 
@@ -61,14 +69,14 @@ namespace CeifadoraObsidiana
         {
             var anim = AnimatorDe(p);
             if (anim == null || anim.runtimeAnimatorController == null) return;
-            bool com = ComFoice(p) && CfgTrocarUltimo.Value;
+            bool com = ComFoice(p) && CfgTrocarUltimo.Value && !string.IsNullOrEmpty(ClipeAlvo);
             bool trocado = _originais.ContainsKey(anim);
             if (com && !trocado)
             {
                 var orig = anim.runtimeAnimatorController;
                 if (!_cache.TryGetValue(orig, out var ovr))
                 {
-                    var giro = orig.animationClips.FirstOrDefault(c => c.name == CfgClipeGiro.Value);
+                    var giro = orig.animationClips.FirstOrDefault(c => c.name == ClipeAlvo);
                     ovr = new AnimatorOverrideController(orig);
                     var pares = new List<KeyValuePair<AnimationClip, AnimationClip>>();
                     ovr.GetOverrides(pares);
@@ -110,11 +118,11 @@ namespace CeifadoraObsidiana
 
         public static float PesoGiro(Animator anim)
         {
-            if (!GiroAtivo || !CfgEspelhar.Value || anim == null) return 0f;
+            if (!GiroAtivo || Ceifada || !CfgEspelhar.Value || anim == null) return 0f;
             float w = 0f;
-            foreach (var ci in anim.GetCurrentAnimatorClipInfo(0)) if (ci.clip != null && ci.clip.name == CfgClipeGiro.Value) w += ci.weight;
+            foreach (var ci in anim.GetCurrentAnimatorClipInfo(0)) if (ci.clip != null && ci.clip.name == ClipeAlvo) w += ci.weight;
             if (anim.IsInTransition(0))
-                foreach (var ci in anim.GetNextAnimatorClipInfo(0)) if (ci.clip != null && ci.clip.name == CfgClipeGiro.Value) w += ci.weight;
+                foreach (var ci in anim.GetNextAnimatorClipInfo(0)) if (ci.clip != null && ci.clip.name == ClipeAlvo) w += ci.weight;
             return Mathf.Clamp01(w);
         }
     }
@@ -133,7 +141,7 @@ namespace CeifadoraObsidiana
             var anim = Golpes.AnimatorDe(p);
             float m = Golpes.Mult(p);
             if (anim != null) anim.speed = m;
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] golpe {(sec ? "especial" : "normal")} nivel {Golpes.Nivel(a)}, velocidade {m:0.00}{(Golpes.GiroAtivo ? ", giro" : "")}");
+            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] golpe {(sec ? "especial" : "normal")} nivel {Golpes.Nivel(a)}, velocidade {m:0.00}{(Golpes.GiroAtivo ? (Golpes.Ceifada ? ", ceifada" : ", giro") : "")}");
         }
     }
 

@@ -157,6 +157,9 @@ namespace CeifadoraObsidiana
                 costas.SetParent(prefab.transform, false);
                 if (refC != null) { costas.localPosition = refC.localPosition; costas.localRotation = refC.localRotation; costas.localScale = refC.localScale; }
             }
+            // O jogo procura os filhos em ordem e para no primeiro "attach" que achar, mesmo nas costas.
+            // Por isso o attach_back tem que ser o primeiro filho, senao a foice da mao vai para as costas.
+            costas.SetSiblingIndex(0);
             ModeloCostas = CriarModelo(costas, Malha_, Mat_);
             Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Foice nas costas criada (referencia: {referencia.name}, attach_back da referencia: {(referencia.transform.Find("attach_back") != null ? "sim" : "nao")}).");
         }
@@ -181,6 +184,8 @@ namespace CeifadoraObsidiana
         TrailRenderer _tr;
         MeleeWeaponTrail _mw;
         Player _dono;
+        Vector3 _ultPos;
+        bool _temPos;
 
         void Start()
         {
@@ -199,6 +204,10 @@ namespace CeifadoraObsidiana
             if (_mw != null && _emit != null) liga = (bool)_emit.GetValue(_mw);
             else liga = _dono != null && _dono.InAttack();
             if (_dono == null) liga = false;
+            // se a foice pulou de lugar (troca de pose), apaga o rastro para nao riscar a tela
+            var pos = transform.position;
+            if (_temPos && (pos - _ultPos).sqrMagnitude > 0.8f * 0.8f) _tr.Clear();
+            _ultPos = pos; _temPos = true;
             _tr.emitting = liga;
         }
     }

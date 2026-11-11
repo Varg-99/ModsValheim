@@ -15,7 +15,7 @@ namespace CeifadoraObsidiana
     {
         public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
-            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
+            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
         public static ConfigEntry<string> CfgAjusteEsq;
 
         public static void Init(ConfigFile c)
@@ -24,7 +24,10 @@ namespace CeifadoraObsidiana
             CfgPegadaBaixo = c.Bind("Encaixe", "PegadaMaoDeBaixo", 0.45f,
                 "Distancia (m) do fim do cabo ate a mao de baixo. Maior = segura mais perto da lamina.");
             CfgPegadaCima = c.Bind("Encaixe", "PegadaMaoDeCima", 0.95f,
-                "Distancia (m) do fim do cabo ate a mao de cima (usada quando so uma mao segura e nos giros).");
+                "Distancia (m) do fim do cabo ate a mao de cima, quando a mao esquerda solta durante o golpe.");
+            CfgPegadaParado = c.Bind("Encaixe", "PegadaParado", 0.35f, "Parado ou andando (uma mao, como a atgeir): distancia (m) do fim do cabo ate a mao.");
+            CfgAmplitudeCeifada = c.Bind("Encaixe", "AmplitudeCeifada", 1.0f, "Ultimo golpe (ceifada): quanto as maos se afastam do corpo nos arcos. 1 = normal.");
+            CfgGiroCeifada = c.Bind("Encaixe", "GiroDaLaminaNaCeifada", 0f, "Ultimo golpe (ceifada): ajuste extra (graus) da lamina, se ficar virada errado. Ex.: 180.");
             CfgGiro = c.Bind("Encaixe", "GiroNaHaste", 0f,
                 "Gira a foice em volta da haste (graus) nos golpes normais. Ex.: 90, 180, -90.");
             CfgDuasMaos = c.Bind("Encaixe", "EncaixarNasDuasMaos", true, "A cada quadro a haste passa pelas duas maos.");
@@ -134,7 +137,9 @@ namespace CeifadoraObsidiana
         bool _procurou;
         Character _dono;
         Vector3 _radial, _radialAnt;
-        float _sinal, _pesoGiro, _lado = 1f;
+        float _sinal, _pesoGiro, _lado = 1f, _pesoAtq, _pesoCeifa, _u;
+        bool _ceifando;
+        Vector3 _ladoCeifa;
 
         float Escala => AjusteFoice.CfgComprimento.Value / Mathf.Max(0.1f, ModeloFoice.ComprimentoOriginal);
 
@@ -152,7 +157,7 @@ namespace CeifadoraObsidiana
             transform.localScale = Vector3.one * Escala;
             var rot = Base * Quaternion.AngleAxis(AjusteFoice.CfgGiro.Value, Vector3.up);
             transform.localRotation = rot;
-            transform.localPosition = -(rot * Vector3.up) * AjusteFoice.CfgPegadaCima.Value;
+            transform.localPosition = -(rot * Vector3.up) * AjusteFoice.CfgPegadaParado.Value;
         }
 
         void Procurar()
@@ -204,12 +209,15 @@ namespace CeifadoraObsidiana
             var p = _dono as Player;
             bool atacando = p != null && p.InAttack() && Golpes.AtaqueAtual(p) != null;
             bool especial = atacando && Golpes.Secundario(p);
-            bool giro = atacando && (especial || (p == Player.m_localPlayer && Golpes.GiroAtivo));
+            bool ultimo = atacando && !especial && p == Player.m_localPlayer && Golpes.GiroAtivo;
+            bool ceifada = ultimo && Golpes.Ceifada;
+            bool giro = especial || (ultimo && !Golpes.Ceifada);
+            _pesoAtq = Mathf.MoveTowards(_pesoAtq, atacando ? 1f : 0f, 8f * dt);
             _pesoGiro = Mathf.MoveTowards(_pesoGiro, giro && AjusteFoice.CfgLaminaSegue.Value ? 1f : 0f, 8f * dt);
-            bool puxar = AjusteFoice.CfgPuxarMao.Value && atacando;
+            _pesoCeifa = Mathf.MoveTowards(_pesoCeifa, ceifada ? 1f : 0f, 10f * dt);
 
-            // --- golpes normais: haste pelas duas maos ---
-            if (AjusteFoice.CfgDuasMaos.Value && _pesoGiro < 1f)
+            // --- golpes normais: haste pelas duas maos (parado/andando fica como a atgeir) ---
+            if (AjusteFoice.CfgDuasMaos.Value && _pesoAtq > 0f && _pesoGiro < 1f && _pesoCeifa < 1f)
             {
                 var pr = PalmaDireita();
                 var pl = PalmaEsquerda();
@@ -221,28 +229,25 @@ namespace CeifadoraObsidiana
                     var cima = transform.up;
                     if (Vector3.Dot(d, cima) < 0f) d = -d;
                     var baixo = Vector3.Dot(pr, d) <= Vector3.Dot(pl, d) ? pr : pl;
-                    transform.rotation = Quaternion.FromToRotation(cima, d) * transform.rotation;
-                    transform.position = baixo - d * AjusteFoice.CfgPegadaBaixo.Value;
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(cima, d) * transform.rotation, _pesoAtq);
+                    transform.position = Vector3.Lerp(transform.position, baixo - d * AjusteFoice.CfgPegadaBaixo.Value, _pesoAtq);
                 }
-                else if (puxar)
+                else if (AjusteFoice.CfgPuxarMao.Value)
                 {
                     // mao esquerda solta: volta para a haste, no ponto da mao de baixo
-                    var alvo = transform.position + transform.up * AjusteFoice.CfgPegadaBaixo.Value;
-                    AjusteFoice.IKBraco(_lo, _lc, _l, alvo, pl, 1f - _pesoGiro);
+                    var alvo = transform.position + transform.up * (AjusteFoice.CfgPegadaCima.Value - AjusteFoice.CfgVaoMaosGiro.Value);
+                    AjusteFoice.IKBraco(_lo, _lc, _l, alvo, pl, _pesoAtq * (1f - _pesoGiro) * (1f - _pesoCeifa));
                 }
             }
 
-            // --- giros: foice para fora do corpo, nas duas maos, ponta da lamina na frente ---
+            // --- especial (e estilo giro): foice para fora do corpo, ponta da lamina na frente ---
             if (_pesoGiro > 0f && _peito != null && _ro != null && _lo != null)
             {
                 var up = _dono.transform.up;
                 var c = _peito.position;
-                // frente do peito (segue o corpo girando; nao depende de qual mao esta solta)
-                var agora = Vector3.Cross(_ro.position - _lo.position, up);
-                agora = Vector3.ProjectOnPlane(agora, up);
+                var agora = Vector3.ProjectOnPlane(Vector3.Cross(_ro.position - _lo.position, up), up);
                 agora = agora.sqrMagnitude > 1e-4f ? agora.normalized : _dono.transform.forward;
                 if (_radial.sqrMagnitude < 0.5f) { _radial = agora; _radialAnt = agora; }
-                // sentido do giro (medido e suavizado; so troca se o giro trocar de verdade)
                 float s = Vector3.Dot(agora - _radialAnt, Vector3.Cross(up, _radialAnt)) / dt;
                 _sinal = Mathf.Lerp(_sinal, s, 1f - Mathf.Exp(-6f * dt));
                 if (_sinal > 1f) _lado = 1f; else if (_sinal < -1f) _lado = -1f;
@@ -252,28 +257,52 @@ namespace CeifadoraObsidiana
                 var tang = Vector3.Cross(up, _radial) * _lado;
                 var haste = (_radial - tang * 0.25f - up * 0.1f).normalized;
                 var maoBaixo = c + _radial * AjusteFoice.CfgAfastarGiro.Value + up * AjusteFoice.CfgAlturaGiro.Value;
-                float vao = Mathf.Clamp(AjusteFoice.CfgVaoMaosGiro.Value, 0.1f, 0.8f);
-                var maoCima = maoBaixo + haste * vao;
-                var lado = Vector3.ProjectOnPlane(tang, haste);
-                if (lado.sqrMagnitude < 1e-4f) lado = Vector3.ProjectOnPlane(_dono.transform.forward, haste);
-                var rotG = Quaternion.LookRotation(lado.normalized, haste) * Quaternion.AngleAxis(AjusteFoice.CfgGiroEspecial.Value, Vector3.up);
-
-                // no 3o golpe o corpo esta espelhado: a mao que leva a arma e a esquerda
                 bool esquerdaLeva = !especial && Golpes.PesoGiro(_anim) > 0.5f;
-                if (AjusteFoice.CfgPuxarMao.Value)
-                {
-                    AjusteFoice.IKBraco(_ro, _rc, _r, esquerdaLeva ? maoBaixo : maoCima, PalmaDireita(), _pesoGiro);
-                    AjusteFoice.IKBraco(_lo, _lc, _l, esquerdaLeva ? maoCima : maoBaixo, PalmaEsquerda(), _pesoGiro);
-                }
-                // a haste passa pela mao de baixo de verdade (mesmo se o braco nao alcancar o alvo)
-                var palmaBaixo = esquerdaLeva ? PalmaDireita() : PalmaEsquerda();
-                if (!AjusteFoice.CfgPuxarMao.Value) palmaBaixo = maoBaixo;
-                var cabo = palmaBaixo - haste * AjusteFoice.CfgCaboGiro.Value;
-
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotG, _pesoGiro);
-                transform.position = Vector3.Lerp(transform.position, cabo, _pesoGiro);
+                Segurar(haste, tang, maoBaixo, esquerdaLeva, _pesoGiro, AjusteFoice.CfgGiroEspecial.Value);
             }
             else { _radial = Vector3.zero; _sinal = 0f; _lado = 1f; }
+
+            // --- ultimo golpe, estilo ceifada: arcos largos guiados pelo tempo do golpe ---
+            if (_pesoCeifa > 0f && _peito != null && _anim != null)
+            {
+                var info = _anim.IsInTransition(0) ? _anim.GetNextAnimatorStateInfo(0) : _anim.GetCurrentAnimatorStateInfo(0);
+                float u = Mathf.Clamp01(info.normalizedTime);
+                if (!_ceifando) { _ceifando = true; _u = 0f; }
+                if (ceifada) _u = Mathf.Max(_u, u);
+                var raiz = _dono.transform;
+                Ceifa.Amostra(_u, out var pl0, out var h0);
+                Ceifa.Amostra(Mathf.Min(1f, _u + 0.03f), out _, out var hMais);
+                Ceifa.Amostra(Mathf.Max(0f, _u - 0.03f), out _, out var hMenos);
+                var haste = raiz.TransformDirection(h0).normalized;
+                var lado = Vector3.ProjectOnPlane(raiz.TransformDirection(hMais - hMenos), haste);
+                if (lado.sqrMagnitude > 1e-5f) _ladoCeifa = lado.normalized;
+                else if (_ladoCeifa.sqrMagnitude < 0.5f) _ladoCeifa = Vector3.ProjectOnPlane(raiz.right, haste).normalized;
+                float amp = AjusteFoice.CfgAmplitudeCeifada.Value;
+                var maoBaixo = _peito.position + raiz.TransformDirection(Vector3.Scale(pl0, new Vector3(amp, 1f, amp)));
+                Segurar(haste, _ladoCeifa, maoBaixo, false, _pesoCeifa, AjusteFoice.CfgGiroCeifada.Value);
+            }
+            else if (!ceifada) { _ceifando = false; _ladoCeifa = Vector3.zero; }
+        }
+
+        /// Foice nas duas maos: haste na direcao dada, lamina para "lado", mao de baixo em "maoBaixo".
+        void Segurar(Vector3 haste, Vector3 lado, Vector3 maoBaixo, bool esquerdaLeva, float peso, float giroExtra)
+        {
+            float vao = Mathf.Clamp(AjusteFoice.CfgVaoMaosGiro.Value, 0.1f, 0.8f);
+            var maoCima = maoBaixo + haste * vao;
+            lado = Vector3.ProjectOnPlane(lado, haste);
+            if (lado.sqrMagnitude < 1e-5f) lado = Vector3.ProjectOnPlane(_dono.transform.forward, haste);
+            var rot = Quaternion.LookRotation(lado.normalized, haste) * Quaternion.AngleAxis(giroExtra, Vector3.up);
+            var palmaBaixo = maoBaixo;
+            if (AjusteFoice.CfgPuxarMao.Value)
+            {
+                AjusteFoice.IKBraco(_ro, _rc, _r, esquerdaLeva ? maoBaixo : maoCima, PalmaDireita(), peso);
+                AjusteFoice.IKBraco(_lo, _lc, _l, esquerdaLeva ? maoCima : maoBaixo, PalmaEsquerda(), peso);
+                // a haste passa pela mao de baixo de verdade (mesmo se o braco nao alcancar)
+                palmaBaixo = esquerdaLeva ? PalmaDireita() : PalmaEsquerda();
+            }
+            var cabo = palmaBaixo - haste * AjusteFoice.CfgCaboGiro.Value;
+            transform.rotation = Quaternion.Slerp(transform.rotation, rot, peso);
+            transform.position = Vector3.Lerp(transform.position, cabo, peso);
         }
 
         // Nas costas: diagonal atras do peito, lamina no alto, deitada rente as costas.
@@ -295,5 +324,53 @@ namespace CeifadoraObsidiana
             }
         }
         bool _logou;
+    }
+
+    /// Trajetoria do ultimo golpe (ceifada), inspirada no padrao de foice: sobe por tras e por cima,
+    /// desce na diagonal pela frente, ceifa baixo e longe, e puxa rente ao chao de volta para o corpo.
+    /// Cada ponto: tempo do golpe (0..1), mao de baixo (em relacao ao peito) e direcao da haste,
+    /// no espaco do personagem (x = direita, y = cima, z = frente). A lamina sempre vai na frente do movimento.
+    internal static class Ceifa
+    {
+        static readonly float[] T = { 0.00f, 0.22f, 0.38f, 0.55f, 0.70f, 0.85f, 1.00f };
+        static readonly Vector3[] P =
+        {
+            new Vector3( 0.25f, -0.15f, 0.15f),
+            new Vector3( 0.20f,  0.15f, 0.10f),
+            new Vector3( 0.05f,  0.30f, 0.20f),
+            new Vector3(-0.10f,  0.00f, 0.40f),
+            new Vector3(-0.05f, -0.35f, 0.45f),
+            new Vector3( 0.15f, -0.35f, 0.30f),
+            new Vector3( 0.30f, -0.25f, 0.15f),
+        };
+        static readonly Vector3[] H =
+        {
+            new Vector3( 0.55f,  0.35f, -0.75f),
+            new Vector3( 0.35f,  0.90f, -0.25f),
+            new Vector3(-0.10f,  0.95f,  0.30f),
+            new Vector3(-0.55f,  0.25f,  0.80f),
+            new Vector3(-0.75f, -0.35f,  0.55f),
+            new Vector3( 0.20f, -0.45f,  0.87f),
+            new Vector3( 0.75f, -0.30f,  0.40f),
+        };
+
+        static Vector3 CR(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+        {
+            float t2 = t * t, t3 = t2 * t;
+            return 0.5f * (2f * p1 + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2 + (-p0 + 3f * p1 - 3f * p2 + p3) * t3);
+        }
+
+        public static void Amostra(float u, out Vector3 mao, out Vector3 haste)
+        {
+            u = Mathf.Clamp01(u);
+            int i = 0;
+            while (i < T.Length - 2 && u > T[i + 1]) i++;
+            float t = Mathf.InverseLerp(T[i], T[i + 1], u);
+            int a = Mathf.Max(0, i - 1), b = i, c = i + 1, d = Mathf.Min(T.Length - 1, i + 2);
+            mao = CR(P[a], P[b], P[c], P[d], t);
+            haste = CR(H[a].normalized, H[b].normalized, H[c].normalized, H[d].normalized, t);
+            if (haste.sqrMagnitude < 1e-4f) haste = H[c];
+            haste.Normalize();
+        }
     }
 }
