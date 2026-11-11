@@ -47,9 +47,19 @@ namespace CeifadoraObsidiana
                 }
                 var idx = new int[ni];
                 for (int i = 0; i < ni; i++) idx[i] = (int)br.ReadUInt32();
+                // Dois lados: a reducao do modelo deixou triangulos virados ao contrario, que apareciam
+                // como furos/pontinhos transparentes. Cada triangulo ganha uma copia virada para o outro lado.
+                var p2 = new Vector3[nv * 2]; var n2 = new Vector3[nv * 2]; var uv2 = new Vector2[nv * 2];
+                for (int i = 0; i < nv; i++) { p2[i] = p2[i + nv] = p[i]; n2[i] = n[i]; n2[i + nv] = -n[i]; uv2[i] = uv2[i + nv] = uv[i]; }
+                var idx2 = new int[ni * 2];
+                for (int i = 0; i < ni; i += 3)
+                {
+                    idx2[i] = idx[i]; idx2[i + 1] = idx[i + 1]; idx2[i + 2] = idx[i + 2];
+                    idx2[ni + i] = idx[i] + nv; idx2[ni + i + 1] = idx[i + 2] + nv; idx2[ni + i + 2] = idx[i + 1] + nv;
+                }
                 var m = new Mesh { name = "foice_ceifadora" };
-                if (nv > 65000) m.indexFormat = IndexFormat.UInt32;
-                m.vertices = p; m.normals = n; m.uv = uv; m.triangles = idx;
+                m.indexFormat = IndexFormat.UInt32;
+                m.vertices = p2; m.normals = n2; m.uv = uv2; m.triangles = idx2;
                 m.RecalculateBounds();
                 m.RecalculateTangents();
                 return m;
@@ -83,6 +93,9 @@ namespace CeifadoraObsidiana
             var nor = Textura(Path.Combine(pasta, "foice_normal.png"), true);
             var met = Textura(Path.Combine(pasta, "foice_metal.png"), true);
             if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
+            // sem recorte por transparencia (a textura nova e opaca)
+            if (mat.HasProperty("_Cutoff")) mat.SetFloat("_Cutoff", 0f);
+            mat.DisableKeyword("_ALPHATEST_ON");
             if (cor != null && mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", cor);
             if (nor != null && mat.HasProperty("_BumpMap")) { mat.SetTexture("_BumpMap", nor); mat.EnableKeyword("_NORMALMAP"); }
             if (met != null && mat.HasProperty("_MetallicGlossMap")) { mat.SetTexture("_MetallicGlossMap", met); mat.EnableKeyword("_METALLICGLOSSMAP"); }
@@ -133,6 +146,11 @@ namespace CeifadoraObsidiana
             var props = new System.Collections.Generic.List<string>();
             for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
                 if (mat.shader.GetPropertyType(i) == ShaderPropertyType.Texture) props.Add(mat.shader.GetPropertyName(i));
+            var flt = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
+                if (mat.shader.GetPropertyType(i) == ShaderPropertyType.Float || mat.shader.GetPropertyType(i) == ShaderPropertyType.Range)
+                    flt.Add(mat.shader.GetPropertyName(i) + "=" + mat.GetFloat(mat.shader.GetPropertyName(i)).ToString("0.##"));
+            Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Material: " + string.Join(" ", flt) + " | keywords: " + string.Join(" ", mat.shaderKeywords));
             Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Modelo novo: {mesh.vertexCount} vertices, {ComprimentoOriginal:0.00} m; shader {mat.shader.name} ({string.Join(",", props)}).");
             return Modelo;
         }

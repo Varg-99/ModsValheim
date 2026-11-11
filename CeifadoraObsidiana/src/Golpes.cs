@@ -16,9 +16,17 @@ namespace CeifadoraObsidiana
     {
         public static ConfigEntry<float> CfgVelNormal, CfgVelGiro, CfgAlcanceExtraGiro;
         public static ConfigEntry<string> CfgClipeUltimo, CfgClipeGiro, CfgEstilo, CfgClipeCeifada;
-        public static ConfigEntry<float> CfgVelCeifada;
-        public static bool Ceifada => CfgTrocarUltimo.Value && string.Equals((CfgEstilo.Value ?? "").Trim(), "ceifada", System.StringComparison.OrdinalIgnoreCase);
+        public static ConfigEntry<float> CfgVelCeifada, CfgVelAvanco, CfgDistAvanco, CfgDanoAvanco;
+        public static ConfigEntry<string> CfgSentidoAvanco;
+        static bool Estilo(string e) => CfgTrocarUltimo.Value && string.Equals((CfgEstilo.Value ?? "").Trim(), e, System.StringComparison.OrdinalIgnoreCase);
+        public static bool Ceifada => Estilo("ceifada");
+        public static bool Avanco => Estilo("avanco");
         static string ClipeAlvo => Ceifada ? (CfgClipeCeifada.Value ?? "").Trim() : CfgClipeGiro.Value;
+
+        // ---- avanco: medidas de giro para continuar no mesmo sentido do 2o golpe ----
+        public static float AcumAtgeir, AcumGolpe2;  // rotacao acumulada (graus) do especial e do fim do 2o golpe
+        public static bool EspelharAvanco;          // decidido no inicio do 3o golpe
+        public static Vector3 AvancoPendente;       // deslocamento extra a somar no movimento do golpe
         public static ConfigEntry<bool> CfgEspelhar, CfgTrocarUltimo;
 
         public static void Init(ConfigFile c)
@@ -30,11 +38,16 @@ namespace CeifadoraObsidiana
             CfgAlcanceExtraGiro = c.Bind("Golpes", "AlcanceExtraGiro", 0.5f, "Alcance extra (m) do giro do ultimo golpe.");
             CfgClipeUltimo = c.Bind("Golpes", "ClipeDoUltimoGolpe", "BattleAxe_Combo3", "Animacao do jogo que e trocada pelo giro (precisa reiniciar).");
             CfgClipeGiro = c.Bind("Golpes", "ClipeDoGiro", "Atgeir360Attack", "Animacao do jogo usada no giro (precisa reiniciar).");
-            CfgEstilo = c.Bind("Golpes", "EstiloDoUltimoGolpe", "ceifada",
-                "ceifada = a foice faz arcos largos (sobe por cima e ceifa baixo puxando para o corpo), nas duas maos. giro = giro de 360 graus antigo.");
+            CfgEstilo = c.Bind("Golpes", "EstiloDoUltimoGolpe3", "avanco",
+                "avanco = continua o giro do 2o golpe, avanca e golpeia para frente com muito dano. ceifada = arcos largos guiados. giro = giro de 360 graus antigo.");
             CfgClipeCeifada = c.Bind("Golpes", "ClipeDoCorpoNaCeifada", "",
                 "Animacao do corpo na ceifada. Vazio = a do proprio machado (BattleAxe_Combo3). Precisa reiniciar.");
             CfgVelCeifada = c.Bind("Golpes", "VelocidadeCeifada", 1.15f, "Velocidade do ultimo golpe no estilo ceifada.");
+            CfgVelAvanco = c.Bind("Golpes", "VelocidadeAvanco", 1.3f, "Velocidade do ultimo golpe no estilo avanco.");
+            CfgDistAvanco = c.Bind("Golpes", "DistanciaAvanco", 2.5f, "Estilo avanco: quanto (m) o personagem avanca para frente durante o giro.");
+            CfgDanoAvanco = c.Bind("Golpes", "DanoExtraAvanco", 1.6f, "Estilo avanco: multiplicador de dano do ultimo golpe (1.6 = 60% a mais).");
+            CfgSentidoAvanco = c.Bind("Golpes", "SentidoDoGiroNoAvanco", "auto",
+                "auto = continua girando no mesmo sentido em que o 2o golpe termina (medido no jogo). normal / espelhado = forca um sentido.");
         }
 
         public static bool ComFoice(Humanoid h)
@@ -55,7 +68,7 @@ namespace CeifadoraObsidiana
             if (!(h is Player p) || p != Player.m_localPlayer || !ComFoice(h)) return 1f;
             var a = AtaqueAtual(h);
             if (a == null || Secundario(h)) return 1f;
-            if (CfgTrocarUltimo.Value && Ultimo(a)) return Ceifada ? CfgVelCeifada.Value : CfgVelGiro.Value;
+            if (CfgTrocarUltimo.Value && Ultimo(a)) return Ceifada ? CfgVelCeifada.Value : Avanco ? CfgVelAvanco.Value : CfgVelGiro.Value;
             return CfgVelNormal.Value;
         }
 
@@ -125,7 +138,8 @@ namespace CeifadoraObsidiana
 
         public static float PesoGiro(Animator anim)
         {
-            if (!GiroAtivo || Ceifada || !CfgEspelhar.Value || anim == null) return 0f;
+            if (!GiroAtivo || Ceifada || anim == null) return 0f;
+            if (Avanco ? !EspelharAvanco : !CfgEspelhar.Value) return 0f;
             float w = 0f;
             foreach (var ci in anim.GetCurrentAnimatorClipInfo(0)) if (ci.clip != null && ci.clip.name == ClipeAlvo) w += ci.weight;
             if (anim.IsInTransition(0))
@@ -145,10 +159,21 @@ namespace CeifadoraObsidiana
             var a = Golpes.AtaqueAtual(p);
             bool sec = Golpes.Secundario(p);
             Golpes.GiroAtivo = !sec && Golpes.CfgTrocarUltimo.Value && Golpes.Ultimo(a);
+            if (!sec && Golpes.Nivel(a) == 1) Golpes.AcumGolpe2 = 0f;
+            if (Golpes.GiroAtivo && Golpes.Avanco)
+            {
+                var modo = (Golpes.CfgSentidoAvanco.Value ?? "auto").Trim().ToLowerInvariant();
+                if (modo.StartsWith("esp")) Golpes.EspelharAvanco = true;
+                else if (modo.StartsWith("norm")) Golpes.EspelharAvanco = false;
+                else if (Mathf.Abs(Golpes.AcumAtgeir) > 90f && Mathf.Abs(Golpes.AcumGolpe2) > 15f)
+                    Golpes.EspelharAvanco = Mathf.Sign(Golpes.AcumAtgeir) != Mathf.Sign(Golpes.AcumGolpe2);
+                Golpes.AvancoPendente = Vector3.zero;
+                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] avanco: giro do especial {Golpes.AcumAtgeir:0}, fim do 2o golpe {Golpes.AcumGolpe2:0} -> {(Golpes.EspelharAvanco ? "espelhado" : "normal")}");
+            }
             var anim = Golpes.AnimatorDe(p);
             float m = Golpes.Mult(p);
             if (anim != null) anim.speed = m;
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] golpe {(sec ? "especial" : "normal")} nivel {Golpes.Nivel(a)}, velocidade {m:0.00}{(Golpes.GiroAtivo ? (Golpes.Ceifada ? ", ceifada" : ", giro") : "")}");
+            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] golpe {(sec ? "especial" : "normal")} nivel {Golpes.Nivel(a)}, velocidade {m:0.00}{(Golpes.GiroAtivo ? (Golpes.Ceifada ? ", ceifada" : Golpes.Avanco ? ", avanco" : ", giro") : "")}");
         }
     }
 
@@ -186,22 +211,24 @@ namespace CeifadoraObsidiana
     public static class Patch_DoMeleeAttack_Giro
     {
         [HarmonyPrefix]
-        public static void Prefix(Attack __instance, out Vector2 __state)
+        public static void Prefix(Attack __instance, out Vector3 __state)
         {
-            __state = new Vector2(-1f, -1f);
+            __state = new Vector3(-1f, -1f, -1f);
             var h = Traverse.Create(__instance).Field("m_character").GetValue<Humanoid>();
             if (!(h is Player p) || p != Player.m_localPlayer || !Golpes.ComFoice(p) || !Golpes.GiroAtivo) return;
-            __state = new Vector2(__instance.m_attackAngle, __instance.m_attackRange);
+            __state = new Vector3(__instance.m_attackAngle, __instance.m_attackRange, __instance.m_damageMultiplier);
             __instance.m_attackAngle = 360f;
             __instance.m_attackRange += Golpes.CfgAlcanceExtraGiro.Value;
+            if (Golpes.Avanco) __instance.m_damageMultiplier *= Mathf.Max(0.1f, Golpes.CfgDanoAvanco.Value);
         }
 
         [HarmonyPostfix]
-        public static void Postfix(Attack __instance, Vector2 __state)
+        public static void Postfix(Attack __instance, Vector3 __state)
         {
             if (__state.x < 0f) return;
             __instance.m_attackAngle = __state.x;
             __instance.m_attackRange = __state.y;
+            __instance.m_damageMultiplier = __state.z;
         }
     }
 
@@ -214,6 +241,19 @@ namespace CeifadoraObsidiana
             if (__instance != Player.m_localPlayer) return;
             Golpes.Atualizar(__instance);
             Espelho.Atualizar(__instance);
+        }
+    }
+
+    // Avanco do ultimo golpe: soma um deslocamento para frente ao movimento da animacao.
+    [HarmonyPatch(typeof(Character), "AddRootMotion")]
+    public static class Patch_AddRootMotion_Avanco
+    {
+        [HarmonyPrefix]
+        public static void Prefix(Character __instance, ref Vector3 __0)
+        {
+            if (__instance != Player.m_localPlayer || Golpes.AvancoPendente == Vector3.zero) return;
+            __0 += Golpes.AvancoPendente;
+            Golpes.AvancoPendente = Vector3.zero;
         }
     }
 }

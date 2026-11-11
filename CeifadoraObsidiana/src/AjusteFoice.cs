@@ -140,9 +140,11 @@ namespace CeifadoraObsidiana
         Character _dono;
         Vector3 _radial, _radialAnt;
         float _sinal, _pesoGiro, _lado = 1f, _pesoAtq, _pesoCeifa, _u;
-        bool _ceifando;
+        bool _ceifando, _temFrente, _avancando;
+        Vector3 _frenteMed, _frenteAvanco;
+        float _uAnt;
         float _yawSuave, _leanSuave;
-        Transform _spine, _chest;
+        Transform _spine, _chest, _pescoco, _cabeca;
         Vector3 _ladoCeifa;
 
         float Escala => AjusteFoice.CfgComprimento.Value / Mathf.Max(0.1f, ModeloFoice.ComprimentoOriginal);
@@ -179,6 +181,7 @@ namespace CeifadoraObsidiana
             _lo = B(HumanBodyBones.LeftUpperArm); _lc = B(HumanBodyBones.LeftLowerArm);
             _peito = B(HumanBodyBones.UpperChest) ?? B(HumanBodyBones.Chest) ?? B(HumanBodyBones.Spine);
             _spine = B(HumanBodyBones.Spine); _chest = B(HumanBodyBones.Chest);
+            _pescoco = B(HumanBodyBones.Neck); _cabeca = B(HumanBodyBones.Head);
         }
 
         Vector3 PalmaDireita() => _rd == null ? _r.position : Vector3.Lerp(_r.position, _rd.position, AjusteFoice.CfgPalma.Value);
@@ -220,6 +223,14 @@ namespace CeifadoraObsidiana
             _pesoAtq = Mathf.MoveTowards(_pesoAtq, atacando ? 1f : 0f, 8f * dt);
             _pesoGiro = Mathf.MoveTowards(_pesoGiro, giro && AjusteFoice.CfgLaminaSegue.Value ? 1f : 0f, 8f * dt);
             _pesoCeifa = Mathf.MoveTowards(_pesoCeifa, ceifada ? 1f : 0f, 10f * dt);
+            bool avanco = ultimo && Golpes.Avanco;
+            float uAtq = 0f;
+            if (_anim != null && atacando)
+            {
+                var info = _anim.IsInTransition(0) ? _anim.GetNextAnimatorStateInfo(0) : _anim.GetCurrentAnimatorStateInfo(0);
+                uAtq = Mathf.Clamp01(info.normalizedTime);
+            }
+            if (p == Player.m_localPlayer) Medir(p, atacando, especial, avanco, uAtq, dt);
 
             // --- golpes normais: haste pelas duas maos (parado/andando fica como a atgeir) ---
             if (AjusteFoice.CfgDuasMaos.Value && _pesoAtq > 0f && _pesoGiro < 1f && _pesoCeifa < 1f)
@@ -245,7 +256,7 @@ namespace CeifadoraObsidiana
                 }
             }
 
-            // --- especial (e estilo giro): foice para fora do corpo, ponta da lamina na frente ---
+            // --- especial, giro e avanco: foice para fora do corpo, ponta da lamina na frente ---
             if (_pesoGiro > 0f && _peito != null && _ro != null && _lo != null)
             {
                 var up = _dono.transform.up;
@@ -262,6 +273,19 @@ namespace CeifadoraObsidiana
                 var tang = Vector3.Cross(up, _radial) * _lado;
                 var haste = (_radial - tang * 0.25f - up * 0.1f).normalized;
                 var maoBaixo = c + _radial * AjusteFoice.CfgAfastarGiro.Value + up * AjusteFoice.CfgAlturaGiro.Value;
+                if (avanco)
+                {
+                    // fim do avanco: golpe forte para frente e para baixo
+                    float f = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.6f, 0.8f, uAtq));
+                    if (f > 0f)
+                    {
+                        var frente = _frenteAvanco.sqrMagnitude > 0.5f ? _frenteAvanco : _dono.transform.forward;
+                        var hChop = (frente * 0.85f - up * 0.5f).normalized;
+                        haste = Vector3.Slerp(haste, hChop, f).normalized;
+                        tang = Vector3.Slerp(tang, -up, f);
+                        maoBaixo = Vector3.Lerp(maoBaixo, c + frente * 0.3f - up * 0.2f, f);
+                    }
+                }
                 bool esquerdaLeva = !especial && Golpes.PesoGiro(_anim) > 0.5f;
                 Segurar(haste, tang, maoBaixo, esquerdaLeva, _pesoGiro, AjusteFoice.CfgGiroEspecial.Value);
             }
@@ -289,6 +313,31 @@ namespace CeifadoraObsidiana
                 Segurar(haste, _ladoCeifa, maoBaixo, false, _pesoCeifa, AjusteFoice.CfgGiroCeifada.Value);
             }
             else if (!ceifada) { _ceifando = false; _ladoCeifa = Vector3.zero; _yawSuave = 0f; _leanSuave = 0f; }
+        }
+
+        // Mede para que lado o corpo gira (especial e fim do 2o golpe) e empurra o avanco do 3o golpe.
+        void Medir(Player p, bool atacando, bool especial, bool avanco, float u, float dt)
+        {
+            if (_ro == null || _lo == null) return;
+            var up = _dono.transform.up;
+            var fr = Vector3.ProjectOnPlane(Vector3.Cross(_ro.position - _lo.position, up), up);
+            if (fr.sqrMagnitude < 1e-4f) return;
+            fr.Normalize();
+            float dAng = _temFrente ? Vector3.SignedAngle(_frenteMed, fr, up) : 0f;
+            _frenteMed = fr; _temFrente = true;
+            if (Mathf.Abs(dAng) > 60f) dAng = 0f; // salto (troca de animacao)
+            if (atacando && especial && Golpes.PesoGiro(_anim) < 0.5f) Golpes.AcumAtgeir = Mathf.Clamp(Golpes.AcumAtgeir + dAng, -2000f, 2000f);
+            if (atacando && !especial && Golpes.Nivel(Golpes.AtaqueAtual(p)) == 1 && u > 0.45f) Golpes.AcumGolpe2 += dAng;
+            if (avanco && u > 0.1f && u < 0.7f) Golpes.AcumAtgeir = Mathf.Clamp(Golpes.AcumAtgeir + (Golpes.EspelharAvanco ? -dAng : dAng), -2000f, 2000f);
+            if (avanco)
+            {
+                if (!_avancando) { _avancando = true; _uAnt = u; _frenteAvanco = _dono.transform.forward; }
+                float a0 = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.1f, 0.75f, _uAnt));
+                float a1 = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.1f, 0.75f, u));
+                if (u > _uAnt) Golpes.AvancoPendente += _frenteAvanco * (Golpes.CfgDistAvanco.Value * (a1 - a0));
+                _uAnt = Mathf.Max(_uAnt, u);
+            }
+            else { _avancando = false; _frenteAvanco = Vector3.zero; }
         }
 
         /// Gira e inclina a coluna (3 ossos) para o tronco "puxar" a foice: vira para o lado da haste
@@ -338,12 +387,22 @@ namespace CeifadoraObsidiana
             transform.position = Vector3.Lerp(transform.position, cabo, peso);
         }
 
-        // Nas costas: diagonal atras do peito, lamina no alto, deitada rente as costas.
+        // Nas costas: presa ao tronco (peito, pescoco e ombros), entao gira e se inclina junto com as costas.
         void Costas()
         {
             if (_peito == null || _dono == null) { if (!_logou) { _logou = true; Jotunn.Logger.LogWarning($"[CeifadoraObsidiana] Costas: peito {(_peito != null)}, dono {(_dono != null)}."); } return; }
             var raiz = _dono.transform;
-            var up = raiz.up; var frente = raiz.forward; var dir = raiz.right;
+            Vector3 up = raiz.up, dir = raiz.right;
+            var topo = _pescoco != null ? _pescoco : (_cabeca != null ? _cabeca : null);
+            var base_ = _spine != null && _spine != _peito ? _spine : null;
+            if (topo != null && base_ != null && (topo.position - base_.position).sqrMagnitude > 1e-4f) up = (topo.position - base_.position).normalized;
+            else if (topo != null && (topo.position - _peito.position).sqrMagnitude > 1e-4f) up = (topo.position - _peito.position).normalized;
+            if (_ro != null && _lo != null)
+            {
+                var d = Vector3.ProjectOnPlane(_ro.position - _lo.position, up);
+                if (d.sqrMagnitude > 1e-4f) dir = d.normalized;
+            }
+            var frente = Vector3.Cross(dir, up).normalized;
             var haste = Quaternion.AngleAxis(AjusteFoice.CfgInclinacaoCostas.Value, frente) * up;
             var centro = _peito.position - frente * AjusteFoice.CfgAfastarCostas.Value + up * AjusteFoice.CfgAlturaCostas.Value;
             var lado = Vector3.ProjectOnPlane(dir, haste);
@@ -353,7 +412,7 @@ namespace CeifadoraObsidiana
             if (!_logou)
             {
                 _logou = true;
-                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Costas: pai {transform.parent?.name} escala do pai {transform.parent?.lossyScale}, escala final {transform.lossyScale}, distancia ao peito {(transform.position - _peito.position).magnitude:0.00} m, ativo {gameObject.activeInHierarchy}.");
+                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Costas: presa ao tronco (pescoco {(_pescoco != null)}, ombros {(_ro != null && _lo != null)}), escala final {transform.lossyScale}.");
             }
         }
         bool _logou;
