@@ -15,7 +15,7 @@ namespace CeifadoraObsidiana
     {
         public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
-            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
+            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
         public static ConfigEntry<string> CfgAjusteEsq;
 
         public static void Init(ConfigFile c)
@@ -27,6 +27,8 @@ namespace CeifadoraObsidiana
                 "Distancia (m) do fim do cabo ate a mao de cima, quando a mao esquerda solta durante o golpe.");
             CfgPegadaParado = c.Bind("Encaixe", "PegadaParado", 0.35f, "Parado ou andando (uma mao, como a atgeir): distancia (m) do fim do cabo ate a mao.");
             CfgAmplitudeCeifada = c.Bind("Encaixe", "AmplitudeCeifada", 1.0f, "Ultimo golpe (ceifada): quanto as maos se afastam do corpo nos arcos. 1 = normal.");
+            CfgTorcaoCeifada = c.Bind("Encaixe", "TorcaoDoTroncoNaCeifada", 70f, "Ultimo golpe (ceifada): quanto (graus) o tronco pode virar para acompanhar a foice. 0 = nao vira.");
+            CfgCurvarCeifada = c.Bind("Encaixe", "CurvarCorpoNaCeifada", 1f, "Ultimo golpe (ceifada): quanto o corpo se curva quando a foice desce (0 = nada, 1 = normal).");
             CfgGiroCeifada = c.Bind("Encaixe", "GiroDaLaminaNaCeifada", 0f, "Ultimo golpe (ceifada): ajuste extra (graus) da lamina, se ficar virada errado. Ex.: 180.");
             CfgGiro = c.Bind("Encaixe", "GiroNaHaste", 0f,
                 "Gira a foice em volta da haste (graus) nos golpes normais. Ex.: 90, 180, -90.");
@@ -139,6 +141,8 @@ namespace CeifadoraObsidiana
         Vector3 _radial, _radialAnt;
         float _sinal, _pesoGiro, _lado = 1f, _pesoAtq, _pesoCeifa, _u;
         bool _ceifando;
+        float _yawSuave, _leanSuave;
+        Transform _spine, _chest;
         Vector3 _ladoCeifa;
 
         float Escala => AjusteFoice.CfgComprimento.Value / Mathf.Max(0.1f, ModeloFoice.ComprimentoOriginal);
@@ -174,6 +178,7 @@ namespace CeifadoraObsidiana
             _ro = B(HumanBodyBones.RightUpperArm); _rc = B(HumanBodyBones.RightLowerArm);
             _lo = B(HumanBodyBones.LeftUpperArm); _lc = B(HumanBodyBones.LeftLowerArm);
             _peito = B(HumanBodyBones.UpperChest) ?? B(HumanBodyBones.Chest) ?? B(HumanBodyBones.Spine);
+            _spine = B(HumanBodyBones.Spine); _chest = B(HumanBodyBones.Chest);
         }
 
         Vector3 PalmaDireita() => _rd == null ? _r.position : Vector3.Lerp(_r.position, _rd.position, AjusteFoice.CfgPalma.Value);
@@ -278,10 +283,38 @@ namespace CeifadoraObsidiana
                 if (lado.sqrMagnitude > 1e-5f) _ladoCeifa = lado.normalized;
                 else if (_ladoCeifa.sqrMagnitude < 0.5f) _ladoCeifa = Vector3.ProjectOnPlane(raiz.right, haste).normalized;
                 float amp = AjusteFoice.CfgAmplitudeCeifada.Value;
+                // o corpo acompanha a foice: o tronco vira para onde a lamina vai e se curva quando ela desce
+                Torcer(haste, pl0, _pesoCeifa, dt);
                 var maoBaixo = _peito.position + raiz.TransformDirection(Vector3.Scale(pl0, new Vector3(amp, 1f, amp)));
                 Segurar(haste, _ladoCeifa, maoBaixo, false, _pesoCeifa, AjusteFoice.CfgGiroCeifada.Value);
             }
-            else if (!ceifada) { _ceifando = false; _ladoCeifa = Vector3.zero; }
+            else if (!ceifada) { _ceifando = false; _ladoCeifa = Vector3.zero; _yawSuave = 0f; _leanSuave = 0f; }
+        }
+
+        /// Gira e inclina a coluna (3 ossos) para o tronco "puxar" a foice: vira para o lado da haste
+        /// (como quem enrola o corpo e solta) e se curva para frente quando a lamina esta baixa.
+        void Torcer(Vector3 haste, Vector3 maoLocal, float peso, float dt)
+        {
+            if (_ro == null || _lo == null) return;
+            var raiz = _dono.transform; var up = raiz.up;
+            var frente = Vector3.ProjectOnPlane(Vector3.Cross(_ro.position - _lo.position, up), up);
+            if (frente.sqrMagnitude < 1e-4f) return;
+            float maxT = AjusteFoice.CfgTorcaoCeifada.Value;
+            var hz = Vector3.ProjectOnPlane(haste, up);
+            float alvo = hz.sqrMagnitude > 0.04f ? Mathf.Clamp(Vector3.SignedAngle(raiz.forward, hz, up) * 0.8f, -maxT, maxT) : 0f;
+            float atual = Vector3.SignedAngle(raiz.forward, frente, up);
+            float yaw = Mathf.DeltaAngle(atual, alvo) * peso;
+            float lean = Mathf.Lerp(-10f, 32f, Mathf.InverseLerp(0.3f, -0.35f, maoLocal.y)) * peso * AjusteFoice.CfgCurvarCeifada.Value;
+            float k = 1f - Mathf.Exp(-14f * dt);
+            _yawSuave = Mathf.Lerp(_yawSuave, yaw, k);
+            _leanSuave = Mathf.Lerp(_leanSuave, lean, k);
+            int n = (_spine != null ? 1 : 0) + (_chest != null ? 1 : 0) + (_peito != null && _peito != _chest && _peito != _spine ? 1 : 0);
+            if (n == 0) return;
+            var lado = Vector3.Cross(up, Quaternion.AngleAxis(_yawSuave, up) * frente.normalized);
+            var q = Quaternion.AngleAxis(_leanSuave / n, lado) * Quaternion.AngleAxis(_yawSuave / n, up);
+            if (_spine != null) _spine.rotation = q * _spine.rotation;
+            if (_chest != null) _chest.rotation = q * _chest.rotation;
+            if (_peito != null && _peito != _chest && _peito != _spine) _peito.rotation = q * _peito.rotation;
         }
 
         /// Foice nas duas maos: haste na direcao dada, lamina para "lado", mao de baixo em "maoBaixo".

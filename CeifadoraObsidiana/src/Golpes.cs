@@ -65,10 +65,17 @@ namespace CeifadoraObsidiana
         static readonly Dictionary<RuntimeAnimatorController, AnimatorOverrideController> _cache = new Dictionary<RuntimeAnimatorController, AnimatorOverrideController>();
         static readonly Dictionary<Animator, RuntimeAnimatorController> _originais = new Dictionary<Animator, RuntimeAnimatorController>();
 
+        static bool _listou;
         public static void Atualizar(Player p)
         {
             var anim = AnimatorDe(p);
             if (anim == null || anim.runtimeAnimatorController == null) return;
+            if (!_listou && ComFoice(p))
+            {
+                _listou = true;
+                var nomes = anim.runtimeAnimatorController.animationClips.Select(c => c.name).Distinct().OrderBy(n => n);
+                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Clipes do personagem: " + string.Join(", ", nomes));
+            }
             bool com = ComFoice(p) && CfgTrocarUltimo.Value && !string.IsNullOrEmpty(ClipeAlvo);
             bool trocado = _originais.ContainsKey(anim);
             if (com && !trocado)
