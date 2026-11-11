@@ -37,7 +37,7 @@ namespace CeifadoraObsidiana
             CfgPuxarMao = c.Bind("Encaixe", "PuxarMaoParaHaste", true,
                 "Durante os golpes, se a animacao soltar uma mao, ela e puxada de volta para a haste.");
             CfgMaosNaHaste = c.Bind("Encaixe", "MaosVaoAteAHaste", true, "No fim de cada quadro as maos vao ate a haste (a foice fica onde esta).");
-            CfgLaminaMixamo = c.Bind("Encaixe", "LaminaAcompanhaOCorte", true, "Golpes 3, 4 e especial: a lamina gira em volta da haste para apontar para onde o corte vai.");
+            CfgLaminaMixamo = c.Bind("Encaixe", "LaminaAcompanhaOCorte", true, "Em todos os golpes: a lamina gira em volta da haste para ficar no plano do corte, apontando para onde ele vai.");
             CfgGiroLaminaMixamo = c.Bind("Encaixe", "GiroDaLaminaNoCorte", 0f, "Ajuste extra (graus) da lamina nesses golpes, se ficar virada errado. Ex.: 180.");
             CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao direita: 0 = pulso, 1 = nos dos dedos.");
             CfgAjusteEsq = c.Bind("Encaixe", "AjusteMaoEsquerda", "0,0,0",
@@ -341,7 +341,7 @@ namespace CeifadoraObsidiana
 
             // --- por ultimo: as maos vao ate a haste (a foice nao se mexe para as maos) ---
             if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando && !umaMao, umaMao);
-            if (umaMao && AjusteFoice.CfgLaminaMixamo.Value) LaminaNoCorte(dt); else _temPonta = false;
+            if (AjusteFoice.CfgLaminaMixamo.Value) LaminaNoCorte(dt, atacando); else _temPonta = false;
             Gravar();
         }
 
@@ -421,25 +421,38 @@ namespace CeifadoraObsidiana
             transform.SetPositionAndRotation(pos, rot);
         }
 
-        // Golpes do Mixamo: gira a foice em volta da propria haste para a lamina apontar para onde
-        // a ponta esta indo (acompanha o angulo do corte). A haste e as maos nao mudam.
-        Vector3 _pontaAnt, _ladoMix;
+        // Lamina no angulo do corte (todos os golpes). Em vez de seguir a ponta quadro a quadro (que tremia
+        // e torcia o rastro), mede o EIXO em que a haste esta girando. Num golpe esse eixo quase nao muda,
+        // entao a lamina fica deitada no plano do corte, sempre apontando para onde o corte vai.
+        // Gira so em volta da propria haste: maos e cabo nao mudam.
+        Vector3 _hAnt, _eixoCorte;
+        float _pesoCorte;
         bool _temPonta;
-        void LaminaNoCorte(float dt)
+        void LaminaNoCorte(float dt, bool atacando)
         {
             var haste = transform.up;
-            var ponta = transform.position + haste * AjusteFoice.CfgComprimento.Value * 0.9f;
-            if (!_temPonta) { _temPonta = true; _pontaAnt = ponta; _ladoMix = Vector3.zero; return; }
-            var v = (ponta - _pontaAnt) / dt; _pontaAnt = ponta;
-            var lado = Vector3.ProjectOnPlane(v, haste);
-            if (lado.magnitude > 2f)
-                _ladoMix = _ladoMix.sqrMagnitude < 0.5f ? lado.normalized : Vector3.Slerp(_ladoMix, lado.normalized, 1f - Mathf.Exp(-18f * dt)).normalized;
-            if (_ladoMix.sqrMagnitude < 0.5f) return;
-            var alvo = Quaternion.AngleAxis(AjusteFoice.CfgGiroLaminaMixamo.Value, haste) * Vector3.ProjectOnPlane(_ladoMix, haste);
+            if (!_temPonta) { _temPonta = true; _hAnt = haste; _eixoCorte = Vector3.zero; _pesoCorte = 0f; return; }
+            var giro = Vector3.Cross(_hAnt, haste);
+            float vel = Mathf.Asin(Mathf.Clamp(giro.magnitude, 0f, 1f)) * Mathf.Rad2Deg / dt; // graus/s
+            _hAnt = haste;
+            if (atacando && vel > 80f)
+            {
+                var n = giro.normalized;
+                if (_eixoCorte.sqrMagnitude < 0.5f || (Vector3.Dot(n, _eixoCorte) < 0f && vel > 250f)) _eixoCorte = n; // golpe novo
+                else _eixoCorte = Vector3.Slerp(_eixoCorte, Vector3.Dot(n, _eixoCorte) < 0f ? _eixoCorte : n, 1f - Mathf.Exp(-10f * dt)).normalized;
+            }
+            float alvoPeso = atacando ? Mathf.Clamp01((vel - 80f) / 160f) : 0f;
+            // entra rapido, sai devagar (a lamina nao "volta" de repente no fim do golpe)
+            _pesoCorte = Mathf.MoveTowards(_pesoCorte, Mathf.Max(alvoPeso, _pesoCorte * (atacando ? 0.97f : 0.85f)), (alvoPeso > _pesoCorte ? 10f : 3f) * dt);
+            if (_eixoCorte.sqrMagnitude < 0.5f || _pesoCorte <= 0.01f) return;
+            var lamina = Vector3.Cross(_eixoCorte, haste);
+            if (lamina.sqrMagnitude < 1e-4f) return;
+            lamina = Quaternion.AngleAxis(AjusteFoice.CfgGiroLaminaMixamo.Value, haste) * lamina.normalized;
             var atual = Vector3.ProjectOnPlane(transform.forward, haste);
-            if (atual.sqrMagnitude < 1e-4f || alvo.sqrMagnitude < 1e-4f) return;
+            if (atual.sqrMagnitude < 1e-4f) return;
             var pos = transform.position;
-            transform.rotation = Quaternion.FromToRotation(atual, alvo) * transform.rotation;
+            var q = Quaternion.FromToRotation(atual.normalized, lamina);
+            transform.rotation = Quaternion.Slerp(Quaternion.identity, q, _pesoCorte) * transform.rotation;
             transform.position = pos;
         }
 
