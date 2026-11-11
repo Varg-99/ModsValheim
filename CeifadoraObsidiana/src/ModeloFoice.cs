@@ -142,6 +142,8 @@ namespace CeifadoraObsidiana
             tr.shadowCastingMode = ShadowCastingMode.Off;
             tr.receiveShadows = false;
             ponta.gameObject.AddComponent<RastroFio>();
+            // faixa entre a base e a ponta da lamina: mostra o plano do corte
+            Modelo.gameObject.AddComponent<RastroLamina>();
 
             var props = new System.Collections.Generic.List<string>();
             for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
@@ -196,6 +198,69 @@ namespace CeifadoraObsidiana
     }
 
     /// Liga a linha do fio durante o golpe (quando o jogo liga o rastro da arma).
+    /// Rastro em faixa da lamina: liga a base da lamina a ponta, quadro a quadro, por ~0,3 s.
+    /// Mostra o angulo da lamina durante o corte (se ela "gira" no meio, a faixa torce).
+    [DefaultExecutionOrder(600)]
+    public class RastroLamina : MonoBehaviour
+    {
+        // pontos no espaco do modelo (haste em +Y com o cabo na origem, lamina para +Z)
+        static readonly Vector3 Base = new Vector3(0f, 1.08f, 0.06f), Ponta = new Vector3(0f, 0.83f, 0.47f);
+        struct Amostra { public Vector3 a, b; public float t; }
+        readonly System.Collections.Generic.List<Amostra> _pts = new System.Collections.Generic.List<Amostra>();
+        Player _dono; GameObject _go; Mesh _mesh; Material _mat;
+        Vector3[] _v = new Vector3[0]; Color[] _c = new Color[0]; int[] _i = new int[0];
+
+        void Start()
+        {
+            _dono = GetComponentInParent<Player>();
+            if (_dono == null || !CeifadoraPlugin.CfgRastroLamina.Value) { enabled = false; return; }
+            _go = new GameObject("rastro_lamina");
+            _mesh = new Mesh { name = "rastro_lamina" }; _mesh.MarkDynamic();
+            _go.AddComponent<MeshFilter>().sharedMesh = _mesh;
+            var mr = _go.AddComponent<MeshRenderer>();
+            _mat = new Material(Shader.Find("Sprites/Default"));
+            mr.sharedMaterial = _mat; mr.shadowCastingMode = ShadowCastingMode.Off; mr.receiveShadows = false;
+        }
+
+        void OnDestroy() { if (_go != null) Destroy(_go); if (_mesh != null) Destroy(_mesh); if (_mat != null) Destroy(_mat); }
+        void OnDisable() { _pts.Clear(); if (_mesh != null) _mesh.Clear(); }
+
+        void LateUpdate()
+        {
+            if (_go == null) return;
+            float agora = Time.time, vida = Mathf.Max(0.05f, CeifadoraPlugin.CfgRastroTempo.Value);
+            bool liga = _dono != null && _dono.InAttack();
+            if (liga)
+            {
+                var a = transform.TransformPoint(Base); var b = transform.TransformPoint(Ponta);
+                if (_pts.Count > 0 && (b - _pts[_pts.Count - 1].b).sqrMagnitude > 1.5f * 1.5f) _pts.Clear(); // pulo de pose
+                _pts.Add(new Amostra { a = a, b = b, t = agora });
+            }
+            _pts.RemoveAll(p => agora - p.t > vida);
+            int n = _pts.Count;
+            if (n < 2) { _mesh.Clear(); return; }
+            if (_v.Length != n * 2) { _v = new Vector3[n * 2]; _c = new Color[n * 2]; }
+            var cor = CeifadoraPlugin.CorRastro();
+            for (int k = 0; k < n; k++)
+            {
+                float f = 1f - (agora - _pts[k].t) / vida;
+                _v[2 * k] = _pts[k].a; _v[2 * k + 1] = _pts[k].b;
+                _c[2 * k] = new Color(cor.r, cor.g, cor.b, cor.a * f * 0.35f);
+                _c[2 * k + 1] = new Color(cor.r, cor.g, cor.b, cor.a * f);
+            }
+            if (_i.Length != (n - 1) * 6) _i = new int[(n - 1) * 6];
+            for (int k = 0; k < n - 1; k++)
+            {
+                int o = k * 6, v = k * 2;
+                _i[o] = v; _i[o + 1] = v + 1; _i[o + 2] = v + 2; _i[o + 3] = v + 1; _i[o + 4] = v + 3; _i[o + 5] = v + 2;
+            }
+            _mesh.Clear();
+            _mesh.vertices = _v; _mesh.colors = _c; _mesh.triangles = _i;
+            _mesh.RecalculateBounds();
+        }
+    }
+
+    [DefaultExecutionOrder(600)]
     public class RastroFio : MonoBehaviour
     {
         static readonly System.Reflection.FieldInfo _emit = HarmonyLib.AccessTools.Field(typeof(MeleeWeaponTrail), "_emit");
@@ -212,7 +277,7 @@ namespace CeifadoraObsidiana
             // procura o rastro do jogo dentro da mesma arma (sobe ate o "attach")
             var t = transform.parent;
             for (int i = 0; i < 3 && t != null && _mw == null; i++) { _mw = t.GetComponentInChildren<MeleeWeaponTrail>(true); t = t.parent; }
-            if (!CeifadoraPlugin.CfgRastro.Value) _tr.enabled = false;
+            if (!CeifadoraPlugin.CfgRastro.Value || CeifadoraPlugin.CfgRastroLamina.Value) _tr.enabled = false;
         }
 
         void LateUpdate()

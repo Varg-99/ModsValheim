@@ -29,14 +29,20 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.0.1";
+        public const string PluginVersion = "3.0.2";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
         private const string BaseVisualPrefab = "Scythe"; // modelo da foice do jogo
 
         public static ConfigEntry<float> CfgBrilho;
-        public static ConfigEntry<bool> CfgRastro;
+        public static ConfigEntry<bool> CfgRastro, CfgRastroLamina;
+        public static ConfigEntry<float> CfgRastroTempo;
+        public static ConfigEntry<string> CfgRastroCor;
+        public static Color CorRastro()
+        {
+            return ColorUtility.TryParseHtmlString((CfgRastroCor.Value ?? "").Trim(), out var c) ? c : new Color(1f, 0.25f, 0.2f, 0.9f);
+        }
         public static ConfigEntry<float> CfgSlash, CfgSlashPerLevel, CfgSpecialMultiplier;
         public static ConfigEntry<float> CfgBleedChance, CfgBleedDamagePerTick, CfgBleedDuration;
         public static ConfigEntry<string> CfgArmaNormal, CfgArmaEspecial, CfgArmaEmpunhadura, CfgEfeitoSangue;
@@ -65,6 +71,9 @@ namespace CeifadoraObsidiana
                 "Brilho proprio da textura da foice (0 = nenhum). Precisa reiniciar.");
 
             CfgRastro = Config.Bind("Visual", "LinhaNoFio", true, "Linha fina que segue o fio da lamina durante o golpe. Precisa reiniciar.");
+            CfgRastroLamina = Config.Bind("Visual", "RastroDaLamina", true, "Faixa que liga a base a ponta da lamina durante o golpe (mostra o angulo do corte). Substitui a linha fina.");
+            CfgRastroTempo = Config.Bind("Visual", "DuracaoDoRastro", 0.3f, "Quanto tempo (s) a faixa do rastro fica visivel.");
+            CfgRastroCor = Config.Bind("Visual", "CorDoRastro", "#FF4033E6", "Cor do rastro (RGBA em hexadecimal).");
 
             CfgSlash = Config.Bind("Arma", "DanoCorte", 110f,
                 new ConfigDescription("Dano de corte base (nivel 1).", null, admin));
