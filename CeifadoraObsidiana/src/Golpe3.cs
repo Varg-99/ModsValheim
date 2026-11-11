@@ -107,6 +107,16 @@ namespace CeifadoraObsidiana
             // so libera o proximo golpe perto do fim (apertar varias vezes nao corta o golpe no meio)
             if (acerto > 0f)
             {
+                // um unico acerto, no momento escolhido (o golpe original podia ter varios, e o primeiro
+                // caia na preparacao do giro)
+                var lista = novo.events.ToList();
+                int primeiro = lista.FindIndex(e => e.functionName == "OnAttackTrigger");
+                if (primeiro >= 0)
+                {
+                    lista[primeiro].time = hw;
+                    lista = lista.Where((e, i) => e.functionName != "OnAttackTrigger" || i == primeiro).ToList();
+                }
+                novo.events = lista.OrderBy(e => e.time).ToArray();
                 var evs = novo.events;
                 float fimChain = Mathf.Max(hw + 0.05f, novo.length * 0.85f);
                 for (int i = 0; i < evs.Length; i++)

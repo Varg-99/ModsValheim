@@ -23,7 +23,7 @@ namespace CeifadoraObsidiana
         // ---- combo de 4 golpes + especial em 3 partes, com animacoes do Mixamo ----
         public static ConfigEntry<bool> CfgModo4;
         public static ConfigEntry<string> CfgMapa4, CfgAcertos4;
-        public static ConfigEntry<float> CfgVelMixamo, CfgDano3, CfgDano4, CfgDanoEspFinal;
+        public static ConfigEntry<float> CfgVelMixamo, CfgDano3, CfgDano4, CfgDanoEspFinal, CfgEmpurrao3;
         public static bool Modo4 => CfgModo4 != null && CfgModo4.Value && Golpe3.Bundle.Count > 0;
         public static int NivelAtual = -1;
         public static bool EspecialAtual;
@@ -35,11 +35,12 @@ namespace CeifadoraObsidiana
                 "DualAxes Attack 1=BattleAxe1; DualAxes Attack 2 2=BattleAxe2; DualAxes Attack 3 2=Golpe_Mixamo_360; DualAxes Attack 4=Golpe_Mixamo_4; " +
                 "Greatsword BaseAttack (1)=Especial_1; Greatsword BaseAttack (2)=Especial_2; Greatsword BaseAttack (3)=Especial_3",
                 "Qual animacao entra em cada golpe (original=nova). Precisa reiniciar.");
-            CfgAcertos4 = c.Bind("Combo4", "Acertos", "Golpe_Mixamo_360=0.62; Golpe_Mixamo_4=0.50; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
+            CfgAcertos4 = c.Bind("Combo4", "Acertos2", "Golpe_Mixamo_360=0.75; Golpe_Mixamo_4=0.50; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
                 "Segundo do dano em cada animacao do Mixamo. Precisa reiniciar.");
             CfgVelMixamo = c.Bind("Combo4", "VelocidadeMixamo", 1.15f, "Velocidade dos golpes 3, 4 e do especial.");
             CfgDano3 = c.Bind("Combo4", "Dano3oGolpe", 1.3f, "Multiplicador de dano do 3o golpe.");
             CfgDano4 = c.Bind("Combo4", "Dano4oGolpe", 2.0f, "Multiplicador de dano do 4o golpe (o ultimo).");
+            CfgEmpurrao3 = c.Bind("Combo4", "Empurrao3oGolpe", 0.2f, "Empurrao do 3o golpe nos inimigos (1 = normal, 0.2 = bem pouco), para o 4o golpe ainda acertar.");
             CfgDanoEspFinal = c.Bind("Combo4", "DanoUltimaParteEspecial", 1.5f, "Multiplicador de dano da 3a parte do especial.");
         }
         static Dictionary<string, string> Pares(string s) => (s ?? "").Split(';').Select(x => x.Split('='))
@@ -274,6 +275,7 @@ namespace CeifadoraObsidiana
     public static class Patch_DoMeleeAttack_Giro
     {
         [HarmonyPrefix]
+        static float _forca = -1f;
         public static void Prefix(Attack __instance, out Vector3 __state)
         {
             __state = new Vector3(-1f, -1f, -1f);
@@ -285,6 +287,9 @@ namespace CeifadoraObsidiana
                 bool sec = Golpes.Secundario(p0);
                 if (!sec && nv < 2) return;
                 __state = new Vector3(__instance.m_attackAngle, __instance.m_attackRange, __instance.m_damageMultiplier);
+                // 3o golpe empurra pouco, para o 4o ainda alcancar o inimigo
+                var f = Traverse.Create(__instance).Field("m_forceMultiplier");
+                if (!sec && nv == 2 && f.FieldExists()) { _forca = f.GetValue<float>(); f.SetValue(_forca * Mathf.Max(0f, Golpes.CfgEmpurrao3.Value)); }
                 __instance.m_attackAngle = 360f;
                 __instance.m_attackRange += Golpes.CfgAlcanceExtraGiro.Value;
                 if (!sec) __instance.m_damageMultiplier *= nv == 2 ? Golpes.CfgDano3.Value : Golpes.CfgDano4.Value;
@@ -306,6 +311,7 @@ namespace CeifadoraObsidiana
             __instance.m_attackAngle = __state.x;
             __instance.m_attackRange = __state.y;
             __instance.m_damageMultiplier = __state.z;
+            if (_forca >= 0f) { Traverse.Create(__instance).Field("m_forceMultiplier").SetValue(_forca); _forca = -1f; }
             var h = Traverse.Create(__instance).Field("m_character").GetValue<Humanoid>();
             if (h is Player p && Impacto.Ligado) Impacto.Depois(__instance, p);
         }
