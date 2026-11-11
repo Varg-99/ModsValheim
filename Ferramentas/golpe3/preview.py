@@ -46,7 +46,7 @@ if __name__ == "__main__":
     pasta = sys.argv[1]
     nomes, pais, offs, ch, dados = ler_bvh(pasta + "/Ceifadora_Golpe3.bvh")
     foice = np.load(pasta + "/foice.npy")
-    sel = list(range(0, len(dados), 3))
+    sel = list(range(0, len(dados), 2))
     cols = 6; rows = math.ceil(len(sel)/cols)
     for vista, eixos, nome in (("lado", (0, 2, 1), "lado"), ("cima", (0, 2, None), "cima"), ("frente", (0, 0, 1), "frente")):
         fig, axs = plt.subplots(rows, cols, figsize=(cols*2.6, rows*2.8))
