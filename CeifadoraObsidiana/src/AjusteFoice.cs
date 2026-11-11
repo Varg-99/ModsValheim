@@ -7,6 +7,7 @@
 // Ajustes no .cfg, secao [Encaixe], valem com o jogo aberto.
 
 using BepInEx.Configuration;
+using System.Linq;
 using UnityEngine;
 
 namespace CeifadoraObsidiana
@@ -216,6 +217,7 @@ namespace CeifadoraObsidiana
             Aplicar();
             if (NasCostas) { Costas(); return; }
             if (_r == null || _l == null) return;
+            Restaurar();
 
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var p = _dono as Player;
@@ -335,6 +337,7 @@ namespace CeifadoraObsidiana
 
             // --- por ultimo: as maos vao ate a haste (a foice nao se mexe para as maos) ---
             if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando);
+            Gravar();
         }
 
         // Mede para que lado o corpo gira (especial e fim do 2o golpe) e empurra o avanco do 3o golpe.
@@ -360,6 +363,33 @@ namespace CeifadoraObsidiana
                 _uAnt = Mathf.Max(_uAnt, u);
             }
             else { _avancando = false; _frenteAvanco = Vector3.zero; }
+        }
+
+        // O Animator do Valheim nem sempre roda em todo quadro (anda junto com a fisica). Num quadro sem
+        // animacao os ossos ainda tem as nossas correcoes do quadro anterior; aplicar de novo em cima
+        // fazia a foice e as maos tremerem. Aqui, se o osso ainda tem exatamente o que escrevemos,
+        // volta para a pose original da animacao antes de corrigir.
+        Transform[] _mex;
+        Quaternion[] _bruto, _escrito;
+        void Restaurar()
+        {
+            if (_mex == null)
+            {
+                _mex = new[] { _ro, _rc, _r, _lo, _lc, _l, _spine, _chest, _peito }.Where(t => t != null).Distinct().ToArray();
+                _bruto = new Quaternion[_mex.Length]; _escrito = new Quaternion[_mex.Length];
+                for (int i = 0; i < _mex.Length; i++) { _bruto[i] = _mex[i].localRotation; _escrito[i] = new Quaternion(9, 9, 9, 9); }
+            }
+            for (int i = 0; i < _mex.Length; i++)
+            {
+                var q = _mex[i].localRotation;
+                if (q.x == _escrito[i].x && q.y == _escrito[i].y && q.z == _escrito[i].z && q.w == _escrito[i].w) _mex[i].localRotation = _bruto[i];
+                else _bruto[i] = q;
+            }
+        }
+        void Gravar()
+        {
+            if (_mex == null) return;
+            for (int i = 0; i < _mex.Length; i++) _escrito[i] = _mex[i].localRotation;
         }
 
         // Leva cada palma ao ponto mais proximo da haste. Como a foice e filha da mao direita,

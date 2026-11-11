@@ -5,9 +5,9 @@ import numpy as np, math, json, sys, os
 from scipy.spatial.transform import Rotation as Rot
 
 FPS = 30
-DUR = 1.6
+DUR = 0.92
 N = int(round(DUR * FPS)) + 1
-HIT = 0.85
+HIT = 0.76
 VAO = 0.32          # distancia entre as maos na haste
 CABO = 0.30         # cabo atras da mao de baixo
 COMP = 2.0          # comprimento da foice
@@ -72,6 +72,10 @@ def cr(keys, t, ang=False):
     m2 = (p3 - p1) / max(t3 - t1, 1e-6) * (t2 - t1)
     if i == 0: m1 = (p2 - p1)
     if i + 1 == len(vs) - 1: m2 = (p2 - p1)
+    if any(abs(t1 - q) < 1e-6 for q in PARADAS): m1 = m1 * 0.0
+    if any(abs(t2 - q) < 1e-6 for q in PARADAS): m2 = m2 * 0.0
+    if abs(t2 - HIT) < 1e-6: u = u ** 1.7          # acelera ate a batida
+    elif abs(t1 - HIT) < 1e-6: u = 1 - (1 - u) ** 3  # assenta rapido
     u2, u3 = u * u, u * u * u
     return (2*u3 - 3*u2 + 1) * p1 + (u3 - 2*u2 + u) * m1 + (-2*u3 + 3*u2) * p2 + (u3 - u2) * m2
 
@@ -90,29 +94,32 @@ def ik2(root, alvo, l1, l2, polo):
 
 # ---------------- roteiro do golpe ----------------
 # psi: giro do quadril (graus, + = para a direita do personagem, sentido do fim do 2o golpe)
-K_PSI = [(0.00, 20), (0.15, 50), (0.45, 200), (0.70, 330), (0.85, 360), (1.60, 360)]
-K_TWIST = [(0.00, 25), (0.15, 45), (0.45, 15), (0.70, -10), (0.85, 0), (1.05, 0), (1.60, 5)]
-K_LEAN = [(0.00, 10), (0.15, 15), (0.45, 5), (0.70, -12), (0.85, 42), (1.05, 38), (1.35, 20), (1.60, 10)]
-K_HIPS = [(0.00, (0, -0.06, 0.0)), (0.15, (0, -0.10, 0.10)), (0.45, (0, -0.05, 0.55)),
-          (0.70, (0, -0.02, 0.85)), (0.85, (0, -0.27, 1.90)), (1.05, (0, -0.25, 1.97)),
-          (1.35, (0, -0.12, 1.98)), (1.60, (0, -0.07, 1.98))]
-# foice no espaco do corpo (x=esq, y=cima, z=frente, relativo ao quadril girado por psi+twist):
+# v2: mais pesado. Antecipacao (agacha e enrola), giro rapido e firme, sobe a foice,
+# e uma batida que acelera ate o chao e PARA seca. O clipe termina logo depois do acerto.
+K_PSI = [(0.00, 20), (0.14, 45), (0.40, 215), (0.58, 330), (0.76, 360), (0.92, 360)]
+K_TWIST = [(0.00, 25), (0.14, 50), (0.40, 15), (0.58, -15), (0.76, 0), (0.92, 0)]
+K_LEAN = [(0.00, 12), (0.14, 22), (0.40, 8), (0.58, -14), (0.76, 46), (0.92, 44)]
+K_HIPS = [(0.00, (0, -0.10, 0.0)), (0.14, (0, -0.18, 0.05)), (0.40, (0, -0.12, 0.45)),
+          (0.58, (0, -0.05, 0.75)), (0.76, (0, -0.32, 1.60)), (0.92, (0, -0.33, 1.63))]
+# foice no espaco do corpo (x=esq, y=cima, z=frente, relativo ao quadril girado):
 # G = mao de baixo (esquerda), H = direcao da haste (cabo -> lamina)
-K_G = [(0.00, (-0.25, 0.30, 0.25)), (0.15, (-0.28, 0.25, 0.18)), (0.45, (-0.32, 0.55, 0.30)),
-       (0.58, (-0.18, 0.75, 0.28)), (0.70, (0.00, 0.85, 0.12)), (0.85, (0.00, 0.35, 0.45)),
-       (1.05, (0.00, 0.20, 0.35)), (1.35, (-0.08, 0.30, 0.30)), (1.60, (-0.15, 0.35, 0.25))]
-K_H = [(0.00, (-0.6, -0.3, -0.5)), (0.15, (-0.5, -0.45, -0.75)), (0.45, (-0.85, 0.10, 0.50)),
-       (0.58, (-0.5, 0.6, 0.6)), (0.70, (-0.1, 0.9, -0.4)), (0.85, (0.0, -0.45, 0.89)),
-       (1.05, (0.0, -0.35, 0.94)), (1.35, (-0.3, 0.10, 0.95)), (1.60, (-0.4, 0.5, 0.75))]
-# pes (mundo): (t, (x, z), levantado)
+K_G = [(0.00, (-0.25, 0.30, 0.25)), (0.14, (-0.30, 0.22, 0.12)), (0.40, (-0.32, 0.55, 0.30)),
+       (0.50, (-0.18, 0.75, 0.25)), (0.58, (0.00, 0.88, 0.05)), (0.76, (0.00, 0.30, 0.48)),
+       (0.92, (0.00, 0.26, 0.44))]
+K_H = [(0.00, (-0.6, -0.3, -0.5)), (0.14, (-0.45, -0.45, -0.8)), (0.40, (-0.88, 0.10, 0.45)),
+       (0.50, (-0.5, 0.6, 0.6)), (0.58, (-0.05, 0.85, -0.5)), (0.76, (0.0, -0.50, 0.87)),
+       (0.92, (0.0, -0.52, 0.86))]
+# pes (mundo): base larga, sem escorregar; passo de pivo no giro e um salto curto para a batida
 K_PE = {
-    "Left": [(0.00, (0.15, 0.10)), (0.50, (0.15, 0.10)), (0.62, (0.22, 0.75)), (0.68, (0.22, 0.75)),
-             (0.84, (0.22, 1.32)), (1.60, (0.22, 1.32))],
-    "Right": [(0.00, (-0.15, -0.10)), (0.30, (-0.15, -0.10)), (0.40, (-0.05, 0.55)), (0.66, (-0.05, 0.55)),
-              (0.84, (-0.15, 2.45)), (1.60, (-0.15, 2.45))],
+    "Left": [(0.00, (0.20, 0.10)), (0.44, (0.20, 0.10)), (0.56, (0.26, 0.70)), (0.60, (0.26, 0.70)),
+             (0.74, (0.26, 1.10)), (0.92, (0.26, 1.10))],
+    "Right": [(0.00, (-0.20, -0.10)), (0.26, (-0.20, -0.10)), (0.36, (-0.10, 0.45)), (0.60, (-0.10, 0.45)),
+              (0.74, (-0.20, 2.15)), (0.92, (-0.20, 2.15))],
 }
-K_PE_YAW = {"Left": [(0.0, 20), (0.5, 20), (0.62, 200), (0.68, 250), (0.84, 360), (1.6, 360)],
-            "Right": [(0.0, 20), (0.3, 20), (0.40, 140), (0.66, 300), (0.84, 360), (1.6, 360)]}
+K_PE_YAW = {"Left": [(0.0, 20), (0.44, 20), (0.56, 230), (0.60, 260), (0.74, 360), (0.92, 360)],
+            "Right": [(0.0, 20), (0.26, 20), (0.36, 160), (0.60, 300), (0.74, 360), (0.92, 360)]}
+# chaves onde o movimento para (tangente zero): fim da antecipacao e o impacto
+PARADAS = (0.14, 0.76)
 
 def pe(lado, t):
     ks = K_PE[lado]
@@ -199,7 +206,7 @@ ult = None
 for i, (G, H) in enumerate(trilha):
     a = pontas[max(0, i - 1)]; b = pontas[min(N - 1, i + 1)]
     v = b - a; v = v - H * np.dot(v, H)
-    if np.linalg.norm(v) > 0.05 and i / FPS <= HIT + 0.2: ult = nrm(v)
+    if np.linalg.norm(v) > 0.05 and i / FPS <= HIT: ult = nrm(v)
     elif ult is not None: ult = nrm(ult - H * np.dot(ult, H))
     lam.append(ult)
 first = next(x for x in lam if x is not None)

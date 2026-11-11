@@ -2,10 +2,10 @@
 Built from '6000.0/staging' branch; Version is '6000.0.75f1 (26349cd2a5c8) revision 2503836'; Using compiler version '193933523'; Build Type 'Release'
 OS: 'Windows 11  (10.0.26300) Professional' Language: 'pt' Physical Memory: 32690 MB
 BatchMode: 0, IsHumanControllingUs: 1, StartBugReporterOnCrash: 1, Is64bit: 1
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User" at "2026-11-11T01:34:10.06379Z"
 System  architecture: x64
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User" at "2026-11-11T01:24:24.4758144Z"
 Process architecture: x64
-Date: 2026-11-11T01:24:24Z
+Date: 2026-11-11T01:34:10Z
 
 COMMAND LINE ARGUMENTS:
 F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Unity.exe
@@ -53,12 +53,12 @@ C:/Users/User/Documents/ModsValheim/UnityCeifadora
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gfx=262144"
-Player connection [8088]  Target information:
+Player connection [12120]  Target information:
 
-Player connection [8088]  * "[IP] 192.168.0.2 [Port] 55504 [Flags] 2 [Guid] 246635621 [EditorId] 246635621 [Version] 1048832 [Id] WindowsEditor(7,FABIANO) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [12120]  * "[IP] 192.168.0.2 [Port] 55504 [Flags] 2 [Guid] 1765688073 [EditorId] 1765688073 [Version] 1048832 [Id] WindowsEditor(7,FABIANO) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [8088] Host joined multi-casting on [225.0.0.222:54997]...
-Player connection [8088] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Player connection [12120] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [12120] Host joined alternative multi-casting on [225.0.0.222:34997]...
 Input System module state changed to: Initialized.
 [Physics::Module] Initialized fallback backend.
 [Physics::Module] Id: 0xdecafbad
@@ -66,12 +66,12 @@ Input System module state changed to: Initialized.
 [Licensing::Module] LicensingClient has failed validation; ignoring
 [Licensing::Client] Handshaking with LicensingClient:
   Version:                 1.18.3+d7ffd15
-  Session Id:              09fdf042b0ce44348500df4f2c0882b6
+  Session Id:              af69ca8206964e13830b6d5cbbeddaa8
   Correlation Id:          bc9c86adc69d597b5b29ef57f346d4e2
-  External correlation Id: 6371205265246888727
+  External correlation Id: 1460411631564680416
   Machine Id:              Xu3NORS/YUMPAYoXY0M70+B0Gn4=
-[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-User" (connect: 0.00s, validation: 0.00s, handshake: 0.04s)
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User-notifications" at "2026-11-11T01:24:24.516816Z"
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-User" (connect: 0.00s, validation: 0.00s, handshake: 0.08s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User-notifications" at "2026-11-11T01:34:10.1450945Z"
 [Licensing::Module] Error: Access token is unavailable; failed to update
 [Licensing::Client] Successfully resolved entitlement details
 [Licensing::Module] License group:
@@ -81,8 +81,8 @@ Input System module state changed to: Initialized.
   Expiration: Unlimited
 [Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
 [Licensing::Client] Successfully resolved entitlement details
-[Licensing::Module] Licensing Background thread has ended after 0.06s
-[Package Manager] Connected to IPC stream "Upm-16520" after 0.3 seconds.
+[Licensing::Module] Licensing Background thread has ended after 0.12s
+[Package Manager] Connected to IPC stream "Upm-24012" after 0.5 seconds.
 Library Redirect Path: Library/
 [Physics::Module] Selected backend.
 [Physics::Module] Name: PhysX
@@ -90,7 +90,7 @@ Library Redirect Path: Library/
 [Physics::Module] SDK Version: 4.1.2
 [Physics::Module] Integration Version: 1.0.0
 [Physics::Module] Threading Mode: Multi-Threaded
-Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
+Artifact Garbage Collection - Removed 2 unused hashed content filesRefreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Initialize engine version: 6000.0.75f1 (26349cd2a5c8)
 [Subsystems] Discovering subsystems at path F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/Resources/UnitySubsystems
@@ -107,7 +107,7 @@ Initialize mono
 Mono path[0] = 'F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/Managed'
 Mono path[1] = 'F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
 Mono config path = 'F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/MonoBleedingEdge/etc'
-Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56520
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56012
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 ImportWorker Server TCP listen port: 0
@@ -115,40 +115,40 @@ AcceleratorClientConnectionCallback - disconnected - :0
 Begin MonoManager ReloadAssembly
 Registering precompiled unity dll's ...
 Register platform support module: F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
-Registered in 0.002341 seconds.
-- Loaded All Assemblies, in  0.315 seconds
+Registered in 0.002724 seconds.
+- Loaded All Assemblies, in  0.353 seconds
 Native extension for WindowsStandalone target not found
 Package Manager log level set to [2]
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.285 seconds
-Domain Reload Profiling: 600ms
-	BeginReloadAssembly (120ms)
+- Finished resetting the current domain, in  0.337 seconds
+Domain Reload Profiling: 690ms
+	BeginReloadAssembly (138ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (0ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
 		CreateAndSetChildDomain (1ms)
-	RebuildCommonClasses (30ms)
-	RebuildNativeTypeToScriptingClass (10ms)
-	initialDomainReloadingComplete (38ms)
-	LoadAllAssembliesAndSetupDomain (117ms)
-		LoadAssemblies (120ms)
+	RebuildCommonClasses (36ms)
+	RebuildNativeTypeToScriptingClass (9ms)
+	initialDomainReloadingComplete (42ms)
+	LoadAllAssembliesAndSetupDomain (126ms)
+		LoadAssemblies (138ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (114ms)
-			TypeCache.Refresh (112ms)
-				TypeCache.ScanAssembly (102ms)
+		AnalyzeDomain (124ms)
+			TypeCache.Refresh (122ms)
+				TypeCache.ScanAssembly (111ms)
 			BuildScriptInfoCaches (0ms)
 			ResolveRequiredComponents (0ms)
-	FinalizeReload (286ms)
+	FinalizeReload (338ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (253ms)
+		SetupLoadedEditorAssemblies (304ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (18ms)
-			SetLoadedEditorAssemblies (3ms)
-			BeforeProcessingInitializeOnLoad (46ms)
-			ProcessInitializeOnLoadAttributes (120ms)
-			ProcessInitializeOnLoadMethodAttributes (65ms)
+			InitializePlatformSupportModulesInManaged (17ms)
+			SetLoadedEditorAssemblies (4ms)
+			BeforeProcessingInitializeOnLoad (57ms)
+			ProcessInitializeOnLoadAttributes (161ms)
+			ProcessInitializeOnLoadMethodAttributes (64ms)
 			AfterProcessingInitializeOnLoad (0ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
@@ -195,119 +195,103 @@ Application.AssetDatabase Initial Refresh Start
     com.unity.modules.subsystems@1.0.0 (location: C:\Users\User\Documents\ModsValheim\UnityCeifadora\Library\PackageCache\com.unity.modules.subsystems)
     com.unity.modules.hierarchycore@1.0.0 (location: C:\Users\User\Documents\ModsValheim\UnityCeifadora\Library\PackageCache\com.unity.modules.hierarchycore)
 [Subsystems] No new subsystems found in resolved package list.
-[Package Manager] Done registering packages in 0.02 seconds
-[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+[Package Manager] Done registering packages in 0.03 seconds
 Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
 WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\Tools\netcorerun\netcorerun.exe "F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1900b0aE.dag.json" "Library/Bee/1900b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
-WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-ExitCode: 4 Duration: 0s150ms
-Rebuilding DAG because FileSignature timestamp changed: Library/Bee/1900b0aE-inputdata.json
-*** Tundra requires additional run (0.07 seconds), 0 items updated, 151 evaluated
-ExitCode: 0 Duration: 2s117ms
-Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1900b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
-WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-ExitCode: 0 Duration: 4s760ms
-Finished compiling graph: 154 nodes, 709 flattened edges (687 ToBuild, 6 ToUse), maximum node priority 37
-[137/151    0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.rsp
-[148/151    4s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
-[149/151    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
-[150/151    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
-*** Tundra build success (4.73 seconds), 4 items updated, 151 evaluated
+ExitCode: 0 Duration: 0s81ms
+*** Tundra build success (0.04 seconds), 0 items updated, 151 evaluated
 Total cache size 271292
-AssetDatabase: script compilation time: 9.746489s
-Total cache size after purge 271292, took 00:00:00.0156799
+AssetDatabase: script compilation time: 0.473081s
+Total cache size after purge 271292, took 00:00:00.0145192
 Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  0.392 seconds
-Start importing Assets/Ceifada using Guid(4ec69b41abe6b1b4987c0e9b587a1668) (DefaultImporter) -> (artifact id: 'e4f81dd3e8cfa055b4d46a291c87cd0a') in 0.0245344 seconds
+- Loaded All Assemblies, in  0.250 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Native extension for WindowsStandalone target not found
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.321 seconds
-Domain Reload Profiling: 713ms
-	BeginReloadAssembly (169ms)
+- Finished resetting the current domain, in  0.346 seconds
+Domain Reload Profiling: 597ms
+	BeginReloadAssembly (182ms)
 		ExecutionOrderSort (0ms)
-		DisableScriptedObjects (10ms)
+		DisableScriptedObjects (14ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (27ms)
-	RebuildCommonClasses (29ms)
+		CreateAndSetChildDomain (29ms)
+	RebuildCommonClasses (30ms)
 	RebuildNativeTypeToScriptingClass (9ms)
-	initialDomainReloadingComplete (15ms)
-	LoadAllAssembliesAndSetupDomain (170ms)
-		LoadAssemblies (264ms)
+	initialDomainReloadingComplete (16ms)
+	LoadAllAssembliesAndSetupDomain (12ms)
+		LoadAssemblies (106ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (7ms)
-			TypeCache.Refresh (4ms)
-				TypeCache.ScanAssembly (1ms)
+		AnalyzeDomain (9ms)
+			TypeCache.Refresh (6ms)
+				TypeCache.ScanAssembly (2ms)
 			BuildScriptInfoCaches (1ms)
 			ResolveRequiredComponents (0ms)
-	FinalizeReload (321ms)
+	FinalizeReload (347ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (218ms)
+		SetupLoadedEditorAssemblies (236ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (10ms)
+			InitializePlatformSupportModulesInManaged (11ms)
 			SetLoadedEditorAssemblies (2ms)
-			BeforeProcessingInitializeOnLoad (69ms)
-			ProcessInitializeOnLoadAttributes (112ms)
-			ProcessInitializeOnLoadMethodAttributes (22ms)
+			BeforeProcessingInitializeOnLoad (78ms)
+			ProcessInitializeOnLoadAttributes (117ms)
+			ProcessInitializeOnLoadMethodAttributes (25ms)
 			AfterProcessingInitializeOnLoad (3ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
-		AwakeInstancesAfterBackupRestoration (11ms)
-Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter)Keyframe reduction: Ratio: 14.656774%;
- -> (artifact id: '9b6c37ca1182518360f5874226a4b93b') in 0.0637555 seconds
+		AwakeInstancesAfterBackupRestoration (8ms)
+Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: '03d65fd3ec5c49056c3e564471251b91') in 0.0422959 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=f9315d7aacaf7eb48935a224392a566f): Total: 11.053 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+Asset Pipeline Refresh (id=c598d718e6f8fb547976a874a34167a7): Total: 1.371 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
 	Summary:
-		Imports: total=2 (actual=2, local cache=0, cache server=0)
-		Asset DB Process Time: managed=7 ms, native=752 ms
-		Asset DB Callback time: managed=80 ms, native=61 ms
-		Scripting: domain reloads=1, domain reload time=393 ms, compile time=9749 ms, other=8 ms
+		Imports: total=1 (actual=1, local cache=0, cache server=0)
+		Asset DB Process Time: managed=4 ms, native=531 ms
+		Asset DB Callback time: managed=59 ms, native=40 ms
+		Scripting: domain reloads=1, domain reload time=252 ms, compile time=475 ms, other=7 ms
 		Project Asset Count: scripts=111, non-scripts=117
-		Asset File Changes: new=3, changed=3, moved=0, deleted=0
+		Asset File Changes: new=0, changed=1, moved=0, deleted=0
 		Scan Filter Count: 0
 	InvokeCustomDependenciesCallbacks: 0.002ms
-	InvokePackagesCallback: 53.808ms
-	ApplyChangesToAssetFolders: 0.505ms
-	Scan: 237.587ms
-	OnSourceAssetsModified: 0.748ms
-	CategorizeAssetsWithTransientArtifact: 0.307ms
-	ProcessAssetsWithTransientArtifactChanges: 0.863ms
-	CategorizeAssets: 1.702ms
-	ImportOutOfDateAssets: 416.419ms (-9426.454ms without children)
-		ImportManagerImport: 93.660ms (4.785ms without children)
-			ImportInProcess: 88.821ms
-			UpdateCategorizedAssets: 0.053ms
-		CompileScripts: 9748.664ms
+	InvokePackagesCallback: 36.131ms
+	ApplyChangesToAssetFolders: 1.006ms
+	Scan: 64.162ms
+	OnSourceAssetsModified: 0.935ms
+	CategorizeAssetsWithTransientArtifact: 0.284ms
+	ProcessAssetsWithTransientArtifactChanges: 1.037ms
+	CategorizeAssets: 3.561ms
+	ImportOutOfDateAssets: 391.250ms (-127.809ms without children)
+		ImportManagerImport: 43.450ms (0.813ms without children)
+			ImportInProcess: 42.608ms
+			UpdateCategorizedAssets: 0.028ms
+		CompileScripts: 475.220ms
 		ReloadNativeAssets: 0.001ms
-		UnloadImportedAssets: 0.346ms
-		ReloadImportedAssets: 0.001ms
-		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.045ms
-		InitializingProgressBar: 0.001ms
+		UnloadImportedAssets: 0.166ms
+		ReloadImportedAssets: 0.000ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.044ms
+		InitializingProgressBar: 0.002ms
 		PostProcessAllAssetNotificationsAddChangedAssets: 0.001ms
-		OnDemandSchedulerStart: 0.156ms
-	PostProcessAllAssets: 88.344ms
-	Hotreload: 1.115ms
-	GatherAllCurrentPrimaryArtifactRevisions: 0.002ms
-	UnloadStreamsBegin: 0.205ms
-	PersistCurrentRevisions: 0.055ms
+		OnDemandSchedulerStart: 0.176ms
+	PostProcessAllAssets: 64.340ms
+	Hotreload: 0.635ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.004ms
+	UnloadStreamsBegin: 0.324ms
+	PersistCurrentRevisions: 0.062ms
 	UnloadStreamsEnd: 0.001ms
-	GenerateScriptTypeHashes: 0.271ms
-	Untracked: 10250.872ms
+	GenerateScriptTypeHashes: 0.230ms
+	Untracked: 807.605ms
 
 Application.AssetDatabase Initial Refresh End
-Scanning for USB devices : 2.243ms
+Scanning for USB devices : 2.117ms
 Initializing Unity extensions:
 [MODES] ModeService[none].Initialize
 [MODES] ModeService[none].LoadModes
 [MODES] Loading mode Default (0) for mode-current-id-UnityCeifadora
 Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 81 unused Assets / (0.8 MB). Loaded Objects now: 595.
-Memory consumption went from 116.8 MB to 116.0 MB.
-Total: 4.392600 ms (FindLiveObjects: 0.030800 ms CreateObjectMapping: 0.004900 ms MarkObjects: 4.046100 ms  DeleteObjects: 0.310100 ms)
+Memory consumption went from 116.5 MB to 115.7 MB.
+Total: 4.525900 ms (FindLiveObjects: 0.043400 ms CreateObjectMapping: 0.005300 ms MarkObjects: 4.053500 ms  DeleteObjects: 0.423000 ms)
 
 [LAYOUT] About to load UserSettings\Layouts\default-6000.dwlt, keepMainWindow=False
 [LAYOUT] About to save layout C:\Users\User\Documents\ModsValheim\UnityCeifadora\UserSettings\Layouts\default-6000.dwlt
@@ -326,7 +310,7 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:43)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Asset Pipeline Refresh (id=5546d6628c98aca438a6e7ee4e29e269): Total: 0.024 seconds - Initiated by RefreshV2(ForceUpdate)
+Asset Pipeline Refresh (id=f332bbedfa56fce45b8dfe6310aa2035): Total: 0.014 seconds - Initiated by RefreshV2(ForceUpdate)
 [Ceifadora] FBX encontrados: 1
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -339,15 +323,15 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:46)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: '3906dc627c16337dcd9ef8347b20f379') in 0.1085142 seconds
+Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: '3067adc1a3a4a3eac9ee2dcf3da061b9') in 0.0246903 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=ea30d18ce69446540a07204a1b409754): Total: 0.159 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
-Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: '88a0039025b3e4ea0d0dbb2441fa4a72') in 0.0259671 seconds
+Asset Pipeline Refresh (id=b3be7ca9114d2304e9b98da593d0bba9): Total: 0.076 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: '7ae0c8fbbedbfcc94db39ef18167ed69') in 0.0244397 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=c1a7dac5592b90546a55323e05f9683d): Total: 0.050 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
-[Ceifadora] Ceifadora_Golpe3: ossos mapeados 22/22, avatar humanoide OK, clipe Ceifadora_Golpe3 1,60s humano=True
+Asset Pipeline Refresh (id=f09b2f7fae50a5d4c95c0b7865efe67a): Total: 0.049 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+[Ceifadora] Ceifadora_Golpe3: ossos mapeados 22/22, avatar humanoide OK, clipe Ceifadora_Golpe3 0,93s humano=True
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
 UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
@@ -359,59 +343,59 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:101)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Launched and connected shader compiler UnityShaderCompiler.exe after 0.04 seconds
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.01 seconds
 Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aESkipCompile.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssembliesAndTypeDB
 WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-Total cache size 271292
-ExitCode: 0 Duration: 0s99ms
+ExitCode: 0 Duration: 0s84ms
 *** Tundra build success (0.05 seconds), 0 items updated, 3 evaluated
-Total cache size after purge 271292, took 00:00:00.0132058
-Asset Pipeline Refresh (id=4881dbd1a13ab234f88c749c87bbc1a0): Total: 0.012 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+Total cache size 271292
+Total cache size after purge 271292, took 00:00:00.0105108
+Asset Pipeline Refresh (id=a3f0fdb6dff6b6b409294ebd9d084bde): Total: 0.012 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
 [ScriptCompilation] Requested script compilation because: Recompiling scripts for player build.
 BuildPlayer: start building target 19
 Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aP.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssembliesAndTypeDB
 WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-ExitCode: 0 Duration: 0s72ms
-[82/86      0s] CopyFiles Library/PlayerScriptAssemblies/Unity.Multiplayer.Center.Common.pdb
-[83/86      0s] CopyFiles Library/PlayerScriptAssemblies/Unity.Multiplayer.Center.Common.dll
+ExitCode: 0 Duration: 0s63ms
+[82/86      0s] CopyFiles Library/PlayerScriptAssemblies/Unity.Multiplayer.Center.Common.dll
+[83/86      0s] CopyFiles Library/PlayerScriptAssemblies/Unity.Multiplayer.Center.Common.pdb
 *** Tundra build success (0.04 seconds), 2 items updated, 86 evaluated
 Total cache size 271292
-Total cache size after purge 271292, took 00:00:00.0035488
+Total cache size after purge 271292, took 00:00:00.0042781
 
 ***Player size statistics***
-Total compressed size 90.4 KB. Total uncompressed size 139.6 KB.
-Asset Pipeline Refresh (id=ec0452f6a668c6b47998ba44d1b56a57): Total: 0.004 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+Total compressed size 60.0 KB. Total uncompressed size 106.7 KB.
+Asset Pipeline Refresh (id=59861ec0b6849a84db5e06e1a8343fb8): Total: 0.004 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 53 unused Assets / (3.1 KB). Loaded Objects now: 749.
-Memory consumption went from 194.8 MB to 194.8 MB.
-Total: 12.905700 ms (FindLiveObjects: 0.074300 ms CreateObjectMapping: 0.008500 ms MarkObjects: 12.773400 ms  DeleteObjects: 0.048600 ms)
+Unloading 53 unused Assets / (4.5 KB). Loaded Objects now: 749.
+Memory consumption went from 194.4 MB to 194.4 MB.
+Total: 8.545800 ms (FindLiveObjects: 0.068500 ms CreateObjectMapping: 0.007300 ms MarkObjects: 8.414900 ms  DeleteObjects: 0.054000 ms)
 
 
 ***Player size statistics***
 Total compressed size 1.5 KB. Total uncompressed size 4.1 KB.
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 0 unused Assets / (0 B). Loaded Objects now: 751.
-Memory consumption went from 196.0 MB to 196.0 MB.
-Total: 9.852800 ms (FindLiveObjects: 0.071200 ms CreateObjectMapping: 0.007400 ms MarkObjects: 9.770200 ms  DeleteObjects: 0.003200 ms)
+Memory consumption went from 193.9 MB to 193.9 MB.
+Total: 8.481800 ms (FindLiveObjects: 0.051700 ms CreateObjectMapping: 0.006200 ms MarkObjects: 8.416600 ms  DeleteObjects: 0.005600 ms)
 
 
 -------------------------------------------------------------------------------
 Bundle Name: ceifadora_golpes
-Compressed Size:90.4 kb
+Compressed Size:60.0 kb
 Uncompressed usage by category (Percentages based on user generated assets only):
 Textures               0.0 kb	 0.0% 
 Meshes                 0.0 kb	 0.0% 
-Animations             89.4 kb	 64.0% 
+Animations             56.4 kb	 52.9% 
 Sounds                 0.0 kb	 0.0% 
 Shaders                0.0 kb	 0.0% 
-Other Assets           13.5 kb	 9.7% 
+Other Assets           13.5 kb	 12.7% 
 Levels                 0.0 kb	 0.0% 
-File headers           36.8 kb	 26.3% 
-Total User Assets      139.6 kb	 100.0% 
-Complete build size    139.6 kb
+File headers           36.8 kb	 34.5% 
+Total User Assets      106.7 kb	 100.0% 
+Complete build size    106.7 kb
 Used Assets and files from the Resources folder, sorted by uncompressed size:
- 102.0 kb	 73.1% Assets/Ceifada/Ceifadora_Golpe3.fbx
- 0.8 kb	 0.6% AssetBundle Object
+ 69.1 kb	 64.8% Assets/Ceifada/Ceifadora_Golpe3.fbx
+ 0.8 kb	 0.8% AssetBundle Object
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 Bundle Name: Build
@@ -431,7 +415,7 @@ Used Assets and files from the Resources folder, sorted by uncompressed size:
  0.1 kb	 2.5% AssetBundle Object
  0.1 kb	 2.0% Built-in AssetBundleManifest: AssetBundleManifest
 -------------------------------------------------------------------------------
-[Ceifadora] pacote: Build\ceifadora_golpes (90 KB)
+[Ceifadora] pacote: Build\ceifadora_golpes (60 KB)
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
 UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)

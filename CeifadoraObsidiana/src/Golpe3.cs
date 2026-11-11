@@ -84,7 +84,8 @@ namespace CeifadoraObsidiana
                 if (t <= hv) return t * hw / hv;
                 return hw + (t - hv) * (novo.length - hw) / (orig.length - hv);
             };
-            novo.events = orig.events.Select(e => new AnimationEvent
+            // sem os eventos "Speed" do machado: o ritmo do golpe novo e o da propria animacao
+            novo.events = orig.events.Where(e => e.functionName != "Speed").Select(e => new AnimationEvent
             {
                 time = Mathf.Min(map(e.time), novo.length),
                 functionName = e.functionName, stringParameter = e.stringParameter, floatParameter = e.floatParameter,
