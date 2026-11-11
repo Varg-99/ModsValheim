@@ -15,7 +15,7 @@ namespace CeifadoraObsidiana
     {
         public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
-            CfgAfastarGiro, CfgAlturaGiro, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
+            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
         public static ConfigEntry<string> CfgAjusteEsq;
 
         public static void Init(ConfigFile c)
@@ -37,8 +37,10 @@ namespace CeifadoraObsidiana
                 "Nos giros a foice fica para fora do corpo, nas duas maos, com a ponta da lamina indo na frente.");
             CfgGiroEspecial = c.Bind("Encaixe", "GiroDaLaminaNosGiros", 0f,
                 "Ajuste extra (graus) da lamina nos giros, se ainda ficar virada errado. Ex.: 180.");
-            CfgAfastarGiro = c.Bind("Encaixe", "AfastarMaosNosGiros", 0.3f, "Nos giros, quanto as maos ficam a frente do peito (m).");
-            CfgAlturaGiro = c.Bind("Encaixe", "AlturaNosGiros", -0.3f, "Nos giros, altura das maos em relacao ao peito (m). Negativo = mais baixo.");
+            CfgAfastarGiro = c.Bind("Encaixe", "AfastarMaosDoPeitoNosGiros", 0.22f, "Nos giros, quanto as maos ficam a frente do peito (m).");
+            CfgVaoMaosGiro = c.Bind("Encaixe", "DistanciaEntreMaosNosGiros", 0.32f, "Nos giros, distancia entre as duas maos na haste (m).");
+            CfgCaboGiro = c.Bind("Encaixe", "CaboAtrasDaMaoNosGiros", 0.3f, "Nos giros, quanto do cabo sobra atras da mao de baixo (m).");
+            CfgAlturaGiro = c.Bind("Encaixe", "AlturaDasMaosNosGiros", -0.3f, "Nos giros, altura das maos em relacao ao peito (m). Negativo = mais baixo.");
             CfgGiroCostas = c.Bind("Encaixe", "GiroNasCostas", 0f, "Gira a foice nas costas em volta da haste (graus). 180 = lamina para o outro lado.");
             CfgInclinacaoCostas = c.Bind("Encaixe", "InclinacaoNasCostas", 30f, "Inclinacao da foice nas costas (graus). Negativo = para o outro lado.");
             CfgAfastarCostas = c.Bind("Encaixe", "AfastarDasCostas", 0.2f, "Distancia da foice ate as costas (m).");
@@ -132,7 +134,7 @@ namespace CeifadoraObsidiana
         bool _procurou;
         Character _dono;
         Vector3 _radial, _radialAnt;
-        float _sinal, _pesoGiro;
+        float _sinal, _pesoGiro, _lado = 1f;
 
         float Escala => AjusteFoice.CfgComprimento.Value / Mathf.Max(0.1f, ModeloFoice.ComprimentoOriginal);
 
@@ -142,7 +144,8 @@ namespace CeifadoraObsidiana
             if (AjusteFoice.CfgComprimento == null) return;
             if (NasCostas)
             {
-                float ps = transform.parent != null ? Mathf.Max(1e-3f, transform.parent.lossyScale.x) : 1f;
+                float ps = transform.parent != null ? Mathf.Abs(transform.parent.lossyScale.y) : 1f;
+                if (ps < 0.05f || ps > 20f) ps = 1f;
                 transform.localScale = Vector3.one * (Escala / ps);
                 return;
             }
@@ -230,49 +233,53 @@ namespace CeifadoraObsidiana
             }
 
             // --- giros: foice para fora do corpo, nas duas maos, ponta da lamina na frente ---
-            if (_pesoGiro > 0f && _peito != null)
+            if (_pesoGiro > 0f && _peito != null && _ro != null && _lo != null)
             {
                 var up = _dono.transform.up;
                 var c = _peito.position;
-                // mao que leva a arma = a mais afastada do peito
-                var hr = Vector3.ProjectOnPlane(_r.position - c, up);
-                var hl = Vector3.ProjectOnPlane(_l.position - c, up);
-                var agora = (hr.sqrMagnitude >= hl.sqrMagnitude ? hr : hl);
+                // frente do peito (segue o corpo girando; nao depende de qual mao esta solta)
+                var agora = Vector3.Cross(_ro.position - _lo.position, up);
+                agora = Vector3.ProjectOnPlane(agora, up);
                 agora = agora.sqrMagnitude > 1e-4f ? agora.normalized : _dono.transform.forward;
                 if (_radial.sqrMagnitude < 0.5f) { _radial = agora; _radialAnt = agora; }
-                // sentido do giro (medido, suavizado)
+                // sentido do giro (medido e suavizado; so troca se o giro trocar de verdade)
                 float s = Vector3.Dot(agora - _radialAnt, Vector3.Cross(up, _radialAnt)) / dt;
-                _sinal = Mathf.Lerp(_sinal, s, 1f - Mathf.Exp(-8f * dt));
+                _sinal = Mathf.Lerp(_sinal, s, 1f - Mathf.Exp(-6f * dt));
+                if (_sinal > 1f) _lado = 1f; else if (_sinal < -1f) _lado = -1f;
                 _radialAnt = agora;
-                _radial = Vector3.Slerp(_radial, agora, 1f - Mathf.Exp(-25f * dt)).normalized;
+                _radial = Vector3.Slerp(_radial, agora, 1f - Mathf.Exp(-20f * dt)).normalized;
 
-                var tang = Vector3.Cross(up, _radial) * (_sinal >= 0f ? 1f : -1f);
-                var haste = (_radial - tang * 0.2f - up * 0.12f).normalized;
+                var tang = Vector3.Cross(up, _radial) * _lado;
+                var haste = (_radial - tang * 0.25f - up * 0.1f).normalized;
                 var maoBaixo = c + _radial * AjusteFoice.CfgAfastarGiro.Value + up * AjusteFoice.CfgAlturaGiro.Value;
-                var cabo = maoBaixo - haste * AjusteFoice.CfgPegadaBaixo.Value;
-                var maoCima = cabo + haste * AjusteFoice.CfgPegadaCima.Value;
+                float vao = Mathf.Clamp(AjusteFoice.CfgVaoMaosGiro.Value, 0.1f, 0.8f);
+                var maoCima = maoBaixo + haste * vao;
                 var lado = Vector3.ProjectOnPlane(tang, haste);
                 if (lado.sqrMagnitude < 1e-4f) lado = Vector3.ProjectOnPlane(_dono.transform.forward, haste);
                 var rotG = Quaternion.LookRotation(lado.normalized, haste) * Quaternion.AngleAxis(AjusteFoice.CfgGiroEspecial.Value, Vector3.up);
 
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotG, _pesoGiro);
-                transform.position = Vector3.Lerp(transform.position, cabo, _pesoGiro);
-
+                // no 3o golpe o corpo esta espelhado: a mao que leva a arma e a esquerda
+                bool esquerdaLeva = !especial && Golpes.PesoGiro(_anim) > 0.5f;
                 if (AjusteFoice.CfgPuxarMao.Value)
                 {
-                    // a mao mais afastada pega em cima (perto da lamina), a outra embaixo
-                    bool direitaFora = hr.sqrMagnitude >= hl.sqrMagnitude;
-                    AjusteFoice.IKBraco(_ro, _rc, _r, direitaFora ? maoCima : maoBaixo, PalmaDireita(), _pesoGiro);
-                    AjusteFoice.IKBraco(_lo, _lc, _l, direitaFora ? maoBaixo : maoCima, PalmaEsquerda(), _pesoGiro);
+                    AjusteFoice.IKBraco(_ro, _rc, _r, esquerdaLeva ? maoBaixo : maoCima, PalmaDireita(), _pesoGiro);
+                    AjusteFoice.IKBraco(_lo, _lc, _l, esquerdaLeva ? maoCima : maoBaixo, PalmaEsquerda(), _pesoGiro);
                 }
+                // a haste passa pela mao de baixo de verdade (mesmo se o braco nao alcancar o alvo)
+                var palmaBaixo = esquerdaLeva ? PalmaDireita() : PalmaEsquerda();
+                if (!AjusteFoice.CfgPuxarMao.Value) palmaBaixo = maoBaixo;
+                var cabo = palmaBaixo - haste * AjusteFoice.CfgCaboGiro.Value;
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotG, _pesoGiro);
+                transform.position = Vector3.Lerp(transform.position, cabo, _pesoGiro);
             }
-            else { _radial = Vector3.zero; _sinal = 0f; }
+            else { _radial = Vector3.zero; _sinal = 0f; _lado = 1f; }
         }
 
         // Nas costas: diagonal atras do peito, lamina no alto, deitada rente as costas.
         void Costas()
         {
-            if (_peito == null || _dono == null) return;
+            if (_peito == null || _dono == null) { if (!_logou) { _logou = true; Jotunn.Logger.LogWarning($"[CeifadoraObsidiana] Costas: peito {(_peito != null)}, dono {(_dono != null)}."); } return; }
             var raiz = _dono.transform;
             var up = raiz.up; var frente = raiz.forward; var dir = raiz.right;
             var haste = Quaternion.AngleAxis(AjusteFoice.CfgInclinacaoCostas.Value, frente) * up;
@@ -281,6 +288,12 @@ namespace CeifadoraObsidiana
             if (lado.sqrMagnitude < 1e-4f) lado = -frente;
             transform.rotation = Quaternion.LookRotation(lado.normalized, haste) * Quaternion.AngleAxis(AjusteFoice.CfgGiroCostas.Value, Vector3.up);
             transform.position = centro - haste * (AjusteFoice.CfgComprimento.Value * 0.5f);
+            if (!_logou)
+            {
+                _logou = true;
+                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Costas: pai {transform.parent?.name} escala do pai {transform.parent?.lossyScale}, escala final {transform.lossyScale}, distancia ao peito {(transform.position - _peito.position).magnitude:0.00} m, ativo {gameObject.activeInHierarchy}.");
+            }
         }
+        bool _logou;
     }
 }
