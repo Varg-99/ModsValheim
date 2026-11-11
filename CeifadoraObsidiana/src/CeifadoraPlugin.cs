@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.2.3";
+        public const string PluginVersion = "3.2.4";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -417,9 +417,27 @@ namespace CeifadoraObsidiana
             }
             else TintObsidian(item.ItemPrefab);
 
+            // cada foice com a sua propria lista de efeitos (nunca dividida com outra foice);
+            // respingo de sangue so nas foices de sangue
+            shared.m_hitEffect = SemSangue(shared.m_hitEffect);
+            foreach (var at in new[] { shared.m_attack, shared.m_secondaryAttack })
+            {
+                var f = Traverse.Create(at).Field("m_hitEffect");
+                if (at != null && f.FieldExists()) f.SetValue(SemSangue(f.GetValue<EffectList>()));
+            }
             if (v.Sangue) AdicionarSangue(shared);
             ItemManager.Instance.AddItem(item);
             Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
+        }
+
+        /// Copia da lista de efeitos sem nenhum efeito de sangue.
+        private static EffectList SemSangue(EffectList fx)
+        {
+            var nova = new EffectList();
+            nova.m_effectPrefabs = (fx?.m_effectPrefabs ?? new EffectList.EffectData[0])
+                .Where(e => e != null && !(e.m_prefab != null && e.m_prefab.name.IndexOf("blood", System.StringComparison.OrdinalIgnoreCase) >= 0))
+                .ToArray();
+            return nova;
         }
 
         /// Respingo de sangue (efeito do proprio jogo) quando a foice acerta.

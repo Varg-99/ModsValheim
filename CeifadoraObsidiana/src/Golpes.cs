@@ -30,8 +30,11 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<bool> CfgEspecial3;
         public static bool Especial3 => Modo4 && CfgEspecial3 != null && CfgEspecial3.Value;
         public static bool UmaMao => Modo4 && ((EspecialAtual && Especial3) || (!EspecialAtual && NivelAtual >= 2));
+        static ConfigFile _cfg; static System.DateTime _cfgData; static float _proxConf; static string _ultAcertos, _ultMapa;
+        static bool _remontar;
         public static void InitModo4(ConfigFile c)
         {
+            _cfg = c;
             CfgModo4 = c.Bind("Combo4", "Ativar", true, "Combo de 4 golpes (2 do machado + 2 do Mixamo) e especial em 3 partes (aperte o especial 3 vezes).");
             CfgEspecial3 = c.Bind("Combo4", "EspecialEm3Partes", false,
                 "false = especial e o giro da atgeir (foice para fora do corpo); true = especial do Mixamo em 3 partes. Precisa reiniciar.");
@@ -40,7 +43,7 @@ namespace CeifadoraObsidiana
                 "Greatsword BaseAttack (1)=Especial_1; Greatsword BaseAttack (2)=Especial_2; Greatsword BaseAttack (3)=Especial_3",
                 "Qual animacao entra em cada golpe (original=nova). Precisa reiniciar.");
             CfgAcertos4 = c.Bind("Combo4", "Acertos4", "Golpe_Mixamo_360=0.92; Golpe_Mixamo_4=0.68; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
-                "Segundo do dano em cada animacao do Mixamo. Precisa reiniciar.");
+                "Segundo do dano em cada animacao do Mixamo. Pode mudar com o jogo aberto: salve o arquivo e o proximo golpe ja usa o valor novo.");
             CfgVelMixamo = c.Bind("Combo4", "VelocidadeMixamo", 1.15f, "Velocidade dos golpes 3, 4 e do especial.");
             CfgDano3 = c.Bind("Combo4", "Dano3oGolpe", 1.3f, "Multiplicador de dano do 3o golpe.");
             CfgDano4 = c.Bind("Combo4", "Dano4oGolpe", 2.0f, "Multiplicador de dano do 4o golpe (o ultimo).");
@@ -119,10 +122,40 @@ namespace CeifadoraObsidiana
         static readonly Dictionary<Animator, RuntimeAnimatorController> _originais = new Dictionary<Animator, RuntimeAnimatorController>();
 
         static bool _listou;
+        /// Le de novo o arquivo de configuracao quando ele e salvo com o jogo aberto.
+        static void VigiarConfig(Player p)
+        {
+            if (_cfg == null || Time.unscaledTime < _proxConf) return;
+            _proxConf = Time.unscaledTime + 1f;
+            try
+            {
+                var d = System.IO.File.GetLastWriteTimeUtc(_cfg.ConfigFilePath);
+                if (_cfgData == default(System.DateTime)) { _cfgData = d; _ultAcertos = CfgAcertos4.Value; _ultMapa = CfgMapa4.Value; return; }
+                if (d == _cfgData) return;
+                _cfgData = d;
+                _cfg.Reload();
+            }
+            catch (System.Exception e) { Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Nao consegui reler a configuracao: " + e.Message); return; }
+            if (CfgAcertos4.Value != _ultAcertos || CfgMapa4.Value != _ultMapa)
+            {
+                _ultAcertos = CfgAcertos4.Value; _ultMapa = CfgMapa4.Value; _remontar = true;
+                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Acertos4 recarregado: " + _ultAcertos);
+            }
+            p.Message(MessageHud.MessageType.TopLeft, "Ceifadora: configuracao recarregada");
+        }
+
         public static void Atualizar(Player p)
         {
+            VigiarConfig(p);
             var anim = AnimatorDe(p);
             if (anim == null || anim.runtimeAnimatorController == null) return;
+            if (_remontar && !p.InAttack())
+            {
+                // volta ao controlador original e descarta os montados: logo abaixo monta de novo com os valores novos
+                _remontar = false;
+                foreach (var kv in _originais.ToList()) if (kv.Key != null) TrocarMantendo(kv.Key, kv.Value);
+                _originais.Clear(); _cache.Clear();
+            }
             if (!_listou && ComFoice(p))
             {
                 _listou = true;

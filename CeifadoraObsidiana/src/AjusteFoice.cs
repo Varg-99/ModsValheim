@@ -14,7 +14,7 @@ namespace CeifadoraObsidiana
 {
     internal static class AjusteFoice
     {
-        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo;
+        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo, CfgEsqParado;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
             CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
         public static ConfigEntry<string> CfgAjusteEsq;
@@ -39,6 +39,7 @@ namespace CeifadoraObsidiana
             CfgMaosNaHaste = c.Bind("Encaixe", "MaosVaoAteAHaste", true, "No fim de cada quadro as maos vao ate a haste (a foice fica onde esta).");
             CfgLaminaMixamo = c.Bind("Encaixe", "LaminaAcompanhaOCorte", true, "Em todos os golpes: a lamina gira em volta da haste para ficar no plano do corte, apontando para onde ele vai.");
             CfgGiroLaminaMixamo = c.Bind("Encaixe", "GiroDaLaminaNoCorte", 0f, "Ajuste extra (graus) da lamina nesses golpes, se ficar virada errado. Ex.: 180.");
+            CfgEsqParado = c.Bind("Encaixe", "MaoEsquerdaNaHasteParado", true, "Parado ou andando: a mao esquerda tambem segura a haste (false = como a atgeir, so a direita).");
             CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao direita: 0 = pulso, 1 = nos dos dedos.");
             CfgAjusteEsq = c.Bind("Encaixe", "AjusteMaoEsquerda", "0,0,0",
                 "Ajuste fino do ponto da mao esquerda, em centimetros: para os dedos, para o polegar, para a palma. Ex.: 2,0,1");
@@ -418,7 +419,7 @@ namespace CeifadoraObsidiana
             var pl = PalmaEsquerda();
             var alvoL = Ponto(pl);
             float dl = (alvoL - pl).magnitude;
-            float wl = atacando ? Mathf.Clamp01((0.6f - dl) / 0.2f) : Mathf.Clamp01((0.3f - dl) / 0.1f);
+            float wl = atacando || AjusteFoice.CfgEsqParado.Value ? Mathf.Clamp01((0.6f - dl) / 0.2f) : Mathf.Clamp01((0.3f - dl) / 0.1f);
             AjusteFoice.IKBraco(_lo, _lc, _l, alvoL, pl, wl);
             transform.SetPositionAndRotation(pos, rot);
         }
