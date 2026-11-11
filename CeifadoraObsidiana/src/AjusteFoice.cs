@@ -14,9 +14,9 @@ namespace CeifadoraObsidiana
 {
     internal static class AjusteFoice
     {
-        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste;
+        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
-            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
+            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
         public static ConfigEntry<string> CfgAjusteEsq;
 
         public static void Init(ConfigFile c)
@@ -37,6 +37,8 @@ namespace CeifadoraObsidiana
             CfgPuxarMao = c.Bind("Encaixe", "PuxarMaoParaHaste", true,
                 "Durante os golpes, se a animacao soltar uma mao, ela e puxada de volta para a haste.");
             CfgMaosNaHaste = c.Bind("Encaixe", "MaosVaoAteAHaste", true, "No fim de cada quadro as maos vao ate a haste (a foice fica onde esta).");
+            CfgLaminaMixamo = c.Bind("Encaixe", "LaminaAcompanhaOCorte", true, "Golpes 3, 4 e especial: a lamina gira em volta da haste para apontar para onde o corte vai.");
+            CfgGiroLaminaMixamo = c.Bind("Encaixe", "GiroDaLaminaNoCorte", 0f, "Ajuste extra (graus) da lamina nesses golpes, se ficar virada errado. Ex.: 180.");
             CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao direita: 0 = pulso, 1 = nos dos dedos.");
             CfgAjusteEsq = c.Bind("Encaixe", "AjusteMaoEsquerda", "0,0,0",
                 "Ajuste fino do ponto da mao esquerda, em centimetros: para os dedos, para o polegar, para a palma. Ex.: 2,0,1");
@@ -339,6 +341,7 @@ namespace CeifadoraObsidiana
 
             // --- por ultimo: as maos vao ate a haste (a foice nao se mexe para as maos) ---
             if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando && !umaMao, umaMao);
+            if (umaMao && AjusteFoice.CfgLaminaMixamo.Value) LaminaNoCorte(dt); else _temPonta = false;
             Gravar();
         }
 
@@ -416,6 +419,28 @@ namespace CeifadoraObsidiana
             float wl = atacando ? Mathf.Clamp01((0.6f - dl) / 0.2f) : Mathf.Clamp01((0.3f - dl) / 0.1f);
             AjusteFoice.IKBraco(_lo, _lc, _l, alvoL, pl, wl);
             transform.SetPositionAndRotation(pos, rot);
+        }
+
+        // Golpes do Mixamo: gira a foice em volta da propria haste para a lamina apontar para onde
+        // a ponta esta indo (acompanha o angulo do corte). A haste e as maos nao mudam.
+        Vector3 _pontaAnt, _ladoMix;
+        bool _temPonta;
+        void LaminaNoCorte(float dt)
+        {
+            var haste = transform.up;
+            var ponta = transform.position + haste * AjusteFoice.CfgComprimento.Value * 0.9f;
+            if (!_temPonta) { _temPonta = true; _pontaAnt = ponta; _ladoMix = Vector3.zero; return; }
+            var v = (ponta - _pontaAnt) / dt; _pontaAnt = ponta;
+            var lado = Vector3.ProjectOnPlane(v, haste);
+            if (lado.magnitude > 2f)
+                _ladoMix = _ladoMix.sqrMagnitude < 0.5f ? lado.normalized : Vector3.Slerp(_ladoMix, lado.normalized, 1f - Mathf.Exp(-18f * dt)).normalized;
+            if (_ladoMix.sqrMagnitude < 0.5f) return;
+            var alvo = Quaternion.AngleAxis(AjusteFoice.CfgGiroLaminaMixamo.Value, haste) * Vector3.ProjectOnPlane(_ladoMix, haste);
+            var atual = Vector3.ProjectOnPlane(transform.forward, haste);
+            if (atual.sqrMagnitude < 1e-4f || alvo.sqrMagnitude < 1e-4f) return;
+            var pos = transform.position;
+            transform.rotation = Quaternion.FromToRotation(atual, alvo) * transform.rotation;
+            transform.position = pos;
         }
 
         /// Gira e inclina a coluna (3 ossos) para o tronco "puxar" a foice: vira para o lado da haste

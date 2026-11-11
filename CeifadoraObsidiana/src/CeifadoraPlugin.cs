@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.0.0";
+        public const string PluginVersion = "3.0.1";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";

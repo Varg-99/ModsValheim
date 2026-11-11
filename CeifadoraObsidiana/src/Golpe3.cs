@@ -104,6 +104,16 @@ namespace CeifadoraObsidiana
                 functionName = e.functionName, stringParameter = e.stringParameter, floatParameter = e.floatParameter,
                 intParameter = e.intParameter, objectReferenceParameter = e.objectReferenceParameter, messageOptions = e.messageOptions,
             }).ToArray();
+            // so libera o proximo golpe perto do fim (apertar varias vezes nao corta o golpe no meio)
+            if (acerto > 0f)
+            {
+                var evs = novo.events;
+                float fimChain = Mathf.Max(hw + 0.05f, novo.length * 0.85f);
+                for (int i = 0; i < evs.Length; i++)
+                    if (evs[i].functionName == "Chain" || evs[i].functionName == "AttackDone" || evs[i].functionName == "Stop")
+                        evs[i].time = Mathf.Max(evs[i].time, fimChain);
+                novo.events = evs;
+            }
             Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] eventos {orig.name} ({orig.length:0.00}s) -> {novo.name} ({novo.length:0.00}s): " +
                 string.Join(", ", novo.events.Select(e => e.functionName + "@" + e.time.ToString("0.00"))));
         }

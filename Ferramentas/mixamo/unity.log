@@ -3,9 +3,9 @@ Built from '6000.0/staging' branch; Version is '6000.0.75f1 (26349cd2a5c8) revis
 OS: 'Windows 11  (10.0.26300) Professional' Language: 'pt' Physical Memory: 32690 MB
 BatchMode: 0, IsHumanControllingUs: 1, StartBugReporterOnCrash: 1, Is64bit: 1
 System  architecture: x64
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User" at "2026-11-11T04:36:44.8492178Z"
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User" at "2026-11-11T04:47:05.6812531Z"
 Process architecture: x64
-Date: 2026-11-11T04:36:44Z
+Date: 2026-11-11T04:47:05Z
 
 COMMAND LINE ARGUMENTS:
 F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Unity.exe
@@ -53,12 +53,12 @@ C:/Users/User/Documents/ModsValheim/UnityCeifadora
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gfx=262144"
-Player connection [16488]  Target information:
+Player connection [1564]  Target information:
 
-Player connection [16488]  * "[IP] 192.168.0.2 [Port] 55504 [Flags] 2 [Guid] 1507632058 [EditorId] 1507632058 [Version] 1048832 [Id] WindowsEditor(7,FABIANO) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [1564]  * "[IP] 192.168.0.2 [Port] 55504 [Flags] 2 [Guid] 223798053 [EditorId] 223798053 [Version] 1048832 [Id] WindowsEditor(7,FABIANO) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [16488] Host joined multi-casting on [225.0.0.222:54997]...
-Player connection [16488] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Player connection [1564] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [1564] Host joined alternative multi-casting on [225.0.0.222:34997]...
 Input System module state changed to: Initialized.
 [Physics::Module] Initialized fallback backend.
 [Physics::Module] Id: 0xdecafbad
@@ -66,12 +66,12 @@ Input System module state changed to: Initialized.
 [Licensing::Module] LicensingClient has failed validation; ignoring
 [Licensing::Client] Handshaking with LicensingClient:
   Version:                 1.18.3+d7ffd15
-  Session Id:              fbe494c28a60483b8c8c48b43de4f6f2
+  Session Id:              89b9f80376e6461bbabed12a32f8454e
   Correlation Id:          bc9c86adc69d597b5b29ef57f346d4e2
-  External correlation Id: 7524505015529217522
+  External correlation Id: 6741227263628196307
   Machine Id:              Xu3NORS/YUMPAYoXY0M70+B0Gn4=
-[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-User" (connect: 0.00s, validation: 0.00s, handshake: 0.03s)
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User-notifications" at "2026-11-11T04:36:44.8847235Z"
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-User" (connect: 0.00s, validation: 0.00s, handshake: 0.06s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-User-notifications" at "2026-11-11T04:47:05.7399291Z"
 [Licensing::Module] Error: Access token is unavailable; failed to update
 [Licensing::Client] Successfully resolved entitlement details
 [Licensing::Module] License group:
@@ -81,8 +81,8 @@ Input System module state changed to: Initialized.
   Expiration: Unlimited
 [Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
 [Licensing::Client] Successfully resolved entitlement details
-[Licensing::Module] Licensing Background thread has ended after 0.04s
-[Package Manager] Connected to IPC stream "Upm-6892" after 0.3 seconds.
+[Licensing::Module] Licensing Background thread has ended after 0.07s
+[Package Manager] Connected to IPC stream "Upm-8936" after 0.4 seconds.
 Library Redirect Path: Library/
 [Physics::Module] Selected backend.
 [Physics::Module] Name: PhysX
@@ -90,7 +90,7 @@ Library Redirect Path: Library/
 [Physics::Module] SDK Version: 4.1.2
 [Physics::Module] Integration Version: 1.0.0
 [Physics::Module] Threading Mode: Multi-Threaded
-Artifact Garbage Collection - Removed 3 unused hashed content filesRefreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
+Artifact Garbage Collection - Removed 6 unused hashed content filesRefreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Initialize engine version: 6000.0.75f1 (26349cd2a5c8)
 [Subsystems] Discovering subsystems at path F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/Resources/UnitySubsystems
@@ -107,7 +107,7 @@ Initialize mono
 Mono path[0] = 'F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/Managed'
 Mono path[1] = 'F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
 Mono config path = 'F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/MonoBleedingEdge/etc'
-Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56892
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56936
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 ImportWorker Server TCP listen port: 0
@@ -115,40 +115,40 @@ AcceleratorClientConnectionCallback - disconnected - :0
 Begin MonoManager ReloadAssembly
 Registering precompiled unity dll's ...
 Register platform support module: F:/SteamLibrary/UnityEditors/6000.0.75f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
-Registered in 0.002299 seconds.
-- Loaded All Assemblies, in  0.316 seconds
+Registered in 0.002784 seconds.
+- Loaded All Assemblies, in  0.386 seconds
 Native extension for WindowsStandalone target not found
 Package Manager log level set to [2]
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.277 seconds
-Domain Reload Profiling: 593ms
-	BeginReloadAssembly (124ms)
+- Finished resetting the current domain, in  0.365 seconds
+Domain Reload Profiling: 750ms
+	BeginReloadAssembly (160ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (0ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
 		CreateAndSetChildDomain (1ms)
-	RebuildCommonClasses (31ms)
-	RebuildNativeTypeToScriptingClass (10ms)
-	initialDomainReloadingComplete (38ms)
-	LoadAllAssembliesAndSetupDomain (113ms)
-		LoadAssemblies (123ms)
+	RebuildCommonClasses (53ms)
+	RebuildNativeTypeToScriptingClass (12ms)
+	initialDomainReloadingComplete (40ms)
+	LoadAllAssembliesAndSetupDomain (119ms)
+		LoadAssemblies (158ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (111ms)
-			TypeCache.Refresh (109ms)
-				TypeCache.ScanAssembly (100ms)
+		AnalyzeDomain (117ms)
+			TypeCache.Refresh (115ms)
+				TypeCache.ScanAssembly (105ms)
 			BuildScriptInfoCaches (0ms)
 			ResolveRequiredComponents (0ms)
-	FinalizeReload (278ms)
+	FinalizeReload (365ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (246ms)
+		SetupLoadedEditorAssemblies (328ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (17ms)
-			SetLoadedEditorAssemblies (4ms)
-			BeforeProcessingInitializeOnLoad (48ms)
-			ProcessInitializeOnLoadAttributes (118ms)
-			ProcessInitializeOnLoadMethodAttributes (59ms)
+			InitializePlatformSupportModulesInManaged (18ms)
+			SetLoadedEditorAssemblies (5ms)
+			BeforeProcessingInitializeOnLoad (51ms)
+			ProcessInitializeOnLoadAttributes (173ms)
+			ProcessInitializeOnLoadMethodAttributes (81ms)
 			AfterProcessingInitializeOnLoad (0ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
@@ -196,113 +196,94 @@ Application.AssetDatabase Initial Refresh Start
     com.unity.modules.hierarchycore@1.0.0 (location: C:\Users\User\Documents\ModsValheim\UnityCeifadora\Library\PackageCache\com.unity.modules.hierarchycore)
 [Subsystems] No new subsystems found in resolved package list.
 [Package Manager] Done registering packages in 0.03 seconds
-[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
 Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
 WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-ExitCode: 0 Duration: 1s126ms
-[148/151    1s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
-[149/151    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
-[150/151    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
-*** Tundra build success (1.09 seconds), 3 items updated, 151 evaluated
+ExitCode: 0 Duration: 0s76ms
+*** Tundra build success (0.04 seconds), 0 items updated, 151 evaluated
 Total cache size 271292
-AssetDatabase: script compilation time: 1.473063s
-Total cache size after purge 271292, took 00:00:00.0106189
+AssetDatabase: script compilation time: 0.439787s
+Total cache size after purge 271292, took 00:00:00.0135987
 Begin MonoManager ReloadAssembly
-- Loaded All Assemblies, in  0.291 seconds
+- Loaded All Assemblies, in  0.237 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Native extension for WindowsStandalone target not found
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.346 seconds
-Domain Reload Profiling: 637ms
-	BeginReloadAssembly (170ms)
+- Finished resetting the current domain, in  0.330 seconds
+Domain Reload Profiling: 567ms
+	BeginReloadAssembly (173ms)
 		ExecutionOrderSort (0ms)
-		DisableScriptedObjects (10ms)
+		DisableScriptedObjects (14ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (27ms)
-	RebuildCommonClasses (28ms)
+		CreateAndSetChildDomain (29ms)
+	RebuildCommonClasses (29ms)
 	RebuildNativeTypeToScriptingClass (9ms)
-	initialDomainReloadingComplete (14ms)
-	LoadAllAssembliesAndSetupDomain (69ms)
-		LoadAssemblies (163ms)
+	initialDomainReloadingComplete (15ms)
+	LoadAllAssembliesAndSetupDomain (10ms)
+		LoadAssemblies (101ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
 		AnalyzeDomain (7ms)
-			TypeCache.Refresh (5ms)
-				TypeCache.ScanAssembly (2ms)
+			TypeCache.Refresh (4ms)
+				TypeCache.ScanAssembly (1ms)
 			BuildScriptInfoCaches (1ms)
 			ResolveRequiredComponents (0ms)
-	FinalizeReload (346ms)
+	FinalizeReload (331ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (230ms)
+		SetupLoadedEditorAssemblies (226ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (11ms)
-			SetLoadedEditorAssemblies (2ms)
-			BeforeProcessingInitializeOnLoad (70ms)
-			ProcessInitializeOnLoadAttributes (113ms)
-			ProcessInitializeOnLoadMethodAttributes (32ms)
-			AfterProcessingInitializeOnLoad (3ms)
+			InitializePlatformSupportModulesInManaged (13ms)
+			SetLoadedEditorAssemblies (3ms)
+			BeforeProcessingInitializeOnLoad (76ms)
+			ProcessInitializeOnLoadAttributes (112ms)
+			ProcessInitializeOnLoadMethodAttributes (22ms)
+			AfterProcessingInitializeOnLoad (2ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
-		AwakeInstancesAfterBackupRestoration (13ms)
-Start importing Assets/Ceifada/Golpe_Mixamo_4.cortes using Guid(b0fa1bd8f86179a418e08060f9eba708) (DefaultImporter) -> (artifact id: '5341c88c99b9c2a4faf1ea6e270d1e57') in 0.0613119 seconds
-Start importing Assets/Ceifada/Golpe_Mixamo_360.cortes using Guid(535df4471480137488f9ffdb10a9c6af) (DefaultImporter) -> (artifact id: '4aa505c925dfe4777c053ff0495c1136') in 0.0079177 seconds
-Start importing Assets/Ceifada/Especial.cortes using Guid(4b36fe0973462c74c82dd290f45d2dd8) (DefaultImporter) -> (artifact id: '7bf098e82188765b138168f331a7a3d5') in 0.0085755 seconds
-Start importing Assets/Ceifada/Golpe_Mixamo_4.fbx using Guid(e178d3c2d797ec443a905d64ecdec1ea) (FBXImporter)Launched and connected shader compiler UnityShaderCompiler.exe after 0.01 seconds
-Keyframe reduction: Ratio: 50.963055%;
- -> (artifact id: '75c676295aba39f29861b3458ff489d4') in 0.2105501 seconds
-Start importing Assets/Ceifada/Especial.fbx using Guid(06bfc31df91224342a85c0cfc9444b28) (FBXImporter)Keyframe reduction: Ratio: 66.832161%;
- -> (artifact id: '0eafd22454745d5cdd28a23c20ca0b11') in 0.1345774 seconds
-Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
-Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=ff6d643ccf977ed43ab17ff48c975cba): Total: 2.889 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+		AwakeInstancesAfterBackupRestoration (8ms)
+Asset Pipeline Refresh (id=eb8c3fdcea688a5449b01457ddcf0a18): Total: 1.292 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
 	Summary:
-		Imports: total=5 (actual=5, local cache=0, cache server=0)
-		Asset DB Process Time: managed=12 ms, native=1018 ms
-		Asset DB Callback time: managed=47 ms, native=36 ms
-		Scripting: domain reloads=1, domain reload time=293 ms, compile time=1475 ms, other=5 ms
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=555 ms
+		Asset DB Callback time: managed=15 ms, native=32 ms
+		Scripting: domain reloads=1, domain reload time=238 ms, compile time=442 ms, other=6 ms
 		Project Asset Count: scripts=111, non-scripts=123
-		Asset File Changes: new=5, changed=6, moved=0, deleted=0
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
 		Scan Filter Count: 0
 	InvokeCustomDependenciesCallbacks: 0.002ms
-	InvokePackagesCallback: 34.751ms
-	ApplyChangesToAssetFolders: 0.627ms
-	Scan: 185.523ms
-	OnSourceAssetsModified: 0.945ms
-	CategorizeAssetsWithTransientArtifact: 0.488ms
-	ProcessAssetsWithTransientArtifactChanges: 0.819ms
-	CategorizeAssets: 1.530ms
-	ImportOutOfDateAssets: 775.090ms (-1126.775ms without children)
-		ImportManagerImport: 426.361ms (1.964ms without children)
-			ImportInProcess: 424.318ms
-			UpdateCategorizedAssets: 0.079ms
-		CompileScripts: 1475.201ms
-		ReloadNativeAssets: 0.000ms
-		UnloadImportedAssets: 0.110ms
-		ReloadImportedAssets: 0.001ms
-		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.037ms
+	InvokePackagesCallback: 35.068ms
+	ApplyChangesToAssetFolders: 0.507ms
+	Scan: 152.927ms
+	OnSourceAssetsModified: 0.002ms
+	CategorizeAssetsWithTransientArtifact: 0.277ms
+	ProcessAssetsWithTransientArtifactChanges: 0.838ms
+	CategorizeAssets: 1.881ms
+	ImportOutOfDateAssets: 331.733ms (-110.667ms without children)
+		CompileScripts: 442.053ms
+		ReloadNativeAssets: 0.001ms
+		UnloadImportedAssets: 0.095ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.038ms
 		InitializingProgressBar: 0.001ms
-		PostProcessAllAssetNotificationsAddChangedAssets: 0.001ms
-		OnDemandSchedulerStart: 0.153ms
-	PostProcessAllAssets: 49.980ms
-	Hotreload: 1.132ms
-	GatherAllCurrentPrimaryArtifactRevisions: 0.004ms
-	UnloadStreamsBegin: 0.281ms
-	PersistCurrentRevisions: 0.056ms
-	UnloadStreamsEnd: 0.000ms
-	GenerateScriptTypeHashes: 0.230ms
-	Untracked: 1837.691ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.000ms
+		OnDemandSchedulerStart: 0.212ms
+	PostProcessAllAssets: 15.964ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.003ms
+	UnloadStreamsBegin: 0.285ms
+	PersistCurrentRevisions: 0.008ms
+	UnloadStreamsEnd: 0.002ms
+	GenerateScriptTypeHashes: 0.289ms
+	Untracked: 752.940ms
 
 Application.AssetDatabase Initial Refresh End
-Scanning for USB devices : 2.056ms
+Scanning for USB devices : 2.514ms
 Initializing Unity extensions:
 [MODES] ModeService[none].Initialize
 [MODES] ModeService[none].LoadModes
 [MODES] Loading mode Default (0) for mode-current-id-UnityCeifadora
-Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 80 unused Assets / (1.1 MB). Loaded Objects now: 597.
-Memory consumption went from 117.4 MB to 116.3 MB.
-Total: 3.880300 ms (FindLiveObjects: 0.035900 ms CreateObjectMapping: 0.006000 ms MarkObjects: 3.666300 ms  DeleteObjects: 0.171400 ms)
+Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 78 unused Assets / (460.4 KB). Loaded Objects now: 595.
+Memory consumption went from 115.3 MB to 114.8 MB.
+Total: 5.294900 ms (FindLiveObjects: 0.039500 ms CreateObjectMapping: 0.005800 ms MarkObjects: 4.979500 ms  DeleteObjects: 0.265600 ms)
 
 [LAYOUT] About to load UserSettings\Layouts\default-6000.dwlt, keepMainWindow=False
 [LAYOUT] About to save layout C:\Users\User\Documents\ModsValheim\UnityCeifadora\UserSettings\Layouts\default-6000.dwlt
@@ -321,7 +302,7 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:43)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Asset Pipeline Refresh (id=e3bb69c6de5ecb44197e37205ca45a84): Total: 0.031 seconds - Initiated by RefreshV2(ForceUpdate)
+Asset Pipeline Refresh (id=aea77278b0403644da09de39ff10fede): Total: 0.018 seconds - Initiated by RefreshV2(ForceUpdate)
 [Ceifadora] FBX encontrados: 4
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -334,10 +315,10 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:46)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: '9208fad8803e78e48ffc2d44e797c7f1') in 0.0352391 seconds
+Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: '9208fad8803e78e48ffc2d44e797c7f1') in 0.0323942 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=4cbebbc92c9afaf47af118617fc8f6d5): Total: 0.079 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=4cc7a19b8df88f442a20308dd1a6b360): Total: 0.101 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Ceifadora_Golpe3: clipes Ceifadora_Golpe3 [1-25]
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -350,10 +331,10 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:93)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: 'af73125ffbf8a6ff7ffe929d31e02b1a') in 0.0230803 seconds
+Start importing Assets/Ceifada/Ceifadora_Golpe3.fbx using Guid(83576dc7439c4c54f897bf6948d9ba81) (FBXImporter) -> (artifact id: 'af73125ffbf8a6ff7ffe929d31e02b1a') in 0.0227145 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=d8f282c8015ad8b47ac02f345f3be857): Total: 0.046 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=2a1f7c98e90164349b7f9cf8350cebd6): Total: 0.049 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Ceifadora_Golpe3: ossos mapeados 22/22, avatar humanoide OK, clipes Ceifadora_Golpe3 0,80s humano=True
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -366,10 +347,11 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:119)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Especial.fbx using Guid(06bfc31df91224342a85c0cfc9444b28) (FBXImporter) -> (artifact id: 'cc983a0f73c777f68ff3cf21cf7c2fff') in 0.2535433 seconds
+Start importing Assets/Ceifada/Especial.fbx using Guid(06bfc31df91224342a85c0cfc9444b28) (FBXImporter)Launched and connected shader compiler UnityShaderCompiler.exe after 0.01 seconds
+ -> (artifact id: '789e21e5cd94958dabeea02b5a5b2552') in 0.1777509 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=c88641251184ae047a0eaa23f9c1e3d9): Total: 0.281 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=adc3538a5985f6146b4d4bdef1afcdf1): Total: 0.189 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Especial: esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com 52 ossos
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -394,10 +376,10 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:93)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Especial.fbx using Guid(06bfc31df91224342a85c0cfc9444b28) (FBXImporter) -> (artifact id: '789e21e5cd94958dabeea02b5a5b2552') in 0.1205687 seconds
+Start importing Assets/Ceifada/Especial.fbx using Guid(06bfc31df91224342a85c0cfc9444b28) (FBXImporter) -> (artifact id: '789e21e5cd94958dabeea02b5a5b2552') in 0.1314906 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=e4b091c79964a554aaff6e003c383cb8): Total: 0.146 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=18785cb70fc3e2543be4f84cb5acdd1a): Total: 0.144 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Especial: ossos mapeados 52/22, avatar humanoide OK, clipes Especial_3 1,40s humano=True, Especial_1 1,30s humano=True, Especial_2 0,83s humano=True
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -410,10 +392,10 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:119)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Golpe_Mixamo_4.fbx using Guid(e178d3c2d797ec443a905d64ecdec1ea) (FBXImporter) -> (artifact id: 'd401bc27af417f786e157c5cfacc844a') in 0.1980247 seconds
+Start importing Assets/Ceifada/Golpe_Mixamo_4.fbx using Guid(e178d3c2d797ec443a905d64ecdec1ea) (FBXImporter) -> (artifact id: 'c2537da51d76f6214c96b0f1af6344d1') in 0.1270488 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=d2667b8c89eb7614996ba026ce046e66): Total: 0.223 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=bbe8af7daa7aa2e40a8bdbcfaba3f775): Total: 0.140 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Golpe_Mixamo_4: esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com 52 ossos
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -438,10 +420,10 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:93)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Golpe_Mixamo_4.fbx using Guid(e178d3c2d797ec443a905d64ecdec1ea) (FBXImporter) -> (artifact id: 'c2537da51d76f6214c96b0f1af6344d1') in 0.1166175 seconds
+Start importing Assets/Ceifada/Golpe_Mixamo_4.fbx using Guid(e178d3c2d797ec443a905d64ecdec1ea) (FBXImporter) -> (artifact id: 'c2537da51d76f6214c96b0f1af6344d1') in 0.1185671 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=38dad00057f85de4b9d75909352b8d2e): Total: 0.145 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=ad897bd7b14c1e540b378dfd9e897d6f): Total: 0.132 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Golpe_Mixamo_4: ossos mapeados 52/22, avatar humanoide OK, clipes Golpe_Mixamo_4 1,20s humano=True
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -454,10 +436,10 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:119)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Golpe_Mixamo_360.fbx using Guid(af70ad94f3d71a3458b1e281cae9ff1c) (FBXImporter) -> (artifact id: 'ee44b48ccd76c56a31fa3752f83a3a78') in 0.1269144 seconds
+Start importing Assets/Ceifada/Golpe_Mixamo_360.fbx using Guid(af70ad94f3d71a3458b1e281cae9ff1c) (FBXImporter) -> (artifact id: '5251e0c78f1afb3043070025995bb4c3') in 0.1282906 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=9c5341ce533b519478e9aee71cc9a5c3): Total: 0.140 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=8a223b6b095dee04e807df8f6e3b1945): Total: 0.142 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Golpe_Mixamo_360: esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com 52 ossos
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -482,10 +464,10 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:93)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Start importing Assets/Ceifada/Golpe_Mixamo_360.fbx using Guid(af70ad94f3d71a3458b1e281cae9ff1c) (FBXImporter) -> (artifact id: '5251e0c78f1afb3043070025995bb4c3') in 0.1195806 seconds
+Start importing Assets/Ceifada/Golpe_Mixamo_360.fbx using Guid(af70ad94f3d71a3458b1e281cae9ff1c) (FBXImporter) -> (artifact id: '5251e0c78f1afb3043070025995bb4c3') in 0.1229481 seconds
 Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=a6c8f0c53404ace4287766dc7703f012): Total: 0.145 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=af92fc52f66912942b5d481e8492ac27): Total: 0.136 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
 [Ceifadora] Golpe_Mixamo_360: ossos mapeados 52/22, avatar humanoide OK, clipes Golpe_Mixamo_360 1,50s humano=True
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
@@ -498,191 +480,15 @@ CeifadoraGolpes:Build () (at Assets/Editor/CeifadoraGolpes.cs:119)
 
 (Filename: Assets/Editor/CeifadoraGolpes.cs Line: 34)
 
-Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aESkipCompile.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssembliesAndTypeDB
-WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-ExitCode: 0 Duration: 0s70ms
-*** Tundra build success (0.04 seconds), 0 items updated, 3 evaluated
-Total cache size 271292
-Total cache size after purge 271292, took 00:00:00.0098232
-Asset Pipeline Refresh (id=446045d3443e15641a86f28fcb570e4b): Total: 0.011 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
-[ScriptCompilation] Requested script compilation because: Recompiling scripts for player build.
-BuildPlayer: start building target 19
-Starting: F:\SteamLibrary\UnityEditors\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aP.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssembliesAndTypeDB
-WorkingDir: C:/Users/User/Documents/ModsValheim/UnityCeifadora
-ExitCode: 0 Duration: 0s54ms
-[82/86      0s] CopyFiles Library/PlayerScriptAssemblies/Unity.Multiplayer.Center.Common.pdb
-[83/86      0s] CopyFiles Library/PlayerScriptAssemblies/Unity.Multiplayer.Center.Common.dll
-*** Tundra build success (0.03 seconds), 2 items updated, 86 evaluated
-Total cache size 271292
-Total cache size after purge 271292, took 00:00:00.0032240
-Compiling shader "Standard" pass "FORWARD" (vp)
-    Full variant space:         664
-    After settings filtering:   664
-    After built-in stripping:   8
-    After scriptable stripping: 8
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 8 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "FORWARD" (fp)
-    Full variant space:         504
-    After settings filtering:   504
-    After built-in stripping:   4
-    After scriptable stripping: 4
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 4 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "FORWARD_DELTA" (vp)
-    Full variant space:         188
-    After settings filtering:   188
-    After built-in stripping:   13
-    After scriptable stripping: 13
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 13 (0.01s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "FORWARD_DELTA" (fp)
-    Full variant space:         188
-    After settings filtering:   188
-    After built-in stripping:   13
-    After scriptable stripping: 13
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 13 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "ShadowCaster" (vp)
-    Full variant space:         4
-    After settings filtering:   4
-    After built-in stripping:   2
-    After scriptable stripping: 2
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 2 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "ShadowCaster" (fp)
-    Full variant space:         4
-    After settings filtering:   4
-    After built-in stripping:   2
-    After scriptable stripping: 2
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 2 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "DEFERRED" (vp)
-    Full variant space:         76
-    After settings filtering:   76
-    After built-in stripping:   4
-    After scriptable stripping: 4
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 4 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "DEFERRED" (fp)
-    Full variant space:         76
-    After settings filtering:   76
-    After built-in stripping:   4
-    After scriptable stripping: 4
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 4 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "FORWARD" (vp)
-    Full variant space:         208
-    After settings filtering:   208
-    After built-in stripping:   8
-    After scriptable stripping: 8
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 8 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "FORWARD" (fp)
-    Full variant space:         148
-    After settings filtering:   148
-    After built-in stripping:   4
-    After scriptable stripping: 4
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 4 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "FORWARD_DELTA" (vp)
-    Full variant space:         140
-    After settings filtering:   140
-    After built-in stripping:   10
-    After scriptable stripping: 10
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 10 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "FORWARD_DELTA" (fp)
-    Full variant space:         140
-    After settings filtering:   140
-    After built-in stripping:   10
-    After scriptable stripping: 10
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 10 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "ShadowCaster" (vp)
-    Full variant space:         2
-    After settings filtering:   2
-    After built-in stripping:   2
-    After scriptable stripping: 2
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 2 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Compiling shader "Standard" pass "ShadowCaster" (fp)
-    Full variant space:         2
-    After settings filtering:   2
-    After built-in stripping:   2
-    After scriptable stripping: 2
-    Processed in 0.00 seconds
-    starting compilation...
-    finished in 0.00 seconds. Local cache hits 2 (0.00s CPU time), remote cache hits 0 (0.00s CPU time), compiled 0 variants (0.00s CPU time), skipped 0 variants
-    Prepared data for serialisation in 0.00s
-Serialized binary data for shader Standard in 0.00s
-    d3d11 (total internal programs: 86, unique: 72)
-
-***Player size statistics***
-Total compressed size 4.3 MB. Total uncompressed size 7.4 MB.
-Asset Pipeline Refresh (id=aeaffca43eec79e468f2b79594a7e953): Total: 0.004 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
-Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 515 unused Assets / (0.6 MB). Loaded Objects now: 759.
-Memory consumption went from 207.9 MB to 207.2 MB.
-Total: 8.767100 ms (FindLiveObjects: 0.095000 ms CreateObjectMapping: 0.018000 ms MarkObjects: 8.136800 ms  DeleteObjects: 0.516600 ms)
-
 
 ***Player size statistics***
 Total compressed size 1.5 KB. Total uncompressed size 4.1 KB.
-Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 0 unused Assets / (0 B). Loaded Objects now: 761.
-Memory consumption went from 202.3 MB to 202.3 MB.
-Total: 11.438700 ms (FindLiveObjects: 0.069500 ms CreateObjectMapping: 0.008700 ms MarkObjects: 11.355800 ms  DeleteObjects: 0.003900 ms)
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 499 unused Assets / (87.0 KB). Loaded Objects now: 730.
+Memory consumption went from 206.5 MB to 206.4 MB.
+Total: 7.647500 ms (FindLiveObjects: 0.063900 ms CreateObjectMapping: 0.013600 ms MarkObjects: 7.242100 ms  DeleteObjects: 0.327400 ms)
 
 
--------------------------------------------------------------------------------
-Bundle Name: ceifadora_golpes
-Compressed Size:4.3 mb
-Uncompressed usage by category (Percentages based on user generated assets only):
-Textures               0.0 kb	 0.0% 
-Meshes                 6.5 mb	 88.1% 
-Animations             546.9 kb	 7.3% 
-Sounds                 0.0 kb	 0.0% 
-Shaders                48.2 kb	 0.6% 
-Other Assets           165.0 kb	 2.2% 
-Levels                 0.0 kb	 0.0% 
-File headers           139.7 kb	 1.9% 
-Total User Assets      7.4 mb	 100.0% 
-Complete build size    7.4 mb
-Used Assets and files from the Resources folder, sorted by uncompressed size:
- 2.5 mb	 33.7% Assets/Ceifada/Especial.fbx
- 2.3 mb	 31.6% Assets/Ceifada/Golpe_Mixamo_360.fbx
- 2.3 mb	 31.3% Assets/Ceifada/Golpe_Mixamo_4.fbx
- 62.5 kb	 0.8% Assets/Ceifada/Ceifadora_Golpe3.fbx
- 48.2 kb	 0.6% Resources/unity_builtin_extra
- 7.3 kb	 0.1% AssetBundle Object
--------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 Bundle Name: Build
 Compressed Size:1.5 kb

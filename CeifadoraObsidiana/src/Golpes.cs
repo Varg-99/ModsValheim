@@ -31,8 +31,8 @@ namespace CeifadoraObsidiana
         public static void InitModo4(ConfigFile c)
         {
             CfgModo4 = c.Bind("Combo4", "Ativar", true, "Combo de 4 golpes (2 do machado + 2 do Mixamo) e especial em 3 partes (aperte o especial 3 vezes).");
-            CfgMapa4 = c.Bind("Combo4", "Animacoes",
-                "DualAxes Attack 1=BattleAxe2; DualAxes Attack 2 2=BattleAxe1; DualAxes Attack 3 2=Golpe_Mixamo_360; DualAxes Attack 4=Golpe_Mixamo_4; " +
+            CfgMapa4 = c.Bind("Combo4", "Animacoes2",
+                "DualAxes Attack 1=BattleAxe1; DualAxes Attack 2 2=BattleAxe2; DualAxes Attack 3 2=Golpe_Mixamo_360; DualAxes Attack 4=Golpe_Mixamo_4; " +
                 "Greatsword BaseAttack (1)=Especial_1; Greatsword BaseAttack (2)=Especial_2; Greatsword BaseAttack (3)=Especial_3",
                 "Qual animacao entra em cada golpe (original=nova). Precisa reiniciar.");
             CfgAcertos4 = c.Bind("Combo4", "Acertos", "Golpe_Mixamo_360=0.62; Golpe_Mixamo_4=0.50; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
