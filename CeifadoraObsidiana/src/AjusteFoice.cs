@@ -78,6 +78,7 @@ namespace CeifadoraObsidiana
         {
             var enc = modelo.gameObject.AddComponent<EncaixeFoice>();
             enc.NasCostas = costas;
+            enc.Comprimento0 = ModeloFoice.ComprimentoOriginal;
             if (costas) { enc.Aplicar(); Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Encaixe nas costas: preso ao peito."); return; }
 
             var attachA = arma.transform.Find("attach");
@@ -153,7 +154,8 @@ namespace CeifadoraObsidiana
         Transform _spine, _chest, _pescoco, _cabeca;
         Vector3 _ladoCeifa;
 
-        float Escala => AjusteFoice.CfgComprimento.Value / Mathf.Max(0.1f, ModeloFoice.ComprimentoOriginal);
+        public float Comprimento0 = 1f;  // tamanho original deste modelo (cada foice tem o seu)
+        float Escala => AjusteFoice.CfgComprimento.Value / Mathf.Max(0.1f, Comprimento0);
 
         /// Posicao base presa a mao direita (mao de cima), usada quando nada mais se aplica.
         public void Aplicar()
@@ -443,7 +445,7 @@ namespace CeifadoraObsidiana
             }
             float alvoPeso = atacando ? Mathf.Clamp01((vel - 80f) / 160f) : 0f;
             // entra rapido, sai devagar (a lamina nao "volta" de repente no fim do golpe)
-            _pesoCorte = Mathf.MoveTowards(_pesoCorte, Mathf.Max(alvoPeso, _pesoCorte * (atacando ? 0.97f : 0.85f)), (alvoPeso > _pesoCorte ? 10f : 3f) * dt);
+            _pesoCorte = Mathf.MoveTowards(_pesoCorte, alvoPeso, (alvoPeso > _pesoCorte ? 10f : 3f) * dt);
             if (_eixoCorte.sqrMagnitude < 0.5f || _pesoCorte <= 0.01f) return;
             var lamina = Vector3.Cross(_eixoCorte, haste);
             if (lamina.sqrMagnitude < 1e-4f) return;

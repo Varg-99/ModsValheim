@@ -1,0 +1,14 @@
+Metal_negro: 77 MB
+17:57:40 | INFO: Data are loaded, start creating Blender stuff
+17:57:40 | INFO: Blender create Mesh node node_0
+17:57:43 | INFO: glTF import finished in 2.60s
+Metal_negro: 1500000 -> 40000 triangulos, 40186 vertices, rot (0.0, 0.0, 0.0) -> C:\Users\User\Documents\ModsValheim\Ferramentas\novas\Metal_negro.raw
+ferro: 84 MB
+17:58:03 | INFO: Data are loaded, start creating Blender stuff
+17:58:03 | INFO: Blender create Mesh node node_0
+17:58:06 | INFO: glTF import finished in 2.50s
+ferro: 1499956 -> 40000 triangulos, 41523 vertices, rot (0.0, 0.0, 0.0) -> C:\Users\User\Documents\ModsValheim\Ferramentas\novas\ferro.raw
+RESULTADO: OK
+Blender 5.2.3 LTS (hash e13b728c6880 built 2026-10-22 01:37:16)
+
+Blender quit

@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.0.6";
+        public const string PluginVersion = "3.1.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -131,6 +131,10 @@ namespace CeifadoraObsidiana
             {
                 { "item_ceifadora", "Ceifadora Obsidiana" },
                 { "item_ceifadora_desc", "Uma foice longa de lamina negra como vidro vulcanico. Cada corte deixa uma trilha vermelha." },
+                { "item_ceifadora_ferro", "Ceifadora de Ferro" },
+                { "item_ceifadora_ferro_desc", "Uma foice de ferro forjada com casca antiga do pantano. Pesada e confiavel." },
+                { "item_ceifadora_metalnegro", "Ceifadora de Metal Negro" },
+                { "item_ceifadora_metalnegro_desc", "Uma foice de metal negro, leve e quase inquebravel. A lamina corta como o vento das planicies." },
                 { "se_sangramento", "Sangramento" },
                 { "se_sangramento_start", "Voce esta sangrando" },
             });
@@ -138,6 +142,10 @@ namespace CeifadoraObsidiana
             {
                 { "item_ceifadora", "Obsidian Reaper" },
                 { "item_ceifadora_desc", "A long scythe with a blade black as volcanic glass. Every cut leaves a red trail." },
+                { "item_ceifadora_ferro", "Iron Reaper" },
+                { "item_ceifadora_ferro_desc", "An iron scythe forged with ancient bark from the swamp. Heavy and reliable." },
+                { "item_ceifadora_metalnegro", "Black Metal Reaper" },
+                { "item_ceifadora_metalnegro_desc", "A black metal scythe, light and nearly unbreakable. The blade cuts like the wind of the plains." },
                 { "se_sangramento", "Bleeding" },
                 { "se_sangramento_start", "You are bleeding" },
             });
@@ -145,7 +153,15 @@ namespace CeifadoraObsidiana
 
         private void AddContent()
         {
-            try { CreateWeapon(CreateBleedEffect()); }
+            try
+            {
+                var bleed = CreateBleedEffect();
+                foreach (var v in Variantes())
+                {
+                    try { CreateWeapon(bleed, v); }
+                    catch (System.Exception e) { Jotunn.Logger.LogError($"[{PluginName}] Falha ao criar {v.Prefab}: {e}"); }
+                }
+            }
             catch (System.Exception e) { Jotunn.Logger.LogError($"[{PluginName}] Falha ao criar a arma: {e}"); }
             finally { PrefabManager.OnVanillaPrefabsAvailable -= AddContent; }
         }
@@ -188,26 +204,80 @@ namespace CeifadoraObsidiana
             return PrefabManager.Instance.GetPrefab(padrao)?.GetComponent<ItemDrop>();
         }
 
-        private void CreateWeapon(StatusEffect bleed)
+        // ---- as foices (variantes) ----
+        public class Variante
         {
+            public string Prefab, Chave, Pasta, Estacao = CraftingStations.Forge, ReceitaDoJogo;
+            public int Nivel = 4;
+            public RequirementConfig[] Itens;
+            public float Corte, CortePorNivel, Durabilidade = 200f, Peso = 3.5f;
+        }
+        public static readonly System.Collections.Generic.HashSet<string> Prefabs = new System.Collections.Generic.HashSet<string>();
+
+        System.Collections.Generic.IEnumerable<Variante> Variantes()
+        {
+            yield return new Variante
+            {
+                Prefab = ItemPrefabName, Chave = "item_ceifadora", Pasta = "modelo", Nivel = 4,
+                Itens = new[]
+                {
+                    new RequirementConfig("BlackMetal", 30, 15), new RequirementConfig("Obsidian", 20, 10),
+                    new RequirementConfig("Bloodbag", 10, 5), new RequirementConfig("ElderBark", 10, 0),
+                    new RequirementConfig("LinenThread", 5, 2),
+                },
+                Corte = CfgSlash.Value, CortePorNivel = CfgSlashPerLevel.Value,
+            };
+            // Metal negro: mesmos itens do Machado de Batalha de Metal Negro (Forja nivel 4).
+            yield return new Variante
+            {
+                Prefab = "CeifadoraMetalNegro", Chave = "item_ceifadora_metalnegro", Pasta = "modelo_metalnegro", Nivel = 4,
+                ReceitaDoJogo = "Recipe_BattleaxeBlackmetal",
+                Itens = new[] { new RequirementConfig("FineWood", 10, 0), new RequirementConfig("BlackMetal", 30, 15), new RequirementConfig("LinenThread", 5, 5) },
+                Corte = 110f, CortePorNivel = 6f, Durabilidade = 200f,
+            };
+            // Ferro: itens da Lanca de Casca Antiga (pantano), em quantidade de arma de duas maos (Forja nivel 3).
+            yield return new Variante
+            {
+                Prefab = "CeifadoraFerro", Chave = "item_ceifadora_ferro", Pasta = "modelo_ferro", Nivel = 3,
+                Itens = new[] { new RequirementConfig("ElderBark", 20, 5), new RequirementConfig("Iron", 30, 15), new RequirementConfig("TrollHide", 4, 2) },
+                Corte = 75f, CortePorNivel = 6f, Durabilidade = 175f, Peso = 4f,
+            };
+        }
+
+        // Copia os itens e a estacao de uma receita do jogo (se existir), para ficar igual a arma equivalente.
+        static void CopiarReceita(Variante v)
+        {
+            if (string.IsNullOrEmpty(v.ReceitaDoJogo)) return;
+            var r = PrefabManager.Cache.GetPrefab<Recipe>(v.ReceitaDoJogo);
+            if (r == null || r.m_resources == null || r.m_resources.Length == 0) { Jotunn.Logger.LogInfo($"[{PluginName}] receita {v.ReceitaDoJogo} nao achada; usando a padrao."); return; }
+            v.Itens = r.m_resources.Where(q => q?.m_resItem != null)
+                .Select(q => new RequirementConfig(q.m_resItem.name, q.m_amount, q.m_amountPerLevel)).ToArray();
+            if (r.m_craftingStation != null) v.Estacao = r.m_craftingStation.name;
+            if (r.m_minStationLevel > 0) v.Nivel = r.m_minStationLevel;
+            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab}: receita de {v.ReceitaDoJogo}: " + string.Join(", ", v.Itens.Select(i => i.Item + " x" + i.Amount)) + $" ({v.Estacao} {v.Nivel})");
+        }
+
+        private void CreateWeapon(StatusEffect bleed, Variante v)
+        {
+            var pastaV = Path.Combine(Path.GetDirectoryName(Info.Location), v.Pasta);
+            if (!File.Exists(Path.Combine(pastaV, "foice.malha")) && v.Prefab != ItemPrefabName)
+            {
+                Jotunn.Logger.LogWarning($"[{PluginName}] {v.Prefab}: modelo nao encontrado em {pastaV}; foice nao criada.");
+                return;
+            }
+            CopiarReceita(v);
             var config = new ItemConfig
             {
-                Name = "$item_ceifadora",
-                Description = "$item_ceifadora_desc",
-                CraftingStation = CraftingStations.Forge,
-                MinStationLevel = 4,
-                RepairStation = CraftingStations.Forge,
-                Requirements = new[]
-                {
-                    new RequirementConfig("BlackMetal", 30, 15),
-                    new RequirementConfig("Obsidian", 20, 10),
-                    new RequirementConfig("Bloodbag", 10, 5),
-                    new RequirementConfig("ElderBark", 10, 0),
-                    new RequirementConfig("LinenThread", 5, 2),
-                }
+                Name = "$" + v.Chave,
+                Description = "$" + v.Chave + "_desc",
+                CraftingStation = v.Estacao,
+                MinStationLevel = v.Nivel,
+                RepairStation = v.Estacao,
+                Requirements = v.Itens,
             };
 
-            var item = new CustomItem(ItemPrefabName, BaseVisualPrefab, config);
+            var item = new CustomItem(v.Prefab, BaseVisualPrefab, config);
+            Prefabs.Add(v.Prefab);
             var shared = item.ItemDrop.m_itemData.m_shared;
 
             var normal = Fonte(CfgArmaNormal.Value, "Battleaxe");
@@ -224,17 +294,17 @@ namespace CeifadoraObsidiana
             shared.m_skillType = Skills.SkillType.Polearms;
             shared.m_maxQuality = 4;
 
-            shared.m_damages = new HitData.DamageTypes { m_slash = CfgSlash.Value };
-            shared.m_damagesPerLevel = new HitData.DamageTypes { m_slash = CfgSlashPerLevel.Value };
+            shared.m_damages = new HitData.DamageTypes { m_slash = v.Corte };
+            shared.m_damagesPerLevel = new HitData.DamageTypes { m_slash = v.CortePorNivel };
             shared.m_attackForce = 70f;
             shared.m_backstabBonus = 3f;
             shared.m_blockPower = 45f;
             shared.m_blockPowerPerLevel = 0f;
             shared.m_deflectionForce = 40f;
             shared.m_timedBlockBonus = 2f;
-            shared.m_maxDurability = 200f;
+            shared.m_maxDurability = v.Durabilidade;
             shared.m_durabilityPerLevel = 50f;
-            shared.m_weight = 3.5f;
+            shared.m_weight = v.Peso;
             shared.m_movementModifier = -0.05f;
 
             // Golpes do proprio jogo, sem mudar o ritmo nem o movimento.
@@ -271,7 +341,7 @@ namespace CeifadoraObsidiana
             var chance = Traverse.Create(shared).Field("m_attackStatusEffectChance");
             if (chance.FieldExists()) chance.SetValue(CfgBleedChance.Value);
 
-            var pasta = Path.Combine(Path.GetDirectoryName(Info.Location), "modelo");
+            var pasta = pastaV;
             var modelo = ModeloFoice.Trocar(item.ItemPrefab, pasta);
             if (modelo != null)
             {
@@ -287,7 +357,7 @@ namespace CeifadoraObsidiana
 
             AdicionarSangue(shared);
             ItemManager.Instance.AddItem(item);
-            Jotunn.Logger.LogInfo($"[{PluginName}] Ceifadora adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
+            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
         }
 
         /// Respingo de sangue (efeito do proprio jogo) quando a foice acerta.

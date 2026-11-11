@@ -143,7 +143,11 @@ namespace CeifadoraObsidiana
             tr.receiveShadows = false;
             ponta.gameObject.AddComponent<RastroFio>();
             // faixa entre a base e a ponta da lamina: mostra o plano do corte
-            Modelo.gameObject.AddComponent<RastroLamina>();
+            var rl = Modelo.gameObject.AddComponent<RastroLamina>();
+            // ponta da lamina = vertice mais a frente (+Z); topo = vertice mais alto (+Y)
+            Vector3 vPonta = Vector3.zero, vTopo = Vector3.zero;
+            foreach (var vv in mesh.vertices) { if (vv.z > vPonta.z) vPonta = vv; if (vv.y > vTopo.y) vTopo = vv; }
+            rl.Ponta = vPonta; rl.Base = Vector3.Lerp(vTopo, vPonta, 0.6f);
 
             var props = new System.Collections.Generic.List<string>();
             for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
@@ -205,7 +209,7 @@ namespace CeifadoraObsidiana
     {
         // pontos no espaco do modelo (haste em +Y com o cabo na origem, lamina para +Z)
         // so a parte de fora da lamina (rastro discreto, parecido com o das outras armas)
-        static readonly Vector3 Ponta = new Vector3(0f, 0.83f, 0.47f), Base = Vector3.Lerp(new Vector3(0f, 1.08f, 0.06f), new Vector3(0f, 0.83f, 0.47f), 0.6f);
+        public Vector3 Ponta = new Vector3(0f, 0.83f, 0.47f), Base = Vector3.Lerp(new Vector3(0f, 1.08f, 0.06f), new Vector3(0f, 0.83f, 0.47f), 0.6f);
         struct Amostra { public Vector3 a, b; public float t; }
         readonly System.Collections.Generic.List<Amostra> _pts = new System.Collections.Generic.List<Amostra>();
         Player _dono; GameObject _go; Mesh _mesh; Material _mat;

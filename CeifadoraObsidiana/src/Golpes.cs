@@ -83,7 +83,7 @@ namespace CeifadoraObsidiana
         public static bool ComFoice(Humanoid h)
         {
             var w = h?.GetCurrentWeapon();
-            return w?.m_dropPrefab != null && w.m_dropPrefab.name == CeifadoraPlugin.ItemPrefabName;
+            return w?.m_dropPrefab != null && CeifadoraPlugin.Prefabs.Contains(w.m_dropPrefab.name);
         }
 
         public static Attack AtaqueAtual(Humanoid h) => Traverse.Create(h).Field("m_currentAttack").GetValue<Attack>();
