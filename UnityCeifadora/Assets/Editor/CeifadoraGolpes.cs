@@ -80,12 +80,23 @@ public static class CeifadoraGolpes
                 if (takes == null || takes.Length == 0) { imp.SaveAndReimport(); takes = imp.importedTakeInfos; }
                 if (takes == null || takes.Length == 0) { Log("SEM ANIMACAO: " + path); continue; }
                 var t = takes[0];
-                imp.clipAnimations = new[] { new ModelImporterClipAnimation
+                // cortes opcionais: arquivo <nome>.cortes ao lado do FBX, linhas "NomeDoClipe primeiroQuadro ultimoQuadro"
+                var cortes = new System.Collections.Generic.List<(string n, float a, float b)>();
+                var arqCortes = Path.ChangeExtension(path, ".cortes");
+                if (File.Exists(arqCortes))
+                    foreach (var l in File.ReadAllLines(arqCortes))
+                    {
+                        var p = l.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (p.Length == 3 && float.TryParse(p[1], out var fa) && float.TryParse(p[2], out var fb)) cortes.Add((p[0], fa, fb));
+                    }
+                if (cortes.Count == 0) cortes.Add((name, t.startTime * t.sampleRate, t.stopTime * t.sampleRate));
+                Log(name + ": clipes " + string.Join(", ", cortes.Select(c => c.n + " [" + c.a + "-" + c.b + "]")));
+                imp.clipAnimations = cortes.Select(c => new ModelImporterClipAnimation
                 {
-                    name = name,
+                    name = c.n,
                     takeName = t.name,
-                    firstFrame = t.startTime * t.sampleRate,
-                    lastFrame = t.stopTime * t.sampleRate,
+                    firstFrame = c.a,
+                    lastFrame = c.b,
                     loopTime = false,
                     lockRootRotation = true,        // o giro fica na pose (o personagem nao muda de direcao)
                     keepOriginalOrientation = true,
@@ -93,18 +104,19 @@ public static class CeifadoraGolpes
                     keepOriginalPositionY = true,
                     lockRootPositionXZ = false,     // o avanco vira movimento de verdade
                     keepOriginalPositionXZ = false,
-                } };
+                }).ToArray();
                 imp.SaveAndReimport();
 
                 var avatar = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
-                var clip = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview"));
+                var clips = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview")).ToList();
+                var clip = clips.FirstOrDefault();
                 foreach (var pn in new[] { "importAnimationErrors", "importAnimationWarnings" })
                 {
                     var pi = typeof(ModelImporter).GetProperty(pn);
                     var v = pi != null ? pi.GetValue(imp) as string : null;
                     if (!string.IsNullOrEmpty(v)) Log($"{name} {pn}: {v.Replace("\n", " | ")}");
                 }
-                Log($"{name}: ossos mapeados {hd.human.Length}/{Ossos.Length}, avatar {(avatar ? (avatar.isValid && avatar.isHuman ? "humanoide OK" : "INVALIDO") : "nenhum")}, clipe {(clip ? clip.name + " " + clip.length.ToString("0.00") + "s humano=" + clip.humanMotion : "nenhum")}");
+                Log($"{name}: ossos mapeados {hd.human.Length}/{Ossos.Length}, avatar {(avatar ? (avatar.isValid && avatar.isHuman ? "humanoide OK" : "INVALIDO") : "nenhum")}, clipes {string.Join(", ", clips.Select(c => c.name + " " + c.length.ToString("0.00") + "s humano=" + c.humanMotion))}");
                 caminhos.Add(path);
             }
             if (caminhos.Count == 0) { Log("ERRO: nenhum FBX valido"); return; }

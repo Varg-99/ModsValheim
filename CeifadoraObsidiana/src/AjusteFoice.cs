@@ -222,12 +222,12 @@ namespace CeifadoraObsidiana
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var p = _dono as Player;
             bool atacando = p != null && p.InAttack() && Golpes.AtaqueAtual(p) != null;
-            bool especial = atacando && Golpes.Secundario(p);
+            bool especial = atacando && Golpes.Secundario(p) && !Golpes.Modo4;
             bool ultimo = atacando && !especial && p == Player.m_localPlayer && Golpes.GiroAtivo;
             bool ceifada = ultimo && Golpes.Ceifada;
             bool proprio = ultimo && Golpes.Proprio && Golpe3.TemTrilha;
             // animacao de fora (Mixamo) segurando com uma mao so: a foice fica na mao direita, sem puxar a esquerda
-            bool umaMao = ultimo && Golpes.Proprio && !Golpe3.Nossa && !(Golpe3.CfgDuasMaos?.Value ?? false);
+            bool umaMao = (ultimo && Golpes.Proprio && !Golpe3.Nossa || atacando && Golpes.UmaMao) && !(Golpe3.CfgDuasMaos?.Value ?? false);
             bool giro = especial || (ultimo && !Golpes.Ceifada && !Golpes.Proprio);
             _pesoProp = Mathf.MoveTowards(_pesoProp, proprio ? 1f : 0f, 12f * dt);
             _pesoAtq = Mathf.MoveTowards(_pesoAtq, atacando ? 1f : 0f, 8f * dt);

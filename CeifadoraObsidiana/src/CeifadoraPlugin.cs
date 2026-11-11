@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "2.9.1";
+        public const string PluginVersion = "3.0.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -83,6 +83,7 @@ namespace CeifadoraObsidiana
 
             AjusteFoice.Init(Config);
             Golpes.Init(Config);
+            Golpes.InitModo4(Config);
             Impacto.Init(Config);
             Golpe3.CfgClipe = Config.Bind("Golpes", "ClipeDoGolpe3", "auto",
                 "Animacao do 3o golpe dentro do pacote ceifadora_golpes. auto = usa a do Mixamo se houver, senao Ceifadora_Golpe3. Precisa reiniciar.");
@@ -154,6 +155,21 @@ namespace CeifadoraObsidiana
             return se;
         }
 
+        // Acha o ataque de uma arma do jogo: primeiro pelo nome, depois procurando em todas.
+        private static Attack AcharAtaque(System.Func<Attack, bool> filtro, string nome)
+        {
+            var d = PrefabManager.Instance.GetPrefab(nome)?.GetComponent<ItemDrop>();
+            var a = d?.m_itemData?.m_shared?.m_attack;
+            if (a != null && filtro(a)) return a;
+            foreach (var go in PrefabManager.Cache.GetPrefabs(typeof(GameObject)).Values.OfType<GameObject>())
+            {
+                var at = go.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_attack;
+                if (at != null && filtro(at)) { Jotunn.Logger.LogInfo($"[{PluginName}] ataque de {go.name}: {at.m_attackAnimation}"); return at; }
+            }
+            Jotunn.Logger.LogWarning($"[{PluginName}] ataque nao achado ({nome}).");
+            return null;
+        }
+
         private static ItemDrop Fonte(string nome, string padrao)
         {
             var d = PrefabManager.Instance.GetPrefab(nome)?.GetComponent<ItemDrop>();
@@ -215,6 +231,31 @@ namespace CeifadoraObsidiana
             shared.m_attack = normal.m_itemData.m_shared.m_attack.Clone();
             shared.m_secondaryAttack = especial.m_itemData.m_shared.m_secondaryAttack.Clone();
             shared.m_secondaryAttack.m_damageMultiplier = CfgSpecialMultiplier.Value;
+
+            // Combo de 4 golpes: usa o gatilho dos machados duplos (4 golpes encadeados).
+            // Especial em 3 partes: gatilho da espada grande (3 golpes encadeados), apertando 3 vezes.
+            if (Golpes.CfgModo4.Value)
+            {
+                var duplo = AcharAtaque(a => a.m_attackChainLevels >= 4 && (a.m_attackAnimation ?? "").ToLower().Contains("dual"), "AxeBerzerkr");
+                if (duplo != null)
+                {
+                    shared.m_attack.m_attackAnimation = duplo.m_attackAnimation;
+                    shared.m_attack.m_attackChainLevels = duplo.m_attackChainLevels;
+                    shared.m_attack.m_lastChainDamageMultiplier = 1f; // o dano extra vem do [Combo4]
+                }
+                var gs = AcharAtaque(a => a.m_attackChainLevels == 3 && (a.m_attackAnimation ?? "").ToLower().Contains("greatsword"), "THSwordKrom");
+                if (gs != null)
+                {
+                    var sec = shared.m_attack.Clone();
+                    sec.m_attackAnimation = gs.m_attackAnimation;
+                    sec.m_attackChainLevels = 3;
+                    sec.m_lastChainDamageMultiplier = 1f;
+                    sec.m_damageMultiplier = CfgSpecialMultiplier.Value;
+                    sec.m_attackStamina = especial.m_itemData.m_shared.m_secondaryAttack.m_attackStamina / 2f;
+                    shared.m_secondaryAttack = sec;
+                }
+                Jotunn.Logger.LogInfo($"[{PluginName}] Combo4: normal '{shared.m_attack.m_attackAnimation}' x{shared.m_attack.m_attackChainLevels}, especial '{shared.m_secondaryAttack.m_attackAnimation}' x{shared.m_secondaryAttack.m_attackChainLevels}.");
+            }
 
             shared.m_attackStatusEffect = bleed;
             var chance = Traverse.Create(shared).Field("m_attackStatusEffectChance");

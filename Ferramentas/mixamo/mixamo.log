@@ -1,10 +1,20 @@
-==== 11/11/2026  1:19:43,70 ==== 
+==== 11/11/2026  1:36:44,65 ==== 
+fbx: Especial.fbx 
 fbx: Golpe_Mixamo_360.fbx 
-01:19:47 ==== inicio ====
-01:19:47 FBX encontrados: 2
-01:19:47 Ceifadora_Golpe3: ossos mapeados 22/22, avatar humanoide OK, clipe Ceifadora_Golpe3 0,80s humano=True
-01:19:48 Golpe_Mixamo_360: esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com 52 ossos
-01:19:48 Golpe_Mixamo_360: ossos mapeados 52/22, avatar humanoide OK, clipe Golpe_Mixamo_360 3,17s humano=True
-01:19:49 pacote: Build\ceifadora_golpes (1593 KB)
-01:19:49 copiado para C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana
-01:19:49 RESULTADO: OK
+fbx: Golpe_Mixamo_4.fbx 
+01:36:49 ==== inicio ====
+01:36:50 FBX encontrados: 4
+01:36:50 Ceifadora_Golpe3: clipes Ceifadora_Golpe3 [1-25]
+01:36:50 Ceifadora_Golpe3: ossos mapeados 22/22, avatar humanoide OK, clipes Ceifadora_Golpe3 0,80s humano=True
+01:36:50 Especial: esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com 52 ossos
+01:36:50 Especial: clipes Especial_1 [0-39], Especial_2 [39-64], Especial_3 [64-106]
+01:36:50 Especial: ossos mapeados 52/22, avatar humanoide OK, clipes Especial_3 1,40s humano=True, Especial_1 1,30s humano=True, Especial_2 0,83s humano=True
+01:36:50 Golpe_Mixamo_4: esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com 52 ossos
+01:36:50 Golpe_Mixamo_4: clipes Golpe_Mixamo_4 [0-36]
+01:36:50 Golpe_Mixamo_4: ossos mapeados 52/22, avatar humanoide OK, clipes Golpe_Mixamo_4 1,20s humano=True
+01:36:51 Golpe_Mixamo_360: esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com 52 ossos
+01:36:51 Golpe_Mixamo_360: clipes Golpe_Mixamo_360 [0-45]
+01:36:51 Golpe_Mixamo_360: ossos mapeados 52/22, avatar humanoide OK, clipes Golpe_Mixamo_360 1,50s humano=True
+01:36:52 pacote: Build\ceifadora_golpes (4390 KB)
+01:36:52 copiado para C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana
+01:36:52 RESULTADO: OK

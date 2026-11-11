@@ -16,11 +16,14 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<float> CfgPausa, CfgTremer, CfgEmpurrao, CfgAtordoar;
         public static ConfigEntry<bool> CfgEfeitoMarreta;
         public static bool NoGolpe, Acertou;
+        public static ConfigEntry<bool> CfgLigado;
+        public static bool Ligado => CfgLigado != null && CfgLigado.Value;
         static EffectList _fxMarreta;
         static bool _procurou;
 
         public static void Init(ConfigFile c)
         {
+            CfgLigado = c.Bind("Impacto", "Ligado", false, "Liga os efeitos de impacto no ultimo golpe (pausa, tremida, marreta).");
             CfgPausa = c.Bind("Impacto", "PausaNoAcerto", 0.09f, "3o golpe: segundos que o golpe 'trava' quando acerta alguem (0 = desliga).");
             CfgTremer = c.Bind("Impacto", "TremerCamera", 2.5f, "3o golpe: forca da tremida de camera (0 = desliga). Acertando alguem treme o dobro.");
             CfgEfeitoMarreta = c.Bind("Impacto", "EfeitoDeMarreta", true, "3o golpe: efeito e som de batida da marreta no ponto do golpe.");

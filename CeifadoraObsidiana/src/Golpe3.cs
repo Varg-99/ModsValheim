@@ -15,6 +15,7 @@ namespace CeifadoraObsidiana
         public const string Pacote = "ceifadora_golpes";
         public const string NomeClipe = "Ceifadora_Golpe3";
         public static AnimationClip Clipe;
+        public static readonly Dictionary<string, AnimationClip> Bundle = new Dictionary<string, AnimationClip>();
         public static BepInEx.Configuration.ConfigEntry<string> CfgClipe;
         public static BepInEx.Configuration.ConfigEntry<float> CfgAcerto;
         public static BepInEx.Configuration.ConfigEntry<bool> CfgDuasMaos;
@@ -33,11 +34,12 @@ namespace CeifadoraObsidiana
                 var b = AssetBundle.LoadFromFile(arq);
                 if (b == null) { Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Golpe 3 proprio: nao consegui abrir o pacote."); return; }
                 var todos = b.LoadAllAssets<AnimationClip>().Where(c => !c.name.StartsWith("__")).ToArray();
+                foreach (var c in todos) Bundle[c.name] = c;
                 Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Golpe 3: animacoes no pacote: " + string.Join(", ", todos.Select(c => c.name + " (" + c.length.ToString("0.00") + "s)")));
                 var pedido = (CfgClipe?.Value ?? "auto").Trim();
                 if (!string.Equals(pedido, "auto", System.StringComparison.OrdinalIgnoreCase))
                     Clipe = todos.FirstOrDefault(c => string.Equals(c.name, pedido, System.StringComparison.OrdinalIgnoreCase));
-                if (Clipe == null) Clipe = todos.FirstOrDefault(c => c.name != NomeClipe) ?? todos.FirstOrDefault(c => c.name == NomeClipe);
+                if (Clipe == null) Clipe = todos.FirstOrDefault(c => c.name == "Golpe_Mixamo_360") ?? todos.FirstOrDefault(c => c.name != NomeClipe) ?? todos.FirstOrDefault(c => c.name == NomeClipe);
                 var t = Path.Combine(Path.Combine(pastaPlugin, "modelo"), "golpe3_trilha.txt");
                 if (File.Exists(t)) LerTrilha(t);
                 Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Golpe 3 proprio: clipe {(Clipe ? Clipe.name + " " + Clipe.length.ToString("0.00") + "s, humano " + Clipe.humanMotion : "NAO achado")}, trilha {_g.Count} quadros, acerto {Acerto:0.00}s.");
@@ -81,11 +83,12 @@ namespace CeifadoraObsidiana
 
         /// Copia os eventos do golpe original (acerto, encadear, fim) para o clipe novo;
         /// o acerto vai para o momento da batida no chao.
-        public static void CopiarEventos(AnimationClip orig, AnimationClip novo)
+        public static void CopiarEventos(AnimationClip orig, AnimationClip novo) => CopiarEventos(orig, novo, -1f);
+        public static void CopiarEventos(AnimationClip orig, AnimationClip novo, float acerto)
         {
             if (orig == null || novo == null || orig.length <= 0f) return;
             float hv = orig.events.Where(e => e.functionName == "OnAttackTrigger").Select(e => e.time).DefaultIfEmpty(-1f).First();
-            float alvo = CfgAcerto != null && CfgAcerto.Value > 0f ? CfgAcerto.Value : (Nossa ? Acerto : novo.length * 0.55f);
+            float alvo = acerto > 0f ? acerto : CfgAcerto != null && CfgAcerto.Value > 0f ? CfgAcerto.Value : (Nossa ? Acerto : novo.length * 0.55f);
             float hw = Mathf.Min(alvo, novo.length * 0.95f);
             bool usa = hv > 0f && hv < orig.length;
             System.Func<float, float> map = t =>

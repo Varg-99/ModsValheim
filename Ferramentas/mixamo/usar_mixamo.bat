@@ -16,6 +16,7 @@ for %%F in ("%M%\*.fbx") do (
   copy /y "%%F" "%DEST%\%%~nxF" >nul
   echo fbx: %%~nxF >> "%LOG%"
 )
+for %%F in ("%M%\*.cortes") do copy /y "%%F" "%DEST%\%%~nxF" >nul
 echo [1/2] Unity: a janela vai abrir e fechar sozinha...
 if exist "%BASE%\UnityCeifadora\Logs\golpes_build.log" del "%BASE%\UnityCeifadora\Logs\golpes_build.log"
 start "" /wait "%UNITY%" -projectPath "%BASE%\UnityCeifadora" -executeMethod CeifadoraGolpes.Build -quit -logFile "%M%\unity.log"

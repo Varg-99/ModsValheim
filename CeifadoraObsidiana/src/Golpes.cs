@@ -20,6 +20,31 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<string> CfgSentidoAvanco;
         static bool Estilo(string e) => CfgTrocarUltimo.Value && string.Equals((CfgEstilo.Value ?? "").Trim(), e, System.StringComparison.OrdinalIgnoreCase);
         public static bool Ceifada => Estilo("ceifada");
+        // ---- combo de 4 golpes + especial em 3 partes, com animacoes do Mixamo ----
+        public static ConfigEntry<bool> CfgModo4;
+        public static ConfigEntry<string> CfgMapa4, CfgAcertos4;
+        public static ConfigEntry<float> CfgVelMixamo, CfgDano3, CfgDano4, CfgDanoEspFinal;
+        public static bool Modo4 => CfgModo4 != null && CfgModo4.Value && Golpe3.Bundle.Count > 0;
+        public static int NivelAtual = -1;
+        public static bool EspecialAtual;
+        public static bool UmaMao => Modo4 && (EspecialAtual || NivelAtual >= 2);
+        public static void InitModo4(ConfigFile c)
+        {
+            CfgModo4 = c.Bind("Combo4", "Ativar", true, "Combo de 4 golpes (2 do machado + 2 do Mixamo) e especial em 3 partes (aperte o especial 3 vezes).");
+            CfgMapa4 = c.Bind("Combo4", "Animacoes",
+                "DualAxes Attack 1=BattleAxe2; DualAxes Attack 2 2=BattleAxe1; DualAxes Attack 3 2=Golpe_Mixamo_360; DualAxes Attack 4=Golpe_Mixamo_4; " +
+                "Greatsword BaseAttack (1)=Especial_1; Greatsword BaseAttack (2)=Especial_2; Greatsword BaseAttack (3)=Especial_3",
+                "Qual animacao entra em cada golpe (original=nova). Precisa reiniciar.");
+            CfgAcertos4 = c.Bind("Combo4", "Acertos", "Golpe_Mixamo_360=0.62; Golpe_Mixamo_4=0.50; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
+                "Segundo do dano em cada animacao do Mixamo. Precisa reiniciar.");
+            CfgVelMixamo = c.Bind("Combo4", "VelocidadeMixamo", 1.15f, "Velocidade dos golpes 3, 4 e do especial.");
+            CfgDano3 = c.Bind("Combo4", "Dano3oGolpe", 1.3f, "Multiplicador de dano do 3o golpe.");
+            CfgDano4 = c.Bind("Combo4", "Dano4oGolpe", 2.0f, "Multiplicador de dano do 4o golpe (o ultimo).");
+            CfgDanoEspFinal = c.Bind("Combo4", "DanoUltimaParteEspecial", 1.5f, "Multiplicador de dano da 3a parte do especial.");
+        }
+        static Dictionary<string, string> Pares(string s) => (s ?? "").Split(';').Select(x => x.Split('='))
+            .Where(x => x.Length == 2).ToDictionary(x => x[0].Trim(), x => x[1].Trim());
+
         public static bool Proprio => Estilo("proprio") && Golpe3.Clipe != null;
         public static bool Avanco => Estilo("avanco") || (Estilo("proprio") && Golpe3.Clipe == null);
         public static ConfigEntry<float> CfgVelGolpe3, CfgEscalaAvancoGolpe3;
@@ -71,7 +96,9 @@ namespace CeifadoraObsidiana
         {
             if (!(h is Player p) || p != Player.m_localPlayer || !ComFoice(h)) return 1f;
             var a = AtaqueAtual(h);
-            if (a == null || Secundario(h)) return 1f;
+            if (a == null) return 1f;
+            if (Modo4) return (Secundario(h) || Nivel(a) >= 2) ? CfgVelMixamo.Value : CfgVelNormal.Value;
+            if (Secundario(h)) return 1f;
             if (CfgTrocarUltimo.Value && Ultimo(a)) return Proprio ? CfgVelGolpe3.Value : Ceifada ? CfgVelCeifada.Value : Avanco ? CfgVelAvanco.Value : CfgVelGiro.Value;
             return CfgVelNormal.Value;
         }
@@ -93,15 +120,16 @@ namespace CeifadoraObsidiana
                 var nomes = anim.runtimeAnimatorController.animationClips.Select(c => c.name).Distinct().OrderBy(n => n);
                 Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Clipes do personagem: " + string.Join(", ", nomes));
             }
-            bool com = ComFoice(p) && CfgTrocarUltimo.Value && (Proprio || !string.IsNullOrEmpty(ClipeAlvo));
+            bool com = ComFoice(p) && (Modo4 || (CfgTrocarUltimo.Value && (Proprio || !string.IsNullOrEmpty(ClipeAlvo))));
             bool trocado = _originais.ContainsKey(anim);
             if (com && !trocado)
             {
                 var orig = anim.runtimeAnimatorController;
                 if (!_cache.TryGetValue(orig, out var ovr))
                 {
-                    var giro = Proprio ? Golpe3.Clipe : orig.animationClips.FirstOrDefault(c => c.name == ClipeAlvo);
                     ovr = new AnimatorOverrideController(orig);
+                    if (Modo4) { MontarModo4(orig, ovr); _cache[orig] = ovr; _originais[anim] = orig; TrocarMantendo(anim, ovr); return; }
+                    var giro = Proprio ? Golpe3.Clipe : orig.animationClips.FirstOrDefault(c => c.name == ClipeAlvo);
                     var pares = new List<KeyValuePair<AnimationClip, AnimationClip>>();
                     ovr.GetOverrides(pares);
                     int n = 0;
@@ -123,6 +151,32 @@ namespace CeifadoraObsidiana
                 TrocarMantendo(anim, _originais[anim]);
                 _originais.Remove(anim);
             }
+        }
+
+        static void MontarModo4(RuntimeAnimatorController orig, AnimatorOverrideController ovr)
+        {
+            var mapa = Pares(CfgMapa4.Value);
+            var acertos = Pares(CfgAcertos4.Value);
+            var pares = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            ovr.GetOverrides(pares);
+            var log = new List<string>();
+            for (int i = 0; i < pares.Count; i++)
+            {
+                if (!mapa.TryGetValue(pares[i].Key.name, out var nomeNovo)) continue;
+                AnimationClip novo;
+                if (Golpe3.Bundle.TryGetValue(nomeNovo, out var doPacote))
+                {
+                    novo = UnityEngine.Object.Instantiate(doPacote); novo.name = doPacote.name;
+                    float hit = acertos.TryGetValue(nomeNovo, out var hs) && float.TryParse(hs, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var hv) ? hv : novo.length * 0.5f;
+                    Golpe3.CopiarEventos(pares[i].Key, novo, hit);
+                }
+                else novo = orig.animationClips.FirstOrDefault(c => c.name == nomeNovo);
+                if (novo == null) { log.Add(pares[i].Key.name + " -> (" + nomeNovo + " nao achado)"); continue; }
+                pares[i] = new KeyValuePair<AnimationClip, AnimationClip>(pares[i].Key, novo);
+                log.Add(pares[i].Key.name + " -> " + novo.name + " " + novo.length.ToString("0.00") + "s");
+            }
+            ovr.ApplyOverrides(pares);
+            Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Combo4: " + string.Join("; ", log));
         }
 
         static void TrocarMantendo(Animator a, RuntimeAnimatorController novo)
@@ -165,7 +219,8 @@ namespace CeifadoraObsidiana
             if (!__result || !(__instance is Player p) || p != Player.m_localPlayer || !Golpes.ComFoice(p)) return;
             var a = Golpes.AtaqueAtual(p);
             bool sec = Golpes.Secundario(p);
-            Golpes.GiroAtivo = !sec && Golpes.CfgTrocarUltimo.Value && Golpes.Ultimo(a);
+            Golpes.GiroAtivo = !sec && Golpes.CfgTrocarUltimo.Value && Golpes.Ultimo(a) && !Golpes.Modo4;
+            Golpes.NivelAtual = Golpes.Nivel(a); Golpes.EspecialAtual = sec;
             if (!sec && Golpes.Nivel(a) == 1) Golpes.AcumGolpe2 = 0f;
             if (Golpes.GiroAtivo && Golpes.Avanco)
             {
@@ -222,12 +277,25 @@ namespace CeifadoraObsidiana
         {
             __state = new Vector3(-1f, -1f, -1f);
             var h = Traverse.Create(__instance).Field("m_character").GetValue<Humanoid>();
-            if (!(h is Player p) || p != Player.m_localPlayer || !Golpes.ComFoice(p) || !Golpes.GiroAtivo) return;
+            if (!(h is Player p0) || p0 != Player.m_localPlayer || !Golpes.ComFoice(p0)) return;
+            if (Golpes.Modo4)
+            {
+                int nv = Golpes.Nivel(__instance);
+                bool sec = Golpes.Secundario(p0);
+                if (!sec && nv < 2) return;
+                __state = new Vector3(__instance.m_attackAngle, __instance.m_attackRange, __instance.m_damageMultiplier);
+                __instance.m_attackAngle = 360f;
+                __instance.m_attackRange += Golpes.CfgAlcanceExtraGiro.Value;
+                if (!sec) __instance.m_damageMultiplier *= nv == 2 ? Golpes.CfgDano3.Value : Golpes.CfgDano4.Value;
+                else if (nv == 2) __instance.m_damageMultiplier *= Golpes.CfgDanoEspFinal.Value;
+                return;
+            }
+            if (!(h is Player p) || !Golpes.GiroAtivo) return;
             __state = new Vector3(__instance.m_attackAngle, __instance.m_attackRange, __instance.m_damageMultiplier);
             __instance.m_attackAngle = 360f;
             __instance.m_attackRange += Golpes.CfgAlcanceExtraGiro.Value;
             if (Golpes.Avanco || Golpes.Proprio) __instance.m_damageMultiplier *= Mathf.Max(0.1f, Golpes.CfgDanoAvanco.Value);
-            Impacto.Antes(__instance);
+            if (Impacto.Ligado) Impacto.Antes(__instance);
         }
 
         [HarmonyPostfix]
@@ -238,7 +306,7 @@ namespace CeifadoraObsidiana
             __instance.m_attackRange = __state.y;
             __instance.m_damageMultiplier = __state.z;
             var h = Traverse.Create(__instance).Field("m_character").GetValue<Humanoid>();
-            if (h is Player p) Impacto.Depois(__instance, p);
+            if (h is Player p && Impacto.Ligado) Impacto.Depois(__instance, p);
         }
     }
 
