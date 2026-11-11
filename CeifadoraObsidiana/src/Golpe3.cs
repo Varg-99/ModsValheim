@@ -87,7 +87,9 @@ namespace CeifadoraObsidiana
         public static void CopiarEventos(AnimationClip orig, AnimationClip novo, float acerto)
         {
             if (orig == null || novo == null || orig.length <= 0f) return;
-            float hv = orig.events.Where(e => e.functionName == "OnAttackTrigger").Select(e => e.time).DefaultIfEmpty(-1f).First();
+            // o evento de dano no Valheim se chama "Hit" (em versoes antigas, "OnAttackTrigger")
+            System.Func<AnimationEvent, bool> ehHit = e => e.functionName == "Hit" || e.functionName == "OnAttackTrigger";
+            float hv = orig.events.Where(ehHit).Select(e => e.time).DefaultIfEmpty(-1f).First();
             float alvo = acerto > 0f ? acerto : CfgAcerto != null && CfgAcerto.Value > 0f ? CfgAcerto.Value : (Nossa ? Acerto : novo.length * 0.55f);
             float hw = Mathf.Min(alvo, novo.length * 0.95f);
             bool usa = hv > 0f && hv < orig.length;
@@ -110,11 +112,17 @@ namespace CeifadoraObsidiana
                 // um unico acerto, no momento escolhido (o golpe original podia ter varios, e o primeiro
                 // caia na preparacao do giro)
                 var lista = novo.events.ToList();
-                int primeiro = lista.FindIndex(e => e.functionName == "OnAttackTrigger");
+                int primeiro = lista.FindIndex(e => ehHit(e));
                 if (primeiro >= 0)
                 {
                     lista[primeiro].time = hw;
-                    lista = lista.Where((e, i) => e.functionName != "OnAttackTrigger" || i == primeiro).ToList();
+                    lista = lista.Where((e, i) => !ehHit(e) || i == primeiro).ToList();
+                }
+                // rastro so em volta do golpe de verdade
+                foreach (var e in lista)
+                {
+                    if (e.functionName == "TrailOn") e.time = Mathf.Max(0f, hw - 0.2f);
+                    if (e.functionName == "TrailOff") e.time = Mathf.Min(novo.length, hw + 0.12f);
                 }
                 novo.events = lista.OrderBy(e => e.time).ToArray();
                 var evs = novo.events;

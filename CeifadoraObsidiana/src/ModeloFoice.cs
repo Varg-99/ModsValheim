@@ -114,9 +114,28 @@ namespace CeifadoraObsidiana
                 else mat.SetColor("_EmissionColor", Color.black);
             }
 
+            Malha_ = mesh; Mat_ = mat;
             Modelo = CriarModelo(attach, mesh, mat);
 
-            Malha_ = mesh; Mat_ = mat;
+            // Penas (penduricalhos) separadas do resto: balancam com o movimento da arma.
+            Penas_ = null;
+            var arqP = Path.Combine(pasta, "penas.malha");
+            if (File.Exists(arqP))
+            {
+                float c0 = ComprimentoOriginal;
+                Penas_ = Malha(arqP);
+                ComprimentoOriginal = c0;
+                PenasRaiz = 0.9f; PenasPonta = 0.65f;
+                var txt = Path.Combine(pasta, "penas.txt");
+                if (File.Exists(txt))
+                {
+                    var p = File.ReadAllText(txt).Trim().Split(' ');
+                    var ci = System.Globalization.CultureInfo.InvariantCulture;
+                    if (p.Length >= 2) { float.TryParse(p[0], System.Globalization.NumberStyles.Float, ci, out PenasRaiz); float.TryParse(p[1], System.Globalization.NumberStyles.Float, ci, out PenasPonta); }
+                }
+                AdicionarPenas(Modelo);
+                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Penas: {Penas_.vertexCount} vertices (raiz {PenasRaiz:0.00}, ponta {PenasPonta:0.00}).");
+            }
 
             // Rastro: o rastro do jogo (faixa larga) e desligado; fica uma linha fina que sai do fio da lamina.
             Material matRastro = null;
@@ -162,8 +181,23 @@ namespace CeifadoraObsidiana
         }
 
         public static Transform Modelo, ModeloCostas;
-        static Mesh Malha_;
+        static Mesh Malha_, Penas_;
         static Material Mat_;
+        static float PenasRaiz, PenasPonta;
+
+        static void AdicionarPenas(Transform modelo)
+        {
+            if (Penas_ == null || modelo == null) return;
+            var go = new GameObject("penas");
+            go.layer = modelo.gameObject.layer;
+            go.transform.SetParent(modelo, false);
+            go.AddComponent<MeshFilter>().sharedMesh = Penas_;
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = Mat_;
+            mr.shadowCastingMode = ShadowCastingMode.On;
+            var pm = go.AddComponent<PenasMoles>();
+            pm.Raiz = PenasRaiz; pm.Ponta = PenasPonta;
+        }
 
         /// Nas costas (tecla R): o jogo procura um "attach_back" na arma. A foice do jogo nao tem,
         /// entao criamos um igual ao da arma de referencia (atgeir).
@@ -185,6 +219,7 @@ namespace CeifadoraObsidiana
             // Por isso o attach_back tem que ser o primeiro filho, senao a foice da mao vai para as costas.
             costas.SetSiblingIndex(0);
             ModeloCostas = CriarModelo(costas, Malha_, Mat_);
+            AdicionarPenas(ModeloCostas);
             Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Foice nas costas criada (referencia: {referencia.name}, attach_back da referencia: {(referencia.transform.Find("attach_back") != null ? "sim" : "nao")}).");
         }
 
@@ -198,6 +233,52 @@ namespace CeifadoraObsidiana
             mr.sharedMaterial = mat;
             mr.shadowCastingMode = ShadowCastingMode.On;
             return go.transform;
+        }
+    }
+
+    /// Penas que balancam: cada vertice se desloca junto com um "peso" que segue a arma com mola e
+    /// amortecimento (atrasa, passa do ponto e volta). Perto da amarracao (Raiz) nao mexe; na ponta mexe tudo.
+    [DefaultExecutionOrder(650)]
+    public class PenasMoles : MonoBehaviour
+    {
+        public float Raiz = 0.9f, Ponta = 0.65f; // altura (eixo da haste, espaco do modelo)
+        Mesh _mesh; Vector3[] _base, _v; float[] _w; Vector3 _centro, _p, _vel, _restAnt; bool _ini;
+
+        void Start()
+        {
+            var mf = GetComponent<MeshFilter>();
+            if (mf == null || mf.sharedMesh == null || !CeifadoraPlugin.CfgPenas.Value) { enabled = false; return; }
+            _mesh = Instantiate(mf.sharedMesh); _mesh.MarkDynamic(); mf.sharedMesh = _mesh;
+            _base = _mesh.vertices; _v = new Vector3[_base.Length]; _w = new float[_base.Length];
+            float soma = 0f; var c = Vector3.zero;
+            for (int i = 0; i < _base.Length; i++)
+            {
+                float t = Mathf.Clamp01((Raiz - _base[i].y) / Mathf.Max(0.01f, Raiz - Ponta));
+                _w[i] = Mathf.Pow(t, 1.4f);
+                c += _base[i] * _w[i]; soma += _w[i];
+            }
+            _centro = soma > 0f ? c / soma : Vector3.zero;
+        }
+
+        void OnDestroy() { if (_mesh != null) Destroy(_mesh); }
+
+        void LateUpdate()
+        {
+            if (_mesh == null) return;
+            float dt = Mathf.Clamp(Time.deltaTime, 0.0001f, 0.05f);
+            var rest = transform.TransformPoint(_centro);
+            if (!_ini || (rest - _restAnt).sqrMagnitude > 4f) { _p = rest; _vel = Vector3.zero; _ini = true; }
+            _restAnt = rest;
+            float k = CeifadoraPlugin.CfgPenasMola.Value, amort = 2f * Mathf.Sqrt(k) * 0.35f;
+            var acc = (rest - _p) * k - _vel * amort + Physics.gravity * 0.25f;
+            _vel += acc * dt; _p += _vel * dt;
+            var off = _p - rest;
+            float max = 0.18f * transform.lossyScale.y;
+            if (off.magnitude > max) { off = off.normalized * max; _p = rest + off; }
+            var local = transform.InverseTransformVector(off);
+            for (int i = 0; i < _base.Length; i++) _v[i] = _base[i] + local * _w[i];
+            _mesh.vertices = _v;
+            _mesh.RecalculateBounds();
         }
     }
 

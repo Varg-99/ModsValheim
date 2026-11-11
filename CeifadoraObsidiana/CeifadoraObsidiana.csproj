@@ -39,6 +39,8 @@
     <ItemGroup><ModeloFerro Include="modelo_ferro\*.*" /><ModeloMetalNegro Include="modelo_metalnegro\*.*" /></ItemGroup>
     <Copy SourceFiles="@(ModeloFerro)" DestinationFolder="$(BepInExDir)\plugins\CeifadoraObsidiana\modelo_ferro" />
     <Copy SourceFiles="@(ModeloMetalNegro)" DestinationFolder="$(BepInExDir)\plugins\CeifadoraObsidiana\modelo_metalnegro" />
+    <ItemGroup><ModeloFlametal Include="modelo_flametal\*.*" /></ItemGroup>
+    <Copy SourceFiles="@(ModeloFlametal)" DestinationFolder="$(BepInExDir)\plugins\CeifadoraObsidiana\modelo_flametal" />
   </Target>
 
 </Project>

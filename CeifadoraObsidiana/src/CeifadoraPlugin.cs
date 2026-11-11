@@ -29,14 +29,15 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.1.1";
+        public const string PluginVersion = "3.2.1";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
         private const string BaseVisualPrefab = "Scythe"; // modelo da foice do jogo
 
         public static ConfigEntry<float> CfgBrilho;
-        public static ConfigEntry<bool> CfgRastro, CfgRastroLamina;
+        public static ConfigEntry<bool> CfgRastro, CfgRastroLamina, CfgPenas;
+        public static ConfigEntry<float> CfgPenasMola;
         public static ConfigEntry<float> CfgRastroTempo;
         public static ConfigEntry<string> CfgRastroCor;
         public static Color CorRastro()
@@ -72,6 +73,8 @@ namespace CeifadoraObsidiana
 
             CfgRastro = Config.Bind("Visual", "LinhaNoFio", true, "Linha fina que segue o fio da lamina durante o golpe. Precisa reiniciar.");
             CfgRastroLamina = Config.Bind("Visual", "RastroDaLamina", true, "Faixa que liga a base a ponta da lamina durante o golpe (mostra o angulo do corte). Substitui a linha fina.");
+            CfgPenas = Config.Bind("Visual", "PenasBalancam", true, "Foice de flametal: as penas balancam com o movimento.");
+            CfgPenasMola = Config.Bind("Visual", "RigidezDasPenas", 60f, "Quanto maior, mais duras as penas (30 = bem soltas, 120 = firmes).");
             CfgRastroTempo = Config.Bind("Visual", "DuracaoDoRastro2", 0.14f, "Quanto tempo (s) o rastro fica visivel.");
             CfgRastroCor = Config.Bind("Visual", "CorDoRastro2", "#FFFFFF66", "Cor do rastro (RGBA em hexadecimal).");
 
@@ -131,6 +134,8 @@ namespace CeifadoraObsidiana
             {
                 { "item_ceifadora", "Ceifadora Obsidiana" },
                 { "item_ceifadora_desc", "Uma foice longa de lamina negra como vidro vulcanico. Cada corte deixa uma trilha vermelha." },
+                { "item_ceifadora_flametal", "Ceifadora de Flametal" },
+                { "item_ceifadora_flametal_desc", "Foice de flametal com cabo de madeira de cinzas, osso carbonizado e couro de asksvin. As penas dancam a cada golpe." },
                 { "item_ceifadora_ferro", "Ceifadora de Ferro" },
                 { "item_ceifadora_ferro_desc", "Uma foice de ferro forjada com casca antiga do pantano. Pesada e confiavel." },
                 { "item_ceifadora_metalnegro", "Ceifadora de Metal Negro" },
@@ -142,6 +147,8 @@ namespace CeifadoraObsidiana
             {
                 { "item_ceifadora", "Obsidian Reaper" },
                 { "item_ceifadora_desc", "A long scythe with a blade black as volcanic glass. Every cut leaves a red trail." },
+                { "item_ceifadora_flametal", "Flametal Reaper" },
+                { "item_ceifadora_flametal_desc", "A flametal scythe with an ashwood haft, charred bone and asksvin leather. Its feathers dance with every swing." },
                 { "item_ceifadora_ferro", "Iron Reaper" },
                 { "item_ceifadora_ferro_desc", "An iron scythe forged with ancient bark from the swamp. Heavy and reliable." },
                 { "item_ceifadora_metalnegro", "Black Metal Reaper" },
@@ -211,6 +218,7 @@ namespace CeifadoraObsidiana
             public int Nivel = 4;
             public RequirementConfig[] Itens;
             public float Corte, CortePorNivel, Durabilidade = 200f, Peso = 3.5f;
+            public bool Sangue; // sangramento + respingo de sangue
         }
         public static readonly System.Collections.Generic.HashSet<string> Prefabs = new System.Collections.Generic.HashSet<string>();
 
@@ -218,14 +226,16 @@ namespace CeifadoraObsidiana
         {
             yield return new Variante
             {
-                Prefab = ItemPrefabName, Chave = "item_ceifadora", Pasta = "modelo", Nivel = 4,
+                // Obsidiana (vermelha): arma das Brumas, com eitr. Forja Negra 2.
+                Prefab = ItemPrefabName, Chave = "item_ceifadora", Pasta = "modelo",
+                Estacao = CraftingStations.BlackForge, Nivel = 2,
                 Itens = new[]
                 {
-                    new RequirementConfig("BlackMetal", 30, 15), new RequirementConfig("Obsidian", 20, 10),
-                    new RequirementConfig("Bloodbag", 10, 5), new RequirementConfig("ElderBark", 10, 0),
-                    new RequirementConfig("LinenThread", 5, 2),
+                    new RequirementConfig("BlackMetal", 20, 10), new RequirementConfig("Eitr", 10, 5),
+                    new RequirementConfig("YggdrasilWood", 10, 5), new RequirementConfig("Obsidian", 10, 5),
+                    new RequirementConfig("Bloodbag", 10, 5),
                 },
-                Corte = CfgSlash.Value, CortePorNivel = CfgSlashPerLevel.Value,
+                Corte = Mathf.Max(CfgSlash.Value, 125f), CortePorNivel = CfgSlashPerLevel.Value, Sangue = true,
             };
             // Metal negro: mesmos itens do Machado de Batalha de Metal Negro (Forja nivel 4).
             yield return new Variante
@@ -235,6 +245,15 @@ namespace CeifadoraObsidiana
                 Itens = new[] { new RequirementConfig("FineWood", 10, 0), new RequirementConfig("BlackMetal", 30, 15), new RequirementConfig("LinenThread", 5, 5) },
                 Corte = 110f, CortePorNivel = 6f, Durabilidade = 200f,
             };
+            // Flametal (Terras de Cinzas): flametal, madeira de cinzas, osso carbonizado e couro de asksvin. Forja Negra 3.
+            yield return new Variante
+            {
+                Prefab = "CeifadoraFlametal", Chave = "item_ceifadora_flametal", Pasta = "modelo_flametal",
+                Estacao = CraftingStations.BlackForge, Nivel = 3,
+                Itens = new[] { new RequirementConfig("FlametalNew", 30, 15), new RequirementConfig("Blackwood", 10, 5),
+                                new RequirementConfig("CharredBone", 10, 5), new RequirementConfig("AskHide", 4, 2) },
+                Corte = 140f, CortePorNivel = 6f, Durabilidade = 300f, Sangue = true,
+            };
             // Ferro: itens da Lanca de Casca Antiga (pantano), em quantidade de arma de duas maos (Forja nivel 3).
             yield return new Variante
             {
@@ -242,6 +261,26 @@ namespace CeifadoraObsidiana
                 Itens = new[] { new RequirementConfig("ElderBark", 20, 5), new RequirementConfig("Iron", 30, 15), new RequirementConfig("TrollHide", 4, 2) },
                 Corte = 75f, CortePorNivel = 6f, Durabilidade = 175f, Peso = 4f,
             };
+        }
+
+        // Confere se cada item da receita existe no jogo (alguns mudaram de nome entre versoes).
+        static readonly System.Collections.Generic.Dictionary<string, string[]> Alternativos = new System.Collections.Generic.Dictionary<string, string[]>
+        {
+            { "FlametalNew", new[] { "Flametal" } }, { "Blackwood", new[] { "Ashwood", "AshWood" } },
+            { "AskHide", new[] { "AsksvinHide", "Asksvin_Hide" } }, { "CharredBone", new[] { "Charredbone", "BoneCharred" } },
+        };
+        static void ConferirItens(Variante v)
+        {
+            var ok = new System.Collections.Generic.List<RequirementConfig>();
+            foreach (var r in v.Itens)
+            {
+                string nome = r.Item;
+                if (PrefabManager.Instance.GetPrefab(nome) == null && Alternativos.TryGetValue(nome, out var alt))
+                    nome = alt.FirstOrDefault(a => PrefabManager.Instance.GetPrefab(a) != null) ?? nome;
+                if (PrefabManager.Instance.GetPrefab(nome) == null) { Jotunn.Logger.LogWarning($"[{PluginName}] {v.Prefab}: item '{r.Item}' nao existe; tirado da receita."); continue; }
+                r.Item = nome; ok.Add(r);
+            }
+            v.Itens = ok.ToArray();
         }
 
         // Copia os itens e a estacao de uma receita do jogo (se existir), para ficar igual a arma equivalente.
@@ -266,6 +305,7 @@ namespace CeifadoraObsidiana
                 return;
             }
             CopiarReceita(v);
+            ConferirItens(v);
             var config = new ItemConfig
             {
                 Name = "$" + v.Chave,
@@ -337,9 +377,19 @@ namespace CeifadoraObsidiana
                 Jotunn.Logger.LogInfo($"[{PluginName}] Combo4: normal '{shared.m_attack.m_attackAnimation}' x{shared.m_attack.m_attackChainLevels}, especial '{shared.m_secondaryAttack.m_attackAnimation}' x{shared.m_secondaryAttack.m_attackChainLevels}.");
             }
 
-            shared.m_attackStatusEffect = bleed;
-            var chance = Traverse.Create(shared).Field("m_attackStatusEffectChance");
-            if (chance.FieldExists()) chance.SetValue(CfgBleedChance.Value);
+            if (v.Sangue)
+            {
+                shared.m_attackStatusEffect = bleed;
+                var chance = Traverse.Create(shared).Field("m_attackStatusEffectChance");
+                if (chance.FieldExists()) chance.SetValue(CfgBleedChance.Value);
+            }
+            else shared.m_attackStatusEffect = null;
+            // sem a "travadinha" quando acerta (como o machado de duas maos)
+            foreach (var at in new[] { shared.m_attack, shared.m_secondaryAttack })
+            {
+                var ff = Traverse.Create(at).Field("m_freezeFrameDuration");
+                if (ff.FieldExists()) ff.SetValue(0f);
+            }
 
             var pasta = pastaV;
             var modelo = ModeloFoice.Trocar(item.ItemPrefab, pasta);
@@ -355,7 +405,7 @@ namespace CeifadoraObsidiana
             }
             else TintObsidian(item.ItemPrefab);
 
-            AdicionarSangue(shared);
+            if (v.Sangue) AdicionarSangue(shared);
             ItemManager.Instance.AddItem(item);
             Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
         }

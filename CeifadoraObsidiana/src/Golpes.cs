@@ -39,7 +39,7 @@ namespace CeifadoraObsidiana
                 "DualAxes Attack 1=BattleAxe1; DualAxes Attack 2 2=BattleAxe2; DualAxes Attack 3 2=Golpe_Mixamo_360; DualAxes Attack 4=Golpe_Mixamo_4; " +
                 "Greatsword BaseAttack (1)=Especial_1; Greatsword BaseAttack (2)=Especial_2; Greatsword BaseAttack (3)=Especial_3",
                 "Qual animacao entra em cada golpe (original=nova). Precisa reiniciar.");
-            CfgAcertos4 = c.Bind("Combo4", "Acertos2", "Golpe_Mixamo_360=0.75; Golpe_Mixamo_4=0.50; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
+            CfgAcertos4 = c.Bind("Combo4", "Acertos3", "Golpe_Mixamo_360=0.75; Golpe_Mixamo_4=0.55; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
                 "Segundo do dano em cada animacao do Mixamo. Precisa reiniciar.");
             CfgVelMixamo = c.Bind("Combo4", "VelocidadeMixamo", 1.15f, "Velocidade dos golpes 3, 4 e do especial.");
             CfgDano3 = c.Bind("Combo4", "Dano3oGolpe", 1.3f, "Multiplicador de dano do 3o golpe.");

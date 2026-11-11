@@ -6,11 +6,16 @@ ENT = os.path.join(BASE, r"Modelos\novas")
 SAI = os.path.join(BASE, r"Ferramentas\novas")
 LOG = os.path.join(SAI, "blender.log")
 ALVO = 40000  # triangulos
+ALVOS = {"flametal": 80000}  # a de penas precisa de mais detalhe
 linhas = []
 def log(m):
     print(m); linhas.append(str(m)); open(LOG, "w", encoding="utf-8").write("\n".join(linhas))
 try:
-    for nome in ("Metal_negro", "ferro"):
+    # processa os modelos que chegaram (em pedacos ou .glb) e ainda nao tem .raw
+    nomes = sorted({f.split(".glb")[0] for f in os.listdir(ENT) if ".glb" in f})
+    nomes = [n for n in nomes if not os.path.exists(os.path.join(SAI, n + ".raw")) or any(f.startswith(n + ".glb.part") for f in os.listdir(ENT))]
+    log("modelos: " + ", ".join(nomes))
+    for nome in nomes:
         bpy.ops.wm.read_factory_settings(use_empty=True)
         glb = os.path.join(ENT, nome + ".glb")
         partes = sorted(f for f in os.listdir(ENT) if f.startswith(nome + ".glb.part"))
@@ -24,7 +29,7 @@ try:
         me = obj.data
         tris = sum(len(p.vertices) - 2 for p in me.polygons)
         mod = obj.modifiers.new("dec", "DECIMATE"); mod.decimate_type = "COLLAPSE"
-        mod.ratio = min(1.0, ALVO / max(1, tris)); mod.use_collapse_triangulate = True
+        mod.ratio = min(1.0, ALVOS.get(nome, ALVO) / max(1, tris)); mod.use_collapse_triangulate = True
         bpy.context.view_layer.objects.active = obj; obj.select_set(True)
         bpy.ops.object.modifier_apply(modifier="dec")
         me = obj.data
