@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.2.5";
+        public const string PluginVersion = "3.2.6";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -98,6 +98,7 @@ namespace CeifadoraObsidiana
             Golpes.InitModo4(Config);
             UmAcertoPorGolpe.CfgLigado = Config.Bind("Combo4", "UmAcertoPorInimigo", true, "Cada inimigo leva dano no maximo uma vez por golpe (outros inimigos podem ser acertados no mesmo golpe).");
             Impacto.Init(Config);
+            Sons.Init(Config);
             Golpe3.CfgClipe = Config.Bind("Golpes", "ClipeDoGolpe3", "auto",
                 "Animacao do 3o golpe dentro do pacote ceifadora_golpes. auto = usa a do Mixamo se houver, senao Ceifadora_Golpe3. Precisa reiniciar.");
             Golpe3.CfgAcerto = Config.Bind("Golpes", "AcertoDoGolpe3", 0f,
@@ -424,6 +425,7 @@ namespace CeifadoraObsidiana
             shared.m_hitEffect = SemSangue(sn.m_hitEffect);
             shared.m_hitTerrainEffect = SemSangue(sn.m_hitTerrainEffect);
             GarantirTremida(shared.m_hitEffect);
+            Sons.TirarSomDaFoice(shared);
             Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} efeitos de acerto: " + string.Join(", ", shared.m_hitEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));
             foreach (var at in new[] { shared.m_attack, shared.m_secondaryAttack })
             {
