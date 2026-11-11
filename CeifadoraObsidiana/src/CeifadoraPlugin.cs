@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.1.0";
+        public const string PluginVersion = "3.1.1";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -323,7 +323,7 @@ namespace CeifadoraObsidiana
                     shared.m_attack.m_attackChainLevels = duplo.m_attackChainLevels;
                     shared.m_attack.m_lastChainDamageMultiplier = 1f; // o dano extra vem do [Combo4]
                 }
-                var gs = AcharAtaque(a => a.m_attackChainLevels == 3 && (a.m_attackAnimation ?? "").ToLower().Contains("greatsword"), "THSwordKrom");
+                var gs = Golpes.CfgEspecial3.Value ? AcharAtaque(a => a.m_attackChainLevels == 3 && (a.m_attackAnimation ?? "").ToLower().Contains("greatsword"), "THSwordKrom") : null;
                 if (gs != null)
                 {
                     var sec = shared.m_attack.Clone();

@@ -226,7 +226,7 @@ namespace CeifadoraObsidiana
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var p = _dono as Player;
             bool atacando = p != null && p.InAttack() && Golpes.AtaqueAtual(p) != null;
-            bool especial = atacando && Golpes.Secundario(p) && !Golpes.Modo4;
+            bool especial = atacando && Golpes.Secundario(p) && !Golpes.Especial3;
             bool ultimo = atacando && !especial && p == Player.m_localPlayer && Golpes.GiroAtivo;
             bool ceifada = ultimo && Golpes.Ceifada;
             bool proprio = ultimo && Golpes.Proprio && Golpe3.TemTrilha;

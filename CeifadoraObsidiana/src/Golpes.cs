@@ -27,10 +27,14 @@ namespace CeifadoraObsidiana
         public static bool Modo4 => CfgModo4 != null && CfgModo4.Value && Golpe3.Bundle.Count > 0;
         public static int NivelAtual = -1;
         public static bool EspecialAtual;
-        public static bool UmaMao => Modo4 && (EspecialAtual || NivelAtual >= 2);
+        public static ConfigEntry<bool> CfgEspecial3;
+        public static bool Especial3 => Modo4 && CfgEspecial3 != null && CfgEspecial3.Value;
+        public static bool UmaMao => Modo4 && ((EspecialAtual && Especial3) || (!EspecialAtual && NivelAtual >= 2));
         public static void InitModo4(ConfigFile c)
         {
             CfgModo4 = c.Bind("Combo4", "Ativar", true, "Combo de 4 golpes (2 do machado + 2 do Mixamo) e especial em 3 partes (aperte o especial 3 vezes).");
+            CfgEspecial3 = c.Bind("Combo4", "EspecialEm3Partes", false,
+                "false = especial e o giro da atgeir (foice para fora do corpo); true = especial do Mixamo em 3 partes. Precisa reiniciar.");
             CfgMapa4 = c.Bind("Combo4", "Animacoes2",
                 "DualAxes Attack 1=BattleAxe1; DualAxes Attack 2 2=BattleAxe2; DualAxes Attack 3 2=Golpe_Mixamo_360; DualAxes Attack 4=Golpe_Mixamo_4; " +
                 "Greatsword BaseAttack (1)=Especial_1; Greatsword BaseAttack (2)=Especial_2; Greatsword BaseAttack (3)=Especial_3",
@@ -98,7 +102,11 @@ namespace CeifadoraObsidiana
             if (!(h is Player p) || p != Player.m_localPlayer || !ComFoice(h)) return 1f;
             var a = AtaqueAtual(h);
             if (a == null) return 1f;
-            if (Modo4) return (Secundario(h) || Nivel(a) >= 2) ? CfgVelMixamo.Value : CfgVelNormal.Value;
+            if (Modo4)
+            {
+                if (Secundario(h)) return Especial3 ? CfgVelMixamo.Value : 1f;
+                return Nivel(a) >= 2 ? CfgVelMixamo.Value : CfgVelNormal.Value;
+            }
             if (Secundario(h)) return 1f;
             if (CfgTrocarUltimo.Value && Ultimo(a)) return Proprio ? CfgVelGolpe3.Value : Ceifada ? CfgVelCeifada.Value : Avanco ? CfgVelAvanco.Value : CfgVelGiro.Value;
             return CfgVelNormal.Value;
@@ -274,8 +282,8 @@ namespace CeifadoraObsidiana
     [HarmonyPatch(typeof(Attack), "DoMeleeAttack")]
     public static class Patch_DoMeleeAttack_Giro
     {
-        [HarmonyPrefix]
         static float _forca = -1f;
+        [HarmonyPrefix]
         public static void Prefix(Attack __instance, out Vector3 __state)
         {
             __state = new Vector3(-1f, -1f, -1f);
@@ -286,6 +294,7 @@ namespace CeifadoraObsidiana
                 int nv = Golpes.Nivel(__instance);
                 bool sec = Golpes.Secundario(p0);
                 if (!sec && nv < 2) return;
+                if (sec && !Golpes.Especial3) return; // giro da atgeir: como no jogo
                 __state = new Vector3(__instance.m_attackAngle, __instance.m_attackRange, __instance.m_damageMultiplier);
                 // 3o golpe empurra pouco, para o 4o ainda alcancar o inimigo
                 var f = Traverse.Create(__instance).Field("m_forceMultiplier");
