@@ -15,9 +15,13 @@ namespace CeifadoraObsidiana
         public const string Pacote = "ceifadora_golpes";
         public const string NomeClipe = "Ceifadora_Golpe3";
         public static AnimationClip Clipe;
+        public static BepInEx.Configuration.ConfigEntry<string> CfgClipe;
+        public static BepInEx.Configuration.ConfigEntry<float> CfgAcerto;
+        /// a trilha da foice so vale para a animacao feita aqui (Ceifadora_Golpe3)
+        public static bool Nossa => Clipe != null && Clipe.name == NomeClipe;
         public static float Fps = 30f, Acerto = 0.85f, Perna = 0.85f;
         static readonly List<Vector3> _g = new List<Vector3>(), _h = new List<Vector3>(), _l = new List<Vector3>();
-        public static bool TemTrilha => _g.Count > 1;
+        public static bool TemTrilha => _g.Count > 1 && Nossa;
 
         public static void Init(string pastaPlugin)
         {
@@ -27,8 +31,12 @@ namespace CeifadoraObsidiana
                 if (arq == null) { Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Golpe 3 proprio: pacote '{Pacote}' nao encontrado (usa o avanco)."); return; }
                 var b = AssetBundle.LoadFromFile(arq);
                 if (b == null) { Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Golpe 3 proprio: nao consegui abrir o pacote."); return; }
-                Clipe = b.LoadAllAssets<AnimationClip>().FirstOrDefault(c => c.name == NomeClipe)
-                        ?? b.LoadAllAssets<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__"));
+                var todos = b.LoadAllAssets<AnimationClip>().Where(c => !c.name.StartsWith("__")).ToArray();
+                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Golpe 3: animacoes no pacote: " + string.Join(", ", todos.Select(c => c.name + " (" + c.length.ToString("0.00") + "s)")));
+                var pedido = (CfgClipe?.Value ?? "auto").Trim();
+                if (!string.Equals(pedido, "auto", System.StringComparison.OrdinalIgnoreCase))
+                    Clipe = todos.FirstOrDefault(c => string.Equals(c.name, pedido, System.StringComparison.OrdinalIgnoreCase));
+                if (Clipe == null) Clipe = todos.FirstOrDefault(c => c.name != NomeClipe) ?? todos.FirstOrDefault(c => c.name == NomeClipe);
                 var t = Path.Combine(Path.Combine(pastaPlugin, "modelo"), "golpe3_trilha.txt");
                 if (File.Exists(t)) LerTrilha(t);
                 Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Golpe 3 proprio: clipe {(Clipe ? Clipe.name + " " + Clipe.length.ToString("0.00") + "s, humano " + Clipe.humanMotion : "NAO achado")}, trilha {_g.Count} quadros, acerto {Acerto:0.00}s.");
@@ -76,7 +84,8 @@ namespace CeifadoraObsidiana
         {
             if (orig == null || novo == null || orig.length <= 0f) return;
             float hv = orig.events.Where(e => e.functionName == "OnAttackTrigger").Select(e => e.time).DefaultIfEmpty(-1f).First();
-            float hw = Mathf.Min(Acerto, novo.length * 0.95f);
+            float alvo = CfgAcerto != null && CfgAcerto.Value > 0f ? CfgAcerto.Value : (Nossa ? Acerto : novo.length * 0.55f);
+            float hw = Mathf.Min(alvo, novo.length * 0.95f);
             bool usa = hv > 0f && hv < orig.length;
             System.Func<float, float> map = t =>
             {

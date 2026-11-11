@@ -227,6 +227,7 @@ namespace CeifadoraObsidiana
             __instance.m_attackAngle = 360f;
             __instance.m_attackRange += Golpes.CfgAlcanceExtraGiro.Value;
             if (Golpes.Avanco || Golpes.Proprio) __instance.m_damageMultiplier *= Mathf.Max(0.1f, Golpes.CfgDanoAvanco.Value);
+            Impacto.Antes(__instance);
         }
 
         [HarmonyPostfix]
@@ -236,6 +237,8 @@ namespace CeifadoraObsidiana
             __instance.m_attackAngle = __state.x;
             __instance.m_attackRange = __state.y;
             __instance.m_damageMultiplier = __state.z;
+            var h = Traverse.Create(__instance).Field("m_character").GetValue<Humanoid>();
+            if (h is Player p) Impacto.Depois(__instance, p);
         }
     }
 

@@ -61,14 +61,20 @@ public static class CeifadoraGolpes
                 // mapa explicito: os ossos tem os mesmos nomes do humanoide do Unity
                 var hd = imp.humanDescription;
                 var nomesNoModelo = hd.skeleton.Select(s => s.name).ToList();
-                hd.human = Ossos.Where(o => nomesNoModelo.Contains(o)).Select(o =>
+                int iguais = Ossos.Count(o => nomesNoModelo.Contains(o));
+                if (iguais >= 15)
                 {
-                    var hb = new HumanBone { humanName = o, boneName = o };
-                    hb.limit.useDefaultValues = true;
-                    return hb;
-                }).ToArray();
-                imp.humanDescription = hd;
-                imp.autoGenerateAvatarMappingIfUnspecified = false;
+                    // esqueleto feito aqui (golpe3.py): nomes iguais aos do humanoide
+                    hd.human = Ossos.Where(o => nomesNoModelo.Contains(o)).Select(o =>
+                    {
+                        var hb = new HumanBone { humanName = o, boneName = o };
+                        hb.limit.useDefaultValues = true;
+                        return hb;
+                    }).ToArray();
+                    imp.humanDescription = hd;
+                    imp.autoGenerateAvatarMappingIfUnspecified = false;
+                }
+                else Log(name + ": esqueleto de fora (ex.: Mixamo), mapa automatico do Unity com " + hd.human.Length + " ossos");
 
                 var takes = imp.importedTakeInfos;
                 if (takes == null || takes.Length == 0) { imp.SaveAndReimport(); takes = imp.importedTakeInfos; }

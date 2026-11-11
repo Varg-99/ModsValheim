@@ -1,0 +1,16 @@
+Animacao do Mixamo para o 3o golpe da Ceifadora
+================================================
+1. Entre em https://www.mixamo.com (conta gratuita da Adobe).
+2. Busque a animacao (sugestoes: "Great Sword Slash", "Great Sword Spin Attack",
+   "Standing Melee Attack Horizontal", "Sword And Shield Slash").
+3. Clique em Download:
+     Format: FBX for Unity (.fbx)
+     Skin: With Skin
+     Frames per second: 30
+     Keyframe Reduction: none
+   Se a animacao tiver a opcao "In Place", deixe DESMARCADA (o avanco do golpe vem dela).
+4. Salve o .fbx nesta pasta (Ferramentas\mixamo). De um nome simples, ex.: golpe_mixamo.fbx
+5. Feche o Valheim e o Unity e rode usar_mixamo.bat.
+6. No jogo, o 3o golpe passa a usar essa animacao (ClipeDoGolpe3 = auto).
+   Para voltar ao golpe feito aqui: ClipeDoGolpe3 = Ceifadora_Golpe3 no .cfg.
+   Se o dano sair na hora errada: AcertoDoGolpe3 = segundo da batida (ex.: 0.6).
