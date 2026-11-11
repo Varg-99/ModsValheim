@@ -217,6 +217,7 @@ namespace CeifadoraObsidiana
         public static void Postfix(Humanoid __instance, bool __result)
         {
             if (!__result || !(__instance is Player p) || p != Player.m_localPlayer || !Golpes.ComFoice(p)) return;
+            UmAcertoPorGolpe.Atingidos.Clear();
             var a = Golpes.AtaqueAtual(p);
             bool sec = Golpes.Secundario(p);
             Golpes.GiroAtivo = !sec && Golpes.CfgTrocarUltimo.Value && Golpes.Ultimo(a) && !Golpes.Modo4;
@@ -334,6 +335,39 @@ namespace CeifadoraObsidiana
             if (Golpes.AvancoPendente == Vector3.zero) return;
             __0 += Golpes.AvancoPendente;
             Golpes.AvancoPendente = Vector3.zero;
+        }
+    }
+
+    // Cada inimigo so leva dano uma vez por golpe (pode acertar varios inimigos diferentes).
+    // A lista zera a cada golpe novo (StartAttack). So vale para o dano que sai do golpe em si
+    // (dentro de DoMeleeAttack), entao o sangramento continua funcionando.
+    [HarmonyPatch(typeof(Attack), "DoMeleeAttack")]
+    public static class UmAcertoPorGolpe
+    {
+        public static readonly HashSet<int> Atingidos = new HashSet<int>();
+        public static bool Dentro;
+        public static ConfigEntry<bool> CfgLigado;
+
+        [HarmonyPrefix, HarmonyPriority(Priority.First)]
+        public static void Prefix(Attack __instance)
+        {
+            var h = Traverse.Create(__instance).Field("m_character").GetValue<Humanoid>();
+            Dentro = h != null && h == Player.m_localPlayer && Golpes.ComFoice(h) && (CfgLigado == null || CfgLigado.Value);
+        }
+
+        [HarmonyPostfix, HarmonyPriority(Priority.Last)]
+        public static void Postfix() { Dentro = false; }
+    }
+
+    [HarmonyPatch(typeof(Character), nameof(Character.Damage))]
+    public static class Patch_Damage_UmAcerto
+    {
+        [HarmonyPrefix, HarmonyPriority(Priority.First)]
+        public static bool Prefix(Character __instance, HitData hit)
+        {
+            if (!UmAcertoPorGolpe.Dentro || __instance == null || __instance == Player.m_localPlayer) return true;
+            if (UmAcertoPorGolpe.Atingidos.Add(__instance.GetInstanceID())) return true;
+            return false; // ja tomou dano deste golpe
         }
     }
 }

@@ -204,7 +204,8 @@ namespace CeifadoraObsidiana
     public class RastroLamina : MonoBehaviour
     {
         // pontos no espaco do modelo (haste em +Y com o cabo na origem, lamina para +Z)
-        static readonly Vector3 Base = new Vector3(0f, 1.08f, 0.06f), Ponta = new Vector3(0f, 0.83f, 0.47f);
+        // so a parte de fora da lamina (rastro discreto, parecido com o das outras armas)
+        static readonly Vector3 Ponta = new Vector3(0f, 0.83f, 0.47f), Base = Vector3.Lerp(new Vector3(0f, 1.08f, 0.06f), new Vector3(0f, 0.83f, 0.47f), 0.6f);
         struct Amostra { public Vector3 a, b; public float t; }
         readonly System.Collections.Generic.List<Amostra> _pts = new System.Collections.Generic.List<Amostra>();
         Player _dono; GameObject _go; Mesh _mesh; Material _mat;
@@ -245,8 +246,8 @@ namespace CeifadoraObsidiana
             {
                 float f = 1f - (agora - _pts[k].t) / vida;
                 _v[2 * k] = _pts[k].a; _v[2 * k + 1] = _pts[k].b;
-                _c[2 * k] = new Color(cor.r, cor.g, cor.b, cor.a * f * 0.35f);
-                _c[2 * k + 1] = new Color(cor.r, cor.g, cor.b, cor.a * f);
+                _c[2 * k] = new Color(cor.r, cor.g, cor.b, 0f);
+                _c[2 * k + 1] = new Color(cor.r, cor.g, cor.b, cor.a * f * f);
             }
             if (_i.Length != (n - 1) * 6) _i = new int[(n - 1) * 6];
             for (int k = 0; k < n - 1; k++)

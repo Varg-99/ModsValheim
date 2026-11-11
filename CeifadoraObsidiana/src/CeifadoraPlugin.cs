@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.0.3";
+        public const string PluginVersion = "3.0.4";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -72,8 +72,8 @@ namespace CeifadoraObsidiana
 
             CfgRastro = Config.Bind("Visual", "LinhaNoFio", true, "Linha fina que segue o fio da lamina durante o golpe. Precisa reiniciar.");
             CfgRastroLamina = Config.Bind("Visual", "RastroDaLamina", true, "Faixa que liga a base a ponta da lamina durante o golpe (mostra o angulo do corte). Substitui a linha fina.");
-            CfgRastroTempo = Config.Bind("Visual", "DuracaoDoRastro", 0.3f, "Quanto tempo (s) a faixa do rastro fica visivel.");
-            CfgRastroCor = Config.Bind("Visual", "CorDoRastro", "#FF4033E6", "Cor do rastro (RGBA em hexadecimal).");
+            CfgRastroTempo = Config.Bind("Visual", "DuracaoDoRastro2", 0.14f, "Quanto tempo (s) o rastro fica visivel.");
+            CfgRastroCor = Config.Bind("Visual", "CorDoRastro2", "#FFFFFF66", "Cor do rastro (RGBA em hexadecimal).");
 
             CfgSlash = Config.Bind("Arma", "DanoCorte", 110f,
                 new ConfigDescription("Dano de corte base (nivel 1).", null, admin));
@@ -93,6 +93,7 @@ namespace CeifadoraObsidiana
             AjusteFoice.Init(Config);
             Golpes.Init(Config);
             Golpes.InitModo4(Config);
+            UmAcertoPorGolpe.CfgLigado = Config.Bind("Combo4", "UmAcertoPorInimigo", true, "Cada inimigo leva dano no maximo uma vez por golpe (outros inimigos podem ser acertados no mesmo golpe).");
             Impacto.Init(Config);
             Golpe3.CfgClipe = Config.Bind("Golpes", "ClipeDoGolpe3", "auto",
                 "Animacao do 3o golpe dentro do pacote ceifadora_golpes. auto = usa a do Mixamo se houver, senao Ceifadora_Golpe3. Precisa reiniciar.");
