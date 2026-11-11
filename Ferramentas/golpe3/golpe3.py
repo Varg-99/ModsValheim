@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as Rot
 FPS = 30
 DUR = 0.80
 N = int(round(DUR * FPS)) + 1
-HIT = 0.62
+HIT = 0.66
 VAO = 0.32          # distancia entre as maos na haste
 CABO = 0.30         # cabo atras da mao de baixo
 COMP = 2.0          # comprimento da foice
@@ -94,34 +94,32 @@ def ik2(root, alvo, l1, l2, polo):
 
 # ---------------- roteiro do golpe ----------------
 # psi: giro do quadril (graus, + = para a direita do personagem, sentido do fim do 2o golpe)
-# v5: baseado no 4o golpe leve da foice no video de referencia (camera atras do personagem).
-# A foice faz uma RODA do lado direito: desce na frente, passa por baixo para tras, sobe atras,
-# passa por cima da cabeca e desce cortando na diagonal ate o chao a frente-esquerda.
-# A lamina fica sempre na mesma posicao em relacao a roda (vai sempre na frente, com a "giradinha"
-# da roda). Cadeia: quadril -> tronco -> bracos (atrasados). O tronco enrola para a direita
-# enquanto a foice sobe e desenrola para a esquerda puxando a batida.
-K_PSI_H = [(0.00, 10), (0.15, 22), (0.35, 10), (0.55, -25), (0.62, -30), (0.80, -30)]
-K_PSI_C = [(0.00, 12), (0.22, 25), (0.40, 15), (0.58, -25), (0.62, -30), (0.80, -30)]
-K_PSI_S = [(0.00, 8), (0.28, 10), (0.45, 5), (0.62, -25), (0.80, -26)]
-K_LEAN = [(0.00, 10), (0.30, -8), (0.45, -5), (0.62, 38), (0.80, 36)]
-K_HIPS = [(0.00, (0, -0.10, 0.0)), (0.30, (0, -0.06, 0.05)), (0.45, (0, -0.10, 0.15)),
-          (0.62, (0, -0.28, 0.45)), (0.80, (0, -0.28, 0.47))]
-# roda: angulo da haste (graus) a partir da frente, girando para baixo (60 = frente-baixo,
-# 90 = baixo, 180 = tras, 270 = cima, 360 = frente)
-K_PHI = [(0.00, 60), (0.28, 200), (0.45, 290), (0.62, 385), (0.80, 386)]
-K_LAT = [(0.00, -0.30), (0.40, -0.32), (0.52, -0.20), (0.62, -0.04), (0.80, -0.04)]  # mao de baixo para a direita (-x)
+# v4 (base: v2 com o giro). Cadeia do corpo: as PERNAS/quadril giram primeiro, depois o TRONCO,
+# e por ultimo os bracos com a foice, atrasados: uma espiral com o tronco no centro.
+# A foice fica numa posicao fixa em relacao aos bracos durante o giro (lamina sempre na frente,
+# sem virar) e so no fim mergulha em espiral ate o chao, a frente, na batida.
+# Giro no sentido horario (visto de cima), igual ao fim do 2o golpe.
+# v6: continua o giro do 2o golpe (esquerda -> direita = horario visto de cima), da uma volta
+# inteira com a foice na horizontal e termina com mais um corte da esquerda para a direita, na
+# altura da cintura, avancando. Cadeia: pernas -> quadril -> tronco -> bracos com a foice.
+K_PSI_H = [(0.00, 20), (0.10, 40), (0.32, 200), (0.50, 330), (0.62, 370), (0.80, 385)]  # quadril
+K_PSI_C = [(0.00, 20), (0.15, 40), (0.38, 200), (0.56, 320), (0.66, 365), (0.80, 380)]  # tronco
+K_PSI_S = [(0.00, 15), (0.20, 32), (0.44, 190), (0.58, 278), (0.66, 302), (0.80, 345)]  # bracos/foice
+K_LEAN = [(0.00, 10), (0.30, 8), (0.66, 16), (0.80, 14)]
+K_HIPS = [(0.00, (0, -0.12, 0.0)), (0.12, (0, -0.15, 0.05)), (0.36, (0, -0.13, 0.30)),
+          (0.56, (0, -0.15, 0.55)), (0.66, (0, -0.19, 0.80)), (0.80, (0, -0.19, 0.83))]
+K_G = [(0.00, (-0.12, 0.30, 0.28)), (0.20, (-0.10, 0.40, 0.32)), (0.58, (-0.10, 0.38, 0.34)),
+       (0.66, (-0.10, 0.30, 0.38)), (0.80, (-0.10, 0.30, 0.36))]
+K_H = [(0.00, (-0.70, -0.35, 0.60)), (0.20, (-0.85, 0.00, 0.52)), (0.58, (-0.85, 0.00, 0.52)),
+       (0.66, (-0.85, -0.15, 0.50)), (0.80, (-0.85, -0.15, 0.50))]
 K_PE = {
-    "Left": [(0.00, (0.20, 0.10)), (0.40, (0.20, 0.10)), (0.58, (0.24, 0.72)), (0.80, (0.24, 0.72))],
-    "Right": [(0.00, (-0.20, -0.10)), (0.80, (-0.20, -0.10))],
+    "Left": [(0.00, (0.20, 0.10)), (0.30, (0.20, 0.10)), (0.44, (0.26, 0.55)), (0.80, (0.26, 0.55))],
+    "Right": [(0.00, (-0.20, -0.10)), (0.08, (-0.20, -0.10)), (0.20, (-0.10, 0.30)), (0.50, (-0.10, 0.30)),
+              (0.64, (-0.22, 1.05)), (0.80, (-0.22, 1.05))],
 }
-K_PE_YAW = {"Left": [(0.0, 15), (0.40, 15), (0.58, -20), (0.80, -20)],
-            "Right": [(0.0, 20), (0.30, 35), (0.62, 0), (0.80, 0)]}
-PARADAS = (0.62,)
-
-def roda(phi):
-    """haste no quadro dos bracos (x=esq, y=cima, z=frente) para o angulo phi da roda."""
-    r = math.radians(phi)
-    return nrm(np.array([0.0, -math.sin(r), math.cos(r)]))
+K_PE_YAW = {"Left": [(0.0, 20), (0.30, 20), (0.44, 250), (0.66, 330), (0.80, 340)],
+            "Right": [(0.0, 20), (0.08, 20), (0.20, 160), (0.50, 300), (0.64, 375), (0.80, 380)]}
+PARADAS = ()
 
 def pe(lado, t):
     ks = K_PE[lado]
@@ -143,11 +141,9 @@ def pe_yaw(lado, t):
 def foice(t):
     hp = np.array([0, HIPS_Y, 0]) + cr(K_HIPS, t)
     Rb = yaw_dir(float(cr(K_PSI_S, t)))
-    phi = float(cr(K_PHI, t))
-    H = Rb @ roda(phi)
-    piv = hp + Rb @ np.array([float(cr(K_LAT, t)), 0.42, 0.10])
-    G = piv + H * 0.24
-    return G, nrm(H)
+    G = hp + Rb @ cr(K_G, t)
+    H = nrm(Rb @ nrm(cr(K_H, t)))
+    return G, H
 
 def pose(t):
     W = {}  # nome -> (pos, R)
@@ -204,10 +200,14 @@ for f in range(N):
     quadros.append(W); trilha.append((G, H))
 # direcao da lamina = para onde a ponta vai (vem na frente do movimento)
 def lamina(t):
-    """tangente da roda (a lamina vai sempre na frente do giro da roda)."""
-    Rb = yaw_dir(float(cr(K_PSI_S, t)))
-    phi = float(cr(K_PHI, t))
-    v = Rb @ (roda(phi + 2.0) - roda(phi - 2.0))
+    """direcao em que a ponta anda pelo giro do quadro dos bracos (sentido horario), sem a inclinacao."""
+    hp = np.array([0, HIPS_Y, 0]) + cr(K_HIPS, t)
+    g = cr(K_G, t); h = nrm(cr(K_H, t))
+    ponta = g + h * (COMP * 0.9 - CABO)
+    ps = float(cr(K_PSI_S, t))
+    v = yaw_dir(ps + 1.0) @ ponta - yaw_dir(ps - 1.0) @ ponta
+    H = nrm(yaw_dir(ps) @ h)
+    v = v - H * np.dot(v, H)
     return nrm(v)
 lam = [lamina(f / FPS) for f in range(N)]
 

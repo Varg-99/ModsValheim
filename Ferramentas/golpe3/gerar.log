@@ -1,23 +1,23 @@
-==== 10/11/2026 23:27:40,67 ==== 
+==== 10/11/2026 23:41:33,67 ==== 
 Blender: C:\Program Files\Blender Foundation\Blender 5.2\blender.exe 
 	parsing bvh 'C:\\Users\\User\\Documents\\ModsValheim\\Ferramentas\\golpe3\\Ceifadora_Golpe3.bvh'...	zero length node found: Hips
-0.0083
+0.0075
 	updating scene FPS (was 24.000000) to BVH FPS (30.000300)
-	importing to blender...Done in 0.0067
+	importing to blender...Done in 0.0071
 
 ossos: Hips, Spine, Chest, UpperChest, Neck, Head, LeftShoulder, LeftUpperArm, LeftLowerArm, LeftHand, RightShoulder, RightUpperArm, RightLowerArm, RightHand, LeftUpperLeg, LeftLowerLeg, LeftFoot, LeftToes, RightUpperLeg, RightLowerLeg, RightFoot, RightToes
 fps 30, quadros 1-25
 
 FBX export starting... 'C:\\Users\\User\\Documents\\ModsValheim\\UnityCeifadora\\Assets\\Ceifada\\Ceifadora_Golpe3.fbx'
-export finished in 0.0440 sec.
+export finished in 0.0424 sec.
 FBX: C:\Users\User\Documents\ModsValheim\UnityCeifadora\Assets\Ceifada\Ceifadora_Golpe3.fbx (144 KB)
 RESULTADO: OK
 Blender 5.2.3 LTS (hash e13b728c6880 built 2026-10-22 01:37:16)
 
 Blender quit
-23:27:46 ==== inicio ====
-23:27:46 FBX encontrados: 1
-23:27:47 Ceifadora_Golpe3: ossos mapeados 22/22, avatar humanoide OK, clipe Ceifadora_Golpe3 0,80s humano=True
-23:27:47 pacote: Build\ceifadora_golpes (53 KB)
-23:27:47 copiado para C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana
-23:27:47 RESULTADO: OK
+23:41:39 ==== inicio ====
+23:41:39 FBX encontrados: 1
+23:41:39 Ceifadora_Golpe3: ossos mapeados 22/22, avatar humanoide OK, clipe Ceifadora_Golpe3 0,80s humano=True
+23:41:40 pacote: Build\ceifadora_golpes (53 KB)
+23:41:40 copiado para C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana
+23:41:40 RESULTADO: OK
