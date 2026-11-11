@@ -385,4 +385,16 @@ namespace CeifadoraObsidiana
             return false; // ja tomou dano deste golpe
         }
     }
+
+    // Sem a "travadinha" (congelar a animacao) quando a foice acerta.
+    [HarmonyPatch(typeof(CharacterAnimEvent), "FreezeFrame")]
+    public static class SemTravada
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(CharacterAnimEvent __instance)
+        {
+            var ch = Traverse.Create(__instance).Field("m_character").GetValue<Character>() as Humanoid;
+            return !(ch != null && Golpes.ComFoice(ch));
+        }
+    }
 }

@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.2.1";
+        public const string PluginVersion = "3.2.2";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -107,6 +107,8 @@ namespace CeifadoraObsidiana
             Golpe3.Init(Path.GetDirectoryName(Info.Location));
             AddLocalizations();
             PrefabManager.OnVanillaPrefabsAvailable += AddContent;
+            CfgNoTopo = Config.Bind("Arma", "ReceitasNoTopo", true, "As foices aparecem no topo da lista de fabricacao.");
+            ItemManager.OnItemsRegistered += ReceitasNoTopo;
             new Harmony(PluginGUID).PatchAll(Assembly.GetExecutingAssembly());
 
             // Recarrega o .cfg quando ele e salvo (ajustes da foice na mao valem na hora).
@@ -221,6 +223,19 @@ namespace CeifadoraObsidiana
             public bool Sangue; // sangramento + respingo de sangue
         }
         public static readonly System.Collections.Generic.HashSet<string> Prefabs = new System.Collections.Generic.HashSet<string>();
+        public static ConfigEntry<bool> CfgNoTopo;
+
+        // Poe as receitas das foices no topo da lista de fabricacao (o jogo mostra na ordem do ObjectDB).
+        static void ReceitasNoTopo()
+        {
+            var db = ObjectDB.instance;
+            if (db == null || db.m_recipes == null || CfgNoTopo == null || !CfgNoTopo.Value) return;
+            var nossas = db.m_recipes.Where(r => r != null && r.m_item != null && Prefabs.Contains(r.m_item.name)).ToList();
+            if (nossas.Count == 0) return;
+            foreach (var r in nossas) db.m_recipes.Remove(r);
+            db.m_recipes.InsertRange(0, nossas);
+            Jotunn.Logger.LogInfo($"[{PluginName}] {nossas.Count} receitas de foice no topo da lista.");
+        }
 
         System.Collections.Generic.IEnumerable<Variante> Variantes()
         {
@@ -241,7 +256,7 @@ namespace CeifadoraObsidiana
             yield return new Variante
             {
                 Prefab = "CeifadoraMetalNegro", Chave = "item_ceifadora_metalnegro", Pasta = "modelo_metalnegro", Nivel = 4,
-                ReceitaDoJogo = "Recipe_BattleaxeBlackmetal",
+                ReceitaDoJogo = "BattleaxeBlackmetal",
                 Itens = new[] { new RequirementConfig("FineWood", 10, 0), new RequirementConfig("BlackMetal", 30, 15), new RequirementConfig("LinenThread", 5, 5) },
                 Corte = 110f, CortePorNivel = 6f, Durabilidade = 200f,
             };
@@ -287,7 +302,9 @@ namespace CeifadoraObsidiana
         static void CopiarReceita(Variante v)
         {
             if (string.IsNullOrEmpty(v.ReceitaDoJogo)) return;
-            var r = PrefabManager.Cache.GetPrefab<Recipe>(v.ReceitaDoJogo);
+            // acha a receita pelo item que ela faz (o nome da receita muda entre versoes)
+            var r = PrefabManager.Cache.GetPrefabs(typeof(Recipe)).Values.OfType<Recipe>()
+                .FirstOrDefault(x => x != null && x.m_item != null && x.m_item.name == v.ReceitaDoJogo);
             if (r == null || r.m_resources == null || r.m_resources.Length == 0) { Jotunn.Logger.LogInfo($"[{PluginName}] receita {v.ReceitaDoJogo} nao achada; usando a padrao."); return; }
             v.Itens = r.m_resources.Where(q => q?.m_resItem != null)
                 .Select(q => new RequirementConfig(q.m_resItem.name, q.m_amount, q.m_amountPerLevel)).ToArray();
@@ -384,12 +401,7 @@ namespace CeifadoraObsidiana
                 if (chance.FieldExists()) chance.SetValue(CfgBleedChance.Value);
             }
             else shared.m_attackStatusEffect = null;
-            // sem a "travadinha" quando acerta (como o machado de duas maos)
-            foreach (var at in new[] { shared.m_attack, shared.m_secondaryAttack })
-            {
-                var ff = Traverse.Create(at).Field("m_freezeFrameDuration");
-                if (ff.FieldExists()) ff.SetValue(0f);
-            }
+            // a "travadinha" no acerto e tirada no patch SemTravada (o tempo dela e fixo no jogo)
 
             var pasta = pastaV;
             var modelo = ModeloFoice.Trocar(item.ItemPrefab, pasta);
