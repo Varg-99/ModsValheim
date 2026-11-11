@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.2.4";
+        public const string PluginVersion = "3.2.5";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -419,7 +419,12 @@ namespace CeifadoraObsidiana
 
             // cada foice com a sua propria lista de efeitos (nunca dividida com outra foice);
             // respingo de sangue so nas foices de sangue
-            shared.m_hitEffect = SemSangue(shared.m_hitEffect);
+            // efeitos de acerto do machado de duas maos (som de corte + tremida de tela), como nas armas do jogo
+            var sn = normal.m_itemData.m_shared;
+            shared.m_hitEffect = SemSangue(sn.m_hitEffect);
+            shared.m_hitTerrainEffect = SemSangue(sn.m_hitTerrainEffect);
+            GarantirTremida(shared.m_hitEffect);
+            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} efeitos de acerto: " + string.Join(", ", shared.m_hitEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));
             foreach (var at in new[] { shared.m_attack, shared.m_secondaryAttack })
             {
                 var f = Traverse.Create(at).Field("m_hitEffect");
@@ -428,6 +433,15 @@ namespace CeifadoraObsidiana
             if (v.Sangue) AdicionarSangue(shared);
             ItemManager.Instance.AddItem(item);
             Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
+        }
+
+        /// Tremida de tela no acerto (a mesma das armas do jogo), se a lista ainda nao tiver.
+        private static void GarantirTremida(EffectList fx)
+        {
+            if (fx.m_effectPrefabs.Any(e => e.m_prefab != null && e.m_prefab.name.IndexOf("camshake", System.StringComparison.OrdinalIgnoreCase) >= 0)) return;
+            var cs = PrefabManager.Instance.GetPrefab("fx_hit_camshake");
+            if (cs == null) { Jotunn.Logger.LogWarning($"[{PluginName}] fx_hit_camshake nao encontrado."); return; }
+            fx.m_effectPrefabs = fx.m_effectPrefabs.Concat(new[] { new EffectList.EffectData { m_prefab = cs, m_enabled = true } }).ToArray();
         }
 
         /// Copia da lista de efeitos sem nenhum efeito de sangue.
