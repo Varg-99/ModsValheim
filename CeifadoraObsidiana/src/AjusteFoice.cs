@@ -17,7 +17,7 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo, CfgEsqParado;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
             CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas, CfgParaForaCostas, CfgAfastarParado;
-        public static ConfigEntry<string> CfgAjusteEsq, CfgAjusteDir;
+        public static ConfigEntry<string> CfgAjusteEsq, CfgAjusteDir, CfgGiroMaoEsq, CfgGiroMaoDir;
 
         public static void Init(ConfigFile c)
         {
@@ -45,6 +45,10 @@ namespace CeifadoraObsidiana
                 "Ajuste fino do ponto da mao direita, em centimetros: para os dedos, para o polegar, para a palma. Valor positivo leva o ponto para la, e a mao vai para o lado contrario. Muda com o jogo aberto.");
             CfgAjusteEsq = c.Bind("Encaixe", "AjusteMaoEsquerda", "0,0,0",
                 "Ajuste fino do ponto da mao esquerda, em centimetros: para os dedos, para o polegar, para a palma. Ex.: 2,0,1");
+            CfgGiroMaoDir = c.Bind("Encaixe", "RotacaoMaoDireita", "0,0,0",
+                "Gira a mao direita para encaixar a pegada, em graus: em volta da linha dos dedos, em volta da linha do polegar, em volta da palma (torce o pulso). Ex.: 0,15,-10. A mao continua no cabo. Muda com o jogo aberto.");
+            CfgGiroMaoEsq = c.Bind("Encaixe", "RotacaoMaoEsquerda", "0,0,0",
+                "Gira a mao esquerda para encaixar a pegada, em graus: em volta da linha dos dedos, em volta da linha do polegar, em volta da palma (torce o pulso). Ex.: 0,15,-10. A mao continua no cabo. Muda com o jogo aberto.");
             CfgLaminaSegue = c.Bind("Encaixe", "LaminaNaFrenteNosGiros", true,
                 "Nos giros a foice fica para fora do corpo, nas duas maos, com a ponta da lamina indo na frente.");
             CfgGiroEspecial = c.Bind("Encaixe", "GiroDaLaminaNosGiros", 0f,
@@ -104,6 +108,7 @@ namespace CeifadoraObsidiana
         }
 
         public static Vector3 AjusteEsq() => Ajuste(CfgAjusteEsq);
+        public static Vector3 Graus(ConfigEntry<string> cfg) => Ajuste(cfg) * 100f; // Ajuste() divide por 100 (cm -> m)
         public static Vector3 Ajuste(ConfigEntry<string> cfg)
         {
             var p = ((cfg != null ? cfg.Value : null) ?? "").Split(',');
@@ -425,10 +430,24 @@ namespace CeifadoraObsidiana
 
         // Leva cada palma ao ponto mais proximo da haste. Como a foice e filha da mao direita,
         // a pose dela e guardada antes e reaplicada depois, para so as maos se mexerem.
+        // Rotacao fina da mao (graus em volta de dedos, polegar e palma). A pose e restaurada a cada quadro,
+        // entao nao acumula; o IK logo depois leva a mao ja girada de volta ate o cabo.
+        static void GirarMao(Transform mao, Transform dedo, Transform polegar, Vector3 g)
+        {
+            if (mao == null || dedo == null || g == Vector3.zero) return;
+            var dedos = (dedo.position - mao.position).normalized;
+            var pol = polegar != null ? Vector3.ProjectOnPlane(polegar.position - mao.position, dedos).normalized : mao.right;
+            var palma = Vector3.Cross(dedos, pol).normalized;
+            var q = Quaternion.AngleAxis(g.x, dedos) * Quaternion.AngleAxis(g.y, pol) * Quaternion.AngleAxis(g.z, palma);
+            mao.rotation = q * mao.rotation;
+        }
+
         void Agarrar(bool atacando, bool soDireita = false)
         {
             if (_ro == null || _lo == null) return;
             var pos = transform.position; var rot = transform.rotation;
+            GirarMao(_r, _rd, _rt, AjusteFoice.Graus(AjusteFoice.CfgGiroMaoDir));
+            if (!soDireita) GirarMao(_l, _l1, _lt, AjusteFoice.Graus(AjusteFoice.CfgGiroMaoEsq));
             float comp = AjusteFoice.CfgComprimento.Value;
             Vector3 Ponto(Vector3 palma)
             {
