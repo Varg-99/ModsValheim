@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "2.9.0";
+        public const string PluginVersion = "2.9.1";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -88,6 +88,8 @@ namespace CeifadoraObsidiana
                 "Animacao do 3o golpe dentro do pacote ceifadora_golpes. auto = usa a do Mixamo se houver, senao Ceifadora_Golpe3. Precisa reiniciar.");
             Golpe3.CfgAcerto = Config.Bind("Golpes", "AcertoDoGolpe3", 0f,
                 "Segundo da animacao do 3o golpe em que o dano acontece (0 = automatico). Ajuste para animacoes do Mixamo.");
+            Golpe3.CfgDuasMaos = Config.Bind("Golpes", "DuasMaosNoGolpe3Mixamo", false,
+                "Com animacao do Mixamo no 3o golpe: false = segura com uma mao, como na animacao; true = puxa a mao esquerda para o cabo.");
             Golpe3.Init(Path.GetDirectoryName(Info.Location));
             AddLocalizations();
             PrefabManager.OnVanillaPrefabsAvailable += AddContent;

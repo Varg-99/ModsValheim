@@ -226,6 +226,8 @@ namespace CeifadoraObsidiana
             bool ultimo = atacando && !especial && p == Player.m_localPlayer && Golpes.GiroAtivo;
             bool ceifada = ultimo && Golpes.Ceifada;
             bool proprio = ultimo && Golpes.Proprio && Golpe3.TemTrilha;
+            // animacao de fora (Mixamo) segurando com uma mao so: a foice fica na mao direita, sem puxar a esquerda
+            bool umaMao = ultimo && Golpes.Proprio && !Golpe3.Nossa && !(Golpe3.CfgDuasMaos?.Value ?? false);
             bool giro = especial || (ultimo && !Golpes.Ceifada && !Golpes.Proprio);
             _pesoProp = Mathf.MoveTowards(_pesoProp, proprio ? 1f : 0f, 12f * dt);
             _pesoAtq = Mathf.MoveTowards(_pesoAtq, atacando ? 1f : 0f, 8f * dt);
@@ -241,7 +243,7 @@ namespace CeifadoraObsidiana
             if (p == Player.m_localPlayer) Medir(p, atacando, especial, avanco, uAtq, dt);
 
             // --- golpes normais: haste pelas duas maos (parado/andando fica como a atgeir) ---
-            if (AjusteFoice.CfgDuasMaos.Value && _pesoAtq > 0f && _pesoGiro < 1f && _pesoCeifa < 1f && _pesoProp < 1f)
+            if (!umaMao && AjusteFoice.CfgDuasMaos.Value && _pesoAtq > 0f && _pesoGiro < 1f && _pesoCeifa < 1f && _pesoProp < 1f)
             {
                 var pr = PalmaDireita();
                 var pl = PalmaEsquerda();
@@ -336,7 +338,7 @@ namespace CeifadoraObsidiana
             }
 
             // --- por ultimo: as maos vao ate a haste (a foice nao se mexe para as maos) ---
-            if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando);
+            if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando && !umaMao, umaMao);
             Gravar();
         }
 
@@ -394,7 +396,7 @@ namespace CeifadoraObsidiana
 
         // Leva cada palma ao ponto mais proximo da haste. Como a foice e filha da mao direita,
         // a pose dela e guardada antes e reaplicada depois, para so as maos se mexerem.
-        void Agarrar(bool atacando)
+        void Agarrar(bool atacando, bool soDireita = false)
         {
             if (_ro == null || _lo == null) return;
             var pos = transform.position; var rot = transform.rotation;
@@ -407,6 +409,7 @@ namespace CeifadoraObsidiana
             var pr = PalmaDireita();
             var alvoR = Ponto(pr);
             AjusteFoice.IKBraco(_ro, _rc, _r, alvoR, pr, 1f);
+            if (soDireita) { transform.SetPositionAndRotation(pos, rot); return; }
             var pl = PalmaEsquerda();
             var alvoL = Ponto(pl);
             float dl = (alvoL - pl).magnitude;

@@ -17,6 +17,7 @@ namespace CeifadoraObsidiana
         public static AnimationClip Clipe;
         public static BepInEx.Configuration.ConfigEntry<string> CfgClipe;
         public static BepInEx.Configuration.ConfigEntry<float> CfgAcerto;
+        public static BepInEx.Configuration.ConfigEntry<bool> CfgDuasMaos;
         /// a trilha da foice so vale para a animacao feita aqui (Ceifadora_Golpe3)
         public static bool Nossa => Clipe != null && Clipe.name == NomeClipe;
         public static float Fps = 30f, Acerto = 0.85f, Perna = 0.85f;
