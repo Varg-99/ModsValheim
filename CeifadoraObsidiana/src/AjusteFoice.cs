@@ -13,7 +13,7 @@ namespace CeifadoraObsidiana
 {
     internal static class AjusteFoice
     {
-        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao;
+        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
             CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas;
         public static ConfigEntry<string> CfgAjusteEsq;
@@ -35,6 +35,7 @@ namespace CeifadoraObsidiana
             CfgDuasMaos = c.Bind("Encaixe", "EncaixarNasDuasMaos", true, "A cada quadro a haste passa pelas duas maos.");
             CfgPuxarMao = c.Bind("Encaixe", "PuxarMaoParaHaste", true,
                 "Durante os golpes, se a animacao soltar uma mao, ela e puxada de volta para a haste.");
+            CfgMaosNaHaste = c.Bind("Encaixe", "MaosVaoAteAHaste", true, "No fim de cada quadro as maos vao ate a haste (a foice fica onde esta).");
             CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao direita: 0 = pulso, 1 = nos dos dedos.");
             CfgAjusteEsq = c.Bind("Encaixe", "AjusteMaoEsquerda", "0,0,0",
                 "Ajuste fino do ponto da mao esquerda, em centimetros: para os dedos, para o polegar, para a palma. Ex.: 2,0,1");
@@ -141,6 +142,8 @@ namespace CeifadoraObsidiana
         Vector3 _radial, _radialAnt;
         float _sinal, _pesoGiro, _lado = 1f, _pesoAtq, _pesoCeifa, _u;
         bool _ceifando, _temFrente, _avancando;
+        float _pesoProp;
+        Transform _hips, _ul, _ll, _ft;
         Vector3 _frenteMed, _frenteAvanco;
         float _uAnt;
         float _yawSuave, _leanSuave;
@@ -182,6 +185,7 @@ namespace CeifadoraObsidiana
             _peito = B(HumanBodyBones.UpperChest) ?? B(HumanBodyBones.Chest) ?? B(HumanBodyBones.Spine);
             _spine = B(HumanBodyBones.Spine); _chest = B(HumanBodyBones.Chest);
             _pescoco = B(HumanBodyBones.Neck); _cabeca = B(HumanBodyBones.Head);
+            _hips = B(HumanBodyBones.Hips); _ul = B(HumanBodyBones.LeftUpperLeg); _ll = B(HumanBodyBones.LeftLowerLeg); _ft = B(HumanBodyBones.LeftFoot);
         }
 
         Vector3 PalmaDireita() => _rd == null ? _r.position : Vector3.Lerp(_r.position, _rd.position, AjusteFoice.CfgPalma.Value);
@@ -219,7 +223,9 @@ namespace CeifadoraObsidiana
             bool especial = atacando && Golpes.Secundario(p);
             bool ultimo = atacando && !especial && p == Player.m_localPlayer && Golpes.GiroAtivo;
             bool ceifada = ultimo && Golpes.Ceifada;
-            bool giro = especial || (ultimo && !Golpes.Ceifada);
+            bool proprio = ultimo && Golpes.Proprio && Golpe3.TemTrilha;
+            bool giro = especial || (ultimo && !Golpes.Ceifada && !Golpes.Proprio);
+            _pesoProp = Mathf.MoveTowards(_pesoProp, proprio ? 1f : 0f, 12f * dt);
             _pesoAtq = Mathf.MoveTowards(_pesoAtq, atacando ? 1f : 0f, 8f * dt);
             _pesoGiro = Mathf.MoveTowards(_pesoGiro, giro && AjusteFoice.CfgLaminaSegue.Value ? 1f : 0f, 8f * dt);
             _pesoCeifa = Mathf.MoveTowards(_pesoCeifa, ceifada ? 1f : 0f, 10f * dt);
@@ -233,7 +239,7 @@ namespace CeifadoraObsidiana
             if (p == Player.m_localPlayer) Medir(p, atacando, especial, avanco, uAtq, dt);
 
             // --- golpes normais: haste pelas duas maos (parado/andando fica como a atgeir) ---
-            if (AjusteFoice.CfgDuasMaos.Value && _pesoAtq > 0f && _pesoGiro < 1f && _pesoCeifa < 1f)
+            if (AjusteFoice.CfgDuasMaos.Value && _pesoAtq > 0f && _pesoGiro < 1f && _pesoCeifa < 1f && _pesoProp < 1f)
             {
                 var pr = PalmaDireita();
                 var pl = PalmaEsquerda();
@@ -313,6 +319,22 @@ namespace CeifadoraObsidiana
                 Segurar(haste, _ladoCeifa, maoBaixo, false, _pesoCeifa, AjusteFoice.CfgGiroCeifada.Value);
             }
             else if (!ceifada) { _ceifando = false; _ladoCeifa = Vector3.zero; _yawSuave = 0f; _leanSuave = 0f; }
+
+            // --- 3o golpe feito do zero: a foice segue a trilha gravada junto com a animacao ---
+            if (_pesoProp > 0f && _hips != null && _anim != null)
+            {
+                var raiz = _dono.transform;
+                float esc = 1f;
+                if (_ul != null && _ll != null && _ft != null)
+                    esc = ((_ul.position - _ll.position).magnitude + (_ll.position - _ft.position).magnitude) / Mathf.Max(0.1f, Golpe3.Perna);
+                Golpe3.Amostra(uAtq, out var g, out var h, out var l);
+                var haste = raiz.rotation * h;
+                var maoBaixo = _hips.position + raiz.rotation * (g * esc);
+                Segurar(haste, raiz.rotation * l, maoBaixo, false, _pesoProp, AjusteFoice.CfgGiroCeifada.Value);
+            }
+
+            // --- por ultimo: as maos vao ate a haste (a foice nao se mexe para as maos) ---
+            if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando);
         }
 
         // Mede para que lado o corpo gira (especial e fim do 2o golpe) e empurra o avanco do 3o golpe.
@@ -338,6 +360,29 @@ namespace CeifadoraObsidiana
                 _uAnt = Mathf.Max(_uAnt, u);
             }
             else { _avancando = false; _frenteAvanco = Vector3.zero; }
+        }
+
+        // Leva cada palma ao ponto mais proximo da haste. Como a foice e filha da mao direita,
+        // a pose dela e guardada antes e reaplicada depois, para so as maos se mexerem.
+        void Agarrar(bool atacando)
+        {
+            if (_ro == null || _lo == null) return;
+            var pos = transform.position; var rot = transform.rotation;
+            float comp = AjusteFoice.CfgComprimento.Value;
+            Vector3 Ponto(Vector3 palma)
+            {
+                float t = Mathf.Clamp(Vector3.Dot(palma - pos, rot * Vector3.up), 0.05f, comp * 0.7f);
+                return pos + (rot * Vector3.up) * t;
+            }
+            var pr = PalmaDireita();
+            var alvoR = Ponto(pr);
+            AjusteFoice.IKBraco(_ro, _rc, _r, alvoR, pr, 1f);
+            var pl = PalmaEsquerda();
+            var alvoL = Ponto(pl);
+            float dl = (alvoL - pl).magnitude;
+            float wl = atacando ? Mathf.Clamp01((0.6f - dl) / 0.2f) : Mathf.Clamp01((0.3f - dl) / 0.1f);
+            AjusteFoice.IKBraco(_lo, _lc, _l, alvoL, pl, wl);
+            transform.SetPositionAndRotation(pos, rot);
         }
 
         /// Gira e inclina a coluna (3 ossos) para o tronco "puxar" a foice: vira para o lado da haste

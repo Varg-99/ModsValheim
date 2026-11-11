@@ -20,7 +20,9 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<string> CfgSentidoAvanco;
         static bool Estilo(string e) => CfgTrocarUltimo.Value && string.Equals((CfgEstilo.Value ?? "").Trim(), e, System.StringComparison.OrdinalIgnoreCase);
         public static bool Ceifada => Estilo("ceifada");
-        public static bool Avanco => Estilo("avanco");
+        public static bool Proprio => Estilo("proprio") && Golpe3.Clipe != null;
+        public static bool Avanco => Estilo("avanco") || (Estilo("proprio") && Golpe3.Clipe == null);
+        public static ConfigEntry<float> CfgVelGolpe3, CfgEscalaAvancoGolpe3;
         static string ClipeAlvo => Ceifada ? (CfgClipeCeifada.Value ?? "").Trim() : CfgClipeGiro.Value;
 
         // ---- avanco: medidas de giro para continuar no mesmo sentido do 2o golpe ----
@@ -38,14 +40,16 @@ namespace CeifadoraObsidiana
             CfgAlcanceExtraGiro = c.Bind("Golpes", "AlcanceExtraGiro", 0.5f, "Alcance extra (m) do giro do ultimo golpe.");
             CfgClipeUltimo = c.Bind("Golpes", "ClipeDoUltimoGolpe", "BattleAxe_Combo3", "Animacao do jogo que e trocada pelo giro (precisa reiniciar).");
             CfgClipeGiro = c.Bind("Golpes", "ClipeDoGiro", "Atgeir360Attack", "Animacao do jogo usada no giro (precisa reiniciar).");
-            CfgEstilo = c.Bind("Golpes", "EstiloDoUltimoGolpe3", "avanco",
-                "avanco = continua o giro do 2o golpe, avanca e golpeia para frente com muito dano. ceifada = arcos largos guiados. giro = giro de 360 graus antigo.");
+            CfgEstilo = c.Bind("Golpes", "EstiloDoUltimoGolpe4", "proprio",
+                "proprio = golpe feito do zero (gira, avanca e bate a foice no chao a frente; precisa do pacote ceifadora_golpes). avanco = continua o giro do 2o golpe, avanca e golpeia para frente com muito dano. ceifada = arcos largos guiados. giro = giro de 360 graus antigo.");
             CfgClipeCeifada = c.Bind("Golpes", "ClipeDoCorpoNaCeifada", "",
                 "Animacao do corpo na ceifada. Vazio = a do proprio machado (BattleAxe_Combo3). Precisa reiniciar.");
             CfgVelCeifada = c.Bind("Golpes", "VelocidadeCeifada", 1.15f, "Velocidade do ultimo golpe no estilo ceifada.");
             CfgVelAvanco = c.Bind("Golpes", "VelocidadeAvanco", 1.3f, "Velocidade do ultimo golpe no estilo avanco.");
             CfgDistAvanco = c.Bind("Golpes", "DistanciaAvanco", 2.5f, "Estilo avanco: quanto (m) o personagem avanca para frente durante o giro.");
             CfgDanoAvanco = c.Bind("Golpes", "DanoExtraAvanco", 1.6f, "Estilo avanco: multiplicador de dano do ultimo golpe (1.6 = 60% a mais).");
+            CfgVelGolpe3 = c.Bind("Golpes", "VelocidadeGolpe3Proprio", 1.0f, "Velocidade do 3o golpe feito do zero (estilo proprio).");
+            CfgEscalaAvancoGolpe3 = c.Bind("Golpes", "AvancoGolpe3Proprio", 1.0f, "Quanto do avanco do 3o golpe proprio e usado (1 = ~2 m, 0.5 = metade, 0 = parado).");
             CfgSentidoAvanco = c.Bind("Golpes", "SentidoDoGiroNoAvanco", "auto",
                 "auto = continua girando no mesmo sentido em que o 2o golpe termina (medido no jogo). normal / espelhado = forca um sentido.");
         }
@@ -68,7 +72,7 @@ namespace CeifadoraObsidiana
             if (!(h is Player p) || p != Player.m_localPlayer || !ComFoice(h)) return 1f;
             var a = AtaqueAtual(h);
             if (a == null || Secundario(h)) return 1f;
-            if (CfgTrocarUltimo.Value && Ultimo(a)) return Ceifada ? CfgVelCeifada.Value : Avanco ? CfgVelAvanco.Value : CfgVelGiro.Value;
+            if (CfgTrocarUltimo.Value && Ultimo(a)) return Proprio ? CfgVelGolpe3.Value : Ceifada ? CfgVelCeifada.Value : Avanco ? CfgVelAvanco.Value : CfgVelGiro.Value;
             return CfgVelNormal.Value;
         }
 
@@ -89,21 +93,24 @@ namespace CeifadoraObsidiana
                 var nomes = anim.runtimeAnimatorController.animationClips.Select(c => c.name).Distinct().OrderBy(n => n);
                 Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Clipes do personagem: " + string.Join(", ", nomes));
             }
-            bool com = ComFoice(p) && CfgTrocarUltimo.Value && !string.IsNullOrEmpty(ClipeAlvo);
+            bool com = ComFoice(p) && CfgTrocarUltimo.Value && (Proprio || !string.IsNullOrEmpty(ClipeAlvo));
             bool trocado = _originais.ContainsKey(anim);
             if (com && !trocado)
             {
                 var orig = anim.runtimeAnimatorController;
                 if (!_cache.TryGetValue(orig, out var ovr))
                 {
-                    var giro = orig.animationClips.FirstOrDefault(c => c.name == ClipeAlvo);
+                    var giro = Proprio ? Golpe3.Clipe : orig.animationClips.FirstOrDefault(c => c.name == ClipeAlvo);
                     ovr = new AnimatorOverrideController(orig);
                     var pares = new List<KeyValuePair<AnimationClip, AnimationClip>>();
                     ovr.GetOverrides(pares);
                     int n = 0;
                     for (int i = 0; i < pares.Count; i++)
                         if (giro != null && pares[i].Key.name == CfgClipeUltimo.Value)
-                        { pares[i] = new KeyValuePair<AnimationClip, AnimationClip>(pares[i].Key, giro); n++; }
+                        {
+                            if (Proprio) Golpe3.CopiarEventos(pares[i].Key, giro);
+                            pares[i] = new KeyValuePair<AnimationClip, AnimationClip>(pares[i].Key, giro); n++;
+                        }
                     ovr.ApplyOverrides(pares);
                     _cache[orig] = ovr;
                     Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Ultimo golpe: {CfgClipeUltimo.Value} -> {(giro ? giro.name : "(clipe do giro nao achado)")} ({n} troca).");
@@ -138,7 +145,7 @@ namespace CeifadoraObsidiana
 
         public static float PesoGiro(Animator anim)
         {
-            if (!GiroAtivo || Ceifada || anim == null) return 0f;
+            if (!GiroAtivo || Ceifada || Proprio || anim == null) return 0f;
             if (Avanco ? !EspelharAvanco : !CfgEspelhar.Value) return 0f;
             float w = 0f;
             foreach (var ci in anim.GetCurrentAnimatorClipInfo(0)) if (ci.clip != null && ci.clip.name == ClipeAlvo) w += ci.weight;
@@ -173,7 +180,7 @@ namespace CeifadoraObsidiana
             var anim = Golpes.AnimatorDe(p);
             float m = Golpes.Mult(p);
             if (anim != null) anim.speed = m;
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] golpe {(sec ? "especial" : "normal")} nivel {Golpes.Nivel(a)}, velocidade {m:0.00}{(Golpes.GiroAtivo ? (Golpes.Ceifada ? ", ceifada" : Golpes.Avanco ? ", avanco" : ", giro") : "")}");
+            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] golpe {(sec ? "especial" : "normal")} nivel {Golpes.Nivel(a)}, velocidade {m:0.00}{(Golpes.GiroAtivo ? (Golpes.Proprio ? ", golpe 3 proprio" : Golpes.Ceifada ? ", ceifada" : Golpes.Avanco ? ", avanco" : ", giro") : "")}");
         }
     }
 
@@ -219,7 +226,7 @@ namespace CeifadoraObsidiana
             __state = new Vector3(__instance.m_attackAngle, __instance.m_attackRange, __instance.m_damageMultiplier);
             __instance.m_attackAngle = 360f;
             __instance.m_attackRange += Golpes.CfgAlcanceExtraGiro.Value;
-            if (Golpes.Avanco) __instance.m_damageMultiplier *= Mathf.Max(0.1f, Golpes.CfgDanoAvanco.Value);
+            if (Golpes.Avanco || Golpes.Proprio) __instance.m_damageMultiplier *= Mathf.Max(0.1f, Golpes.CfgDanoAvanco.Value);
         }
 
         [HarmonyPostfix]
@@ -251,7 +258,9 @@ namespace CeifadoraObsidiana
         [HarmonyPrefix]
         public static void Prefix(Character __instance, ref Vector3 __0)
         {
-            if (__instance != Player.m_localPlayer || Golpes.AvancoPendente == Vector3.zero) return;
+            if (__instance != Player.m_localPlayer) return;
+            if (Golpes.GiroAtivo && Golpes.Proprio && __instance.InAttack()) __0 *= Mathf.Max(0f, Golpes.CfgEscalaAvancoGolpe3.Value);
+            if (Golpes.AvancoPendente == Vector3.zero) return;
             __0 += Golpes.AvancoPendente;
             Golpes.AvancoPendente = Vector3.zero;
         }

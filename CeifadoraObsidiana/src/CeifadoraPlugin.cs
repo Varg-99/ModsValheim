@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "2.7.0";
+        public const string PluginVersion = "2.8.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -83,6 +83,7 @@ namespace CeifadoraObsidiana
 
             AjusteFoice.Init(Config);
             Golpes.Init(Config);
+            Golpe3.Init(Path.GetDirectoryName(Info.Location));
             AddLocalizations();
             PrefabManager.OnVanillaPrefabsAvailable += AddContent;
             new Harmony(PluginGUID).PatchAll(Assembly.GetExecutingAssembly());
