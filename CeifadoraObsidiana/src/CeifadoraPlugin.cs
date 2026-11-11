@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.2.2";
+        public const string PluginVersion = "3.2.3";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -401,7 +401,7 @@ namespace CeifadoraObsidiana
                 if (chance.FieldExists()) chance.SetValue(CfgBleedChance.Value);
             }
             else shared.m_attackStatusEffect = null;
-            // a "travadinha" no acerto e tirada no patch SemTravada (o tempo dela e fixo no jogo)
+            // a "travadinha" no acerto fica como nas outras armas do jogo
 
             var pasta = pastaV;
             var modelo = ModeloFoice.Trocar(item.ItemPrefab, pasta);
