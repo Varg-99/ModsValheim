@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.5.0";
+        public const string PluginVersion = "3.6.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -39,7 +39,7 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<bool> CfgRastro, CfgRastroLamina, CfgPenas;
         public static ConfigEntry<float> CfgPenasMola;
         public static ConfigEntry<float> CfgRastroTempo;
-        public static ConfigEntry<bool> CfgRastroMachado, CfgLog;
+        public static ConfigEntry<bool> CfgRastroMachado, CfgLog, CfgTexturaPixel;
         public static ConfigEntry<float> CfgRastroMachadoBase, CfgRastroMachadoPonta;
         public static ConfigEntry<string> CfgRastroCor;
         public static Color CorRastro()
@@ -78,6 +78,7 @@ namespace CeifadoraObsidiana
             CfgRastroLamina = Config.Bind("Visual", "RastroDaLamina", true, "Faixa que liga a base a ponta da lamina durante o golpe (mostra o angulo do corte). Substitui a linha fina.");
             CfgPenas = Config.Bind("Visual", "PenasBalancam", true, "Foice de flametal: as penas balancam com o movimento.");
             CfgPenasMola = Config.Bind("Visual", "RigidezDasPenas", 60f, "Quanto maior, mais duras as penas (30 = bem soltas, 120 = firmes).");
+            CfgTexturaPixel = Config.Bind("Visual", "TexturaPixel", false, "Textura em quadradinhos, no estilo das texturas do proprio Valheim, em vez da textura detalhada. Precisa reiniciar.");
             CfgRastroMachado = Config.Bind("Visual", "RastroDoMachado", true, "Usa o rastro do proprio machado de duas maos (o jogo liga e desliga no golpe e alisa a curva). Desliga os outros rastros da foice. Precisa reiniciar.");
             CfgRastroMachadoBase = Config.Bind("Visual", "RastroDoMachadoInicio", 0.2f, "Onde o rastro do machado comeca na lamina: 0 = no alto da haste, 1 = na ponta da lamina. Muda com o jogo aberto.");
             CfgRastroMachadoPonta = Config.Bind("Visual", "RastroDoMachadoFim", 1.0f, "Onde o rastro do machado termina: 1 = na ponta da lamina; mais que 1 estica alem da ponta. Muda com o jogo aberto.");

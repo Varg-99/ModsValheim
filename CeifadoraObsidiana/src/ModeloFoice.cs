@@ -99,9 +99,15 @@ namespace CeifadoraObsidiana
             }
             var mat = baseMat != null ? new Material(baseMat) : new Material(Shader.Find("Standard"));
             mat.name = "foice_ceifadora";
-            var cor = Textura(Path.Combine(pasta, "foice_albedo.png"), false);
-            var nor = Textura(Path.Combine(pasta, "foice_normal.png"), true);
-            var met = Textura(Path.Combine(pasta, "foice_metal.png"), true);
+            // [Visual] TexturaPixel: versao "quadradinhos" no estilo das texturas do Valheim (arquivos *_pixel.png)
+            bool pixel = CeifadoraPlugin.CfgTexturaPixel.Value && File.Exists(Path.Combine(pasta, "foice_albedo_pixel.png"));
+            string suf = pixel ? "_pixel" : "";
+            var cor = Textura(Path.Combine(pasta, "foice_albedo" + suf + ".png"), false);
+            var nor = Textura(Path.Combine(pasta, "foice_normal" + suf + ".png"), true);
+            var met = Textura(Path.Combine(pasta, "foice_metal" + suf + ".png"), true);
+            if (pixel)
+                foreach (var t in new[] { cor, nor, met })
+                    if (t != null) { t.filterMode = FilterMode.Point; t.anisoLevel = 0; }
             if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
             // sem recorte por transparencia (a textura nova e opaca)
             if (mat.HasProperty("_Cutoff")) mat.SetFloat("_Cutoff", 0f);

@@ -1,0 +1,37 @@
+[size=5][b]Ceifadoras — Scythes for Valheim[/b][/size]
+
+Four two-handed scythes, one for each stage of the game, with their own models, icons and stats.
+
+[b]The scythes[/b]
+[list]
+[*][b]Iron Reaper[/b] — Forge level 3 (Ancient Bark, Iron, Troll Hide). 70 slash.
+[*][b]Black Metal Reaper[/b] — Forge level 4 (same recipe as the Black Metal Battleaxe). 105 slash.
+[*][b]Obsidian Reaper[/b] — Black Forge level 2 (Black Metal, Eitr, Yggdrasil Wood, Obsidian, Blood Clots). 120 slash + [color=#cc3333]bleeding[/color].
+[*][b]Flametal Reaper[/b] — Black Forge level 3 (Flametal, Ashwood, Charred Bone, Asksvin Hide). 135 slash + [color=#66cc44]poison[/color].
+[/list]
+
+[b]Combat[/b]
+[list]
+[*]4-hit combo: two battleaxe swings, then two spinning slashes that hit everyone around you.
+[*]Special attack: atgeir-style twirl.
+[*]One hit per enemy per swing.
+[*]Stamina matches the vanilla battleaxe (attacks) and atgeir (special) of the same tier.
+[*]Battleaxe sounds, screen shake on hit and parry, and the battleaxe weapon trail.
+[/list]
+
+[b]Requirements[/b]
+[list]
+[*]BepInExPack Valheim
+[*]Jotunn
+[*][b]Every player on the server needs the mod.[/b]
+[/list]
+
+[b]Installation[/b]
+Extract the [i]BepInEx[/i] folder from the zip into your Valheim folder (Steam > Valheim > Manage > Browse local files).
+It should end up as: Valheim\BepInEx\plugins\CeifadoraObsidiana\CeifadoraObsidiana.dll
+
+[b]Configuration[/b]
+BepInEx\config\fabiano.ceifadoraobsidiana.cfg (created on first launch). Damage and stamina per scythe, sounds, trail and how the scythe sits in the hands. Many settings apply while the game is running — just save the file.
+
+[line]
+[b]Português:[/b] quatro foices de duas mãos (Ferro, Metal Negro, Obsidiana com sangramento e Flametal com veneno), combo de 4 golpes com giro, especial giratório e efeitos do machado de guerra. Precisa de BepInEx e Jotunn, e todos do servidor precisam ter o mod.
