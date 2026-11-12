@@ -14,7 +14,7 @@ namespace CeifadoraObsidiana
 {
     internal static class AjusteFoice
     {
-        public static ConfigEntry<bool> CfgSuavizar, CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo, CfgEsqParado;
+        public static ConfigEntry<bool> CfgCapa, CfgSuavizar, CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo, CfgEsqParado;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
             CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas, CfgParaForaCostas, CfgAfastarParado, CfgTamanhoSuporte, CfgGiroSuporte, CfgPegadaSuporte, CfgSuavizarMin, CfgSuavizarVel;
         public static ConfigEntry<string> CfgAjusteEsq, CfgAjusteDir, CfgGiroMaoEsq, CfgGiroMaoDir;
@@ -39,6 +39,7 @@ namespace CeifadoraObsidiana
             CfgMaosNaHaste = c.Bind("Encaixe", "MaosVaoAteAHaste", true, "No fim de cada quadro as maos vao ate a haste (a foice fica onde esta).");
             CfgLaminaMixamo = c.Bind("Encaixe", "LaminaAcompanhaOCorte", true, "Em todos os golpes: a lamina gira em volta da haste para ficar no plano do corte, apontando para onde ele vai.");
             CfgGiroLaminaMixamo = c.Bind("Encaixe", "GiroDaLaminaNoCorte", 0f, "Ajuste extra (graus) da lamina nesses golpes, se ficar virada errado. Ex.: 180.");
+            CfgCapa = c.Bind("Encaixe", "CapaSemTremer", true, "Depois de desenhar cada quadro, devolve os ossos do braco e do tronco a pose da animacao. Assim a capa (que tem fisica de pano) sempre ve a mesma pose e nao treme.");
             CfgEsqParado = c.Bind("Encaixe", "MaoEsquerdaNaHasteParado", true, "Parado ou andando: a mao esquerda tambem segura a haste (false = como a atgeir, so a direita).");
             CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao direita: 0 = pulso, 1 = nos dos dedos.");
             CfgAjusteDir = c.Bind("Encaixe", "AjusteMaoDireita", "-3,0,-3",
@@ -461,6 +462,28 @@ namespace CeifadoraObsidiana
         {
             if (_mex == null) return;
             for (int i = 0; i < _mex.Length; i++) _escrito[i] = _mex[i].localRotation;
+        }
+
+        // Capa tremendo: o Valheim nem sempre roda a animacao em todo quadro. Nos quadros em que nao roda,
+        // os ossos ainda estavam com as nossas correcoes (maos na haste, giros) e o pano da capa via essa pose;
+        // nos outros via a pose da animacao. Alternando entre as duas, a capa tremia.
+        // Agora, depois de o quadro ser desenhado, os ossos voltam para a pose da animacao: a capa ve sempre a mesma.
+        void OnEnable() { StartCoroutine(FimDoQuadro()); }
+        static readonly WaitForEndOfFrame _fim = new WaitForEndOfFrame();
+        System.Collections.IEnumerator FimDoQuadro()
+        {
+            while (true)
+            {
+                yield return _fim;
+                if (_mex == null || !AjusteFoice.CfgCapa.Value) continue;
+                for (int i = 0; i < _mex.Length; i++)
+                {
+                    if (_mex[i] == null) continue;
+                    var q = _mex[i].localRotation;
+                    if (q.x == _escrito[i].x && q.y == _escrito[i].y && q.z == _escrito[i].z && q.w == _escrito[i].w)
+                        _mex[i].localRotation = _bruto[i];
+                }
+            }
         }
 
         // Leva cada palma ao ponto mais proximo da haste. Como a foice e filha da mao direita,
