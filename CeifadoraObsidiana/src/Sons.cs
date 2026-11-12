@@ -15,7 +15,7 @@ namespace CeifadoraObsidiana
     internal static class Sons
     {
         public static ConfigEntry<bool> CfgLigado;
-        public static ConfigEntry<string> CfgSequencia;
+        public static ConfigEntry<string> CfgSequencia, CfgMomento, CfgMomentoEspecial;
         public static ConfigEntry<int> CfgSomEspecial;
         static List<GameObject> _sons;   // um prefab por gravacao do machado
         static bool _montou;
@@ -25,6 +25,9 @@ namespace CeifadoraObsidiana
             CfgLigado = c.Bind("Sons", "SomDoMachado", true, "Os golpes da foice usam o som de golpe do machado de duas maos (em vez do som da foice de colheita).");
             CfgSequencia = c.Bind("Sons", "SequenciaDosGolpes", "1,2,1,1",
                 "Qual som do machado toca em cada golpe do combo (1o, 2o, 3o, 4o). 1 = som do 1o golpe do machado, 2 = do 2o golpe. Muda com o jogo aberto.");
+            CfgMomento = c.Bind("Sons", "MomentoDosSons", "auto,auto,auto,auto",
+                "Quando o som sai em cada golpe (1o, 2o, 3o, 4o): auto = junto com o rastro da lamina; ou segundos depois do inicio do golpe (ex.: 0.35). Muda com o jogo aberto.");
+            CfgMomentoEspecial = c.Bind("Sons", "MomentoDoSomDoEspecial", "auto", "Quando o som do especial sai: auto ou segundos depois do inicio do golpe.");
             CfgSomEspecial = c.Bind("Sons", "SomDoEspecial", 1, "Qual som do machado toca no especial. 0 = nenhum.");
         }
 
@@ -100,11 +103,38 @@ namespace CeifadoraObsidiana
 
         static Attack _ultimo; static int _ultimoNivel = -99; static float _ultimoTempo;
 
-        public static void Tocar(Attack a)
+        static float Momento(string lista, int nivel)
+        {
+            var p = (lista ?? "").Split(',');
+            if (p.Length == 0) return -1f;
+            var s = p[Mathf.Clamp(nivel, 0, p.Length - 1)].Trim();
+            return float.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v) && v >= 0f ? v : -1f;
+        }
+        static float MomentoDe(Humanoid h, Attack a) => Golpes.Secundario(h) ? Momento(CfgMomentoEspecial.Value, 0) : Momento(CfgMomento.Value, Golpes.Nivel(a));
+
+        /// Inicio do golpe: se o .cfg der um tempo, agenda o som para esse momento.
+        public static void Inicio(Humanoid h)
+        {
+            if (!CfgLigado.Value || h == null || !Golpes.ComFoice(h)) return;
+            var a = Golpes.AtaqueAtual(h);
+            if (a == null) return;
+            float t = MomentoDe(h, a);
+            if (t < 0f) return;
+            h.StartCoroutine(Depois(h, a, Golpes.Nivel(a), t));
+        }
+        static System.Collections.IEnumerator Depois(Humanoid h, Attack a, int nivel, float t)
+        {
+            yield return new WaitForSeconds(t);
+            if (h == null || Golpes.AtaqueAtual(h) != a || Golpes.Nivel(a) != nivel) yield break; // golpe cancelado
+            Tocar(a, true);
+        }
+
+        public static void Tocar(Attack a, bool agendado = false)
         {
             if (!CfgLigado.Value || a == null) return;
             var h = Traverse.Create(a).Field("m_character").GetValue<Character>() as Humanoid;
             if (h == null || !Golpes.ComFoice(h)) return;
+            if (!agendado && MomentoDe(h, a) >= 0f) return; // esse golpe usa o tempo do .cfg
             int nivel = Golpes.Nivel(a);
             // um som por golpe (alguns golpes tem mais de um "TrailOn")
             if (a == _ultimo && nivel == _ultimoNivel && Time.time - _ultimoTempo < 0.5f) return;
@@ -117,6 +147,18 @@ namespace CeifadoraObsidiana
             var som = _sons[Mathf.Clamp(n, 1, _sons.Count) - 1];
             var fx = new EffectList { m_effectPrefabs = new[] { new EffectList.EffectData { m_prefab = som, m_enabled = true } } };
             fx.Create(h.transform.position + Vector3.up, h.transform.rotation, h.transform);
+        }
+    }
+
+    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.StartAttack))]
+    public static class Patch_SomInicio
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Humanoid __instance, bool __result)
+        {
+            if (!__result) return;
+            try { Sons.Inicio(__instance); }
+            catch (System.Exception e) { Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Som do golpe: " + e.Message); }
         }
     }
 
