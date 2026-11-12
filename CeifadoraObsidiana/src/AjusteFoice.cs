@@ -14,9 +14,9 @@ namespace CeifadoraObsidiana
 {
     internal static class AjusteFoice
     {
-        public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo, CfgEsqParado;
+        public static ConfigEntry<bool> CfgSuavizar, CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo, CfgEsqParado;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
-            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas, CfgParaForaCostas, CfgAfastarParado, CfgTamanhoSuporte, CfgGiroSuporte, CfgPegadaSuporte;
+            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas, CfgParaForaCostas, CfgAfastarParado, CfgTamanhoSuporte, CfgGiroSuporte, CfgPegadaSuporte, CfgSuavizarMin, CfgSuavizarVel;
         public static ConfigEntry<string> CfgAjusteEsq, CfgAjusteDir, CfgGiroMaoEsq, CfgGiroMaoDir;
 
         public static void Init(ConfigFile c)
@@ -58,6 +58,9 @@ namespace CeifadoraObsidiana
             CfgCaboGiro = c.Bind("Encaixe", "CaboAtrasDaMaoNosGiros", 0.3f, "Nos giros, quanto do cabo sobra atras da mao de baixo (m).");
             CfgAlturaGiro = c.Bind("Encaixe", "AlturaDasMaosNosGiros", -0.3f, "Nos giros, altura das maos em relacao ao peito (m). Negativo = mais baixo.");
             CfgGiroCostas = c.Bind("Encaixe", "GiroNasCostas", 0f, "Gira a foice nas costas em volta da haste (graus). 180 = lamina para o outro lado.");
+            CfgSuavizar = c.Bind("Encaixe", "SuavizarGolpes", true, "Golpes normais (os 4 do combo): tira a tremida da foice com um filtro que suaviza o que e lento e segue o que e rapido.");
+            CfgSuavizarMin = c.Bind("Encaixe", "SuavizacaoForca", 4f, "Quanto menor, mais suave (e mais atrasada) a foice fica nas partes lentas do golpe. 2 = bem suave, 8 = quase nada. Muda com o jogo aberto.");
+            CfgSuavizarVel = c.Bind("Encaixe", "SuavizacaoSegueOGolpe", 1f, "Quanto o filtro se abre quando o golpe acelera. Maior = segue o golpe rapido mais de perto (menos atraso), menor = mais suave. Muda com o jogo aberto.");
             CfgTamanhoSuporte = c.Bind("Encaixe", "TamanhoNoSuporte", 1f, "Suportes de parede/chao: tamanho da foice (1 = normal).");
             CfgGiroSuporte = c.Bind("Encaixe", "GiroNoSuporte", 0f, "Suportes de parede/chao: gira a foice em volta da haste (graus). 180 = lamina para o outro lado.");
             CfgPegadaSuporte = c.Bind("Encaixe", "PontoPresoNoSuporte", 0.35f, "Suportes de parede/chao: distancia (m) do fim do cabo ate o ponto preso no suporte. Maior = a foice anda para o lado do cabo.");
@@ -401,8 +404,10 @@ namespace CeifadoraObsidiana
             }
 
             // --- por ultimo: as maos vao ate a haste (a foice nao se mexe para as maos) ---
-            if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando && !umaMao, umaMao);
             if (AjusteFoice.CfgLaminaMixamo.Value) LaminaNoCorte(dt, atacando); else _temPonta = false;
+            // golpes normais: tira a tremida (antes das maos irem ate a haste, para elas seguirem a foice ja suave)
+            Filtrar(dt, atacando && !especial && !giro && _pesoCeifa <= 0f);
+            if (AjusteFoice.CfgMaosNaHaste.Value) Agarrar(atacando && !umaMao, umaMao);
             Gravar();
         }
 
@@ -460,6 +465,30 @@ namespace CeifadoraObsidiana
 
         // Leva cada palma ao ponto mais proximo da haste. Como a foice e filha da mao direita,
         // a pose dela e guardada antes e reaplicada depois, para so as maos se mexerem.
+        // Filtro "one euro" (filtro adaptativo): quando a foice anda devagar ou treme, suaviza bastante;
+        // quando o golpe acelera, o filtro abre e segue o movimento quase sem atraso.
+        // Feito no espaco do personagem, para correr ou virar nao contar como movimento da foice.
+        Quaternion _fRot; Vector3 _fPos; float _fW, _fV, _pesoFiltro; bool _fTem;
+        void Filtrar(float dt, bool ligar)
+        {
+            if (_dono == null) return;
+            var raiz = _dono.transform;
+            var r = Quaternion.Inverse(raiz.rotation) * transform.rotation;
+            var p = raiz.InverseTransformPoint(transform.position);
+            bool usa = ligar && AjusteFoice.CfgSuavizar.Value;
+            _pesoFiltro = Mathf.MoveTowards(_pesoFiltro, usa ? 1f : 0f, 6f * dt);
+            if (!_fTem || _pesoFiltro <= 0f) { _fRot = r; _fPos = p; _fW = 0f; _fV = 0f; _fTem = true; return; }
+            float Alfa(float fc) { float tau = 1f / (2f * Mathf.PI * Mathf.Max(0.1f, fc)); return 1f / (1f + tau / dt); }
+            float k = AjusteFoice.CfgSuavizarVel.Value;
+            _fW = Mathf.Lerp(_fW, Quaternion.Angle(_fRot, r) / dt, Alfa(8f));   // graus/s
+            _fV = Mathf.Lerp(_fV, (p - _fPos).magnitude / dt, Alfa(8f));       // m/s
+            float min = AjusteFoice.CfgSuavizarMin.Value;
+            _fRot = Quaternion.Slerp(_fRot, r, Alfa(min + 0.015f * k * _fW));
+            _fPos = Vector3.Lerp(_fPos, p, Alfa(min + 3f * k * _fV));
+            transform.rotation = raiz.rotation * Quaternion.Slerp(r, _fRot, _pesoFiltro);
+            transform.position = raiz.TransformPoint(Vector3.Lerp(p, _fPos, _pesoFiltro));
+        }
+
         // Rotacao fina da mao (graus em volta de dedos, polegar e palma). A pose e restaurada a cada quadro,
         // entao nao acumula; o IK logo depois leva a mao ja girada de volta ate o cabo.
         static void GirarMao(Transform mao, Transform dedo, Transform polegar, Vector3 g)
