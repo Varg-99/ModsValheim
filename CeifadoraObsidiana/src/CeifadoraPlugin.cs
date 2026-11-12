@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.3.1";
+        public const string PluginVersion = "3.3.2";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -433,6 +433,14 @@ namespace CeifadoraObsidiana
             var sn = normal.m_itemData.m_shared;
             shared.m_hitEffect = SemSangue(sn.m_hitEffect);
             shared.m_hitTerrainEffect = SemSangue(sn.m_hitTerrainEffect);
+            // defesa e parry com o efeito do machado (som + tremida de tela)
+            shared.m_blockEffect = SemSangue(sn.m_blockEffect);
+            if (!shared.m_blockEffect.m_effectPrefabs.Any(e => e.m_prefab != null && e.m_prefab.name.IndexOf("camshake", System.StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                var cs = PrefabManager.Instance.GetPrefab("fx_block_camshake") ?? PrefabManager.Instance.GetPrefab("fx_hit_camshake");
+                if (cs != null) shared.m_blockEffect.m_effectPrefabs = shared.m_blockEffect.m_effectPrefabs.Concat(new[] { new EffectList.EffectData { m_prefab = cs, m_enabled = true } }).ToArray();
+            }
+            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} efeitos de defesa: " + string.Join(", ", shared.m_blockEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));
             GarantirTremida(shared.m_hitEffect);
             Sons.TirarSomDaFoice(shared);
             Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} efeitos de acerto: " + string.Join(", ", shared.m_hitEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));

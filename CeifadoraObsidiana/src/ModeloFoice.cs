@@ -488,6 +488,7 @@ namespace CeifadoraObsidiana
             }
             var tr = HarmonyLib.Traverse.Create(mw);
             tr.Field("_base").SetValue(b); tr.Field("_tip").SetValue(t);
+            tr.Field("_emit").SetValue(false); // so acende no golpe (antes ficava aceso ao sacar a arma)
             var r = go.AddComponent<RastroMachado>();
             r.Topo = topo; r.PontaLamina = ponta; r.B = b; r.T = t;
             r.Posicionar();
@@ -505,6 +506,7 @@ namespace CeifadoraObsidiana
         {
             var mw = GetComponent<MeleeWeaponTrail>();
             if (mw != null) mw.enabled = CeifadoraPlugin.CfgRastroMachado.Value && GetComponentInParent<Character>() != null;
+            if (mw != null) HarmonyLib.Traverse.Create(mw).Field("_emit").SetValue(false);
         }
 
         void LateUpdate() => Posicionar(); // muda com o jogo aberto
