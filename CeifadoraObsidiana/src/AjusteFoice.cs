@@ -16,7 +16,7 @@ namespace CeifadoraObsidiana
     {
         public static ConfigEntry<bool> CfgDuasMaos, CfgLaminaSegue, CfgPuxarMao, CfgMaosNaHaste, CfgLaminaMixamo, CfgEsqParado;
         public static ConfigEntry<float> CfgComprimento, CfgPegadaBaixo, CfgPegadaCima, CfgGiro, CfgPalma, CfgGiroEspecial,
-            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas, CfgParaForaCostas, CfgAfastarParado;
+            CfgAfastarGiro, CfgAlturaGiro, CfgVaoMaosGiro, CfgCaboGiro, CfgPegadaParado, CfgAmplitudeCeifada, CfgGiroCeifada, CfgTorcaoCeifada, CfgCurvarCeifada, CfgGiroLaminaMixamo, CfgGiroCostas, CfgInclinacaoCostas, CfgAfastarCostas, CfgAlturaCostas, CfgParaForaCostas, CfgAfastarParado, CfgTamanhoSuporte, CfgGiroSuporte, CfgPegadaSuporte;
         public static ConfigEntry<string> CfgAjusteEsq, CfgAjusteDir, CfgGiroMaoEsq, CfgGiroMaoDir;
 
         public static void Init(ConfigFile c)
@@ -58,6 +58,9 @@ namespace CeifadoraObsidiana
             CfgCaboGiro = c.Bind("Encaixe", "CaboAtrasDaMaoNosGiros", 0.3f, "Nos giros, quanto do cabo sobra atras da mao de baixo (m).");
             CfgAlturaGiro = c.Bind("Encaixe", "AlturaDasMaosNosGiros", -0.3f, "Nos giros, altura das maos em relacao ao peito (m). Negativo = mais baixo.");
             CfgGiroCostas = c.Bind("Encaixe", "GiroNasCostas", 0f, "Gira a foice nas costas em volta da haste (graus). 180 = lamina para o outro lado.");
+            CfgTamanhoSuporte = c.Bind("Encaixe", "TamanhoNoSuporte", 1f, "Suportes de parede/chao: tamanho da foice (1 = normal).");
+            CfgGiroSuporte = c.Bind("Encaixe", "GiroNoSuporte", 0f, "Suportes de parede/chao: gira a foice em volta da haste (graus). 180 = lamina para o outro lado.");
+            CfgPegadaSuporte = c.Bind("Encaixe", "PontoPresoNoSuporte", 0.35f, "Suportes de parede/chao: distancia (m) do fim do cabo ate o ponto preso no suporte. Maior = a foice anda para o lado do cabo.");
             CfgParaForaCostas = c.Bind("Encaixe", "InclinarParaForaParado", 14f, "Parado: inclina a foice nas costas para fora (a parte de baixo se afasta da capa), em graus. 0 = nao inclina.");
             CfgAfastarParado = c.Bind("Encaixe", "AfastarMaisParado", 0.08f, "Parado: afasta a foice mais esse tanto (m) das costas, para nao entrar na capa.");
             CfgInclinacaoCostas = c.Bind("Encaixe", "InclinacaoNasCostas", 30f, "Inclinacao da foice nas costas (graus). Negativo = para o outro lado.");
@@ -83,13 +86,12 @@ namespace CeifadoraObsidiana
             return tem;
         }
 
-        public static void Alinhar(Transform modelo, GameObject arma, bool costas)
+        /// Orientacao do modelo de uma arma do jogo: haste no eixo mais comprido (apontando para a cabeca),
+        /// lamina para o lado onde esta o volume da peca.
+        static bool BaseDe(GameObject arma, out Quaternion q)
         {
-            var enc = modelo.gameObject.AddComponent<EncaixeFoice>();
-            enc.NasCostas = costas;
-            enc.Comprimento0 = ModeloFoice.ComprimentoOriginal;
-            if (costas) { enc.Aplicar(); Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Encaixe nas costas: preso ao peito."); return; }
-
+            q = Quaternion.identity;
+            if (arma == null) return false;
             var attachA = arma.transform.Find("attach");
             Vector3 eixo = Vector3.up, lado = Vector3.forward;
             if (attachA != null && Caixa(attachA, out var b))
@@ -102,9 +104,24 @@ namespace CeifadoraObsidiana
                 if (lado.sqrMagnitude < 1e-6f) lado = Vector3.ProjectOnPlane(Vector3.right, eixo);
                 lado.Normalize();
             }
-            enc.Base = Quaternion.LookRotation(lado, eixo);
+            q = Quaternion.LookRotation(lado, eixo);
+            return attachA != null;
+        }
+
+        public static void Alinhar(Transform modelo, GameObject arma, bool costas)
+        {
+            var enc = modelo.gameObject.AddComponent<EncaixeFoice>();
+            enc.NasCostas = costas;
+            enc.Comprimento0 = ModeloFoice.ComprimentoOriginal;
+            if (costas) { enc.Aplicar(); Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Encaixe nas costas: preso ao peito."); return; }
+
+            BaseDe(arma, out enc.Base);
+            // nos suportes (parede/chao): mesma orientacao da foice de colheita do jogo
+            var foiceJogo = Jotunn.Managers.PrefabManager.Instance.GetPrefab("Scythe");
+            enc.TemSuporte = BaseDe(foiceJogo, out enc.BaseSuporte);
+            
             enc.Aplicar();
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Encaixe na mao: haste {eixo}, lamina {lado} (base: {arma.name}).");
+            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Encaixe na mao: base {arma.name}; nos suportes: {(enc.TemSuporte ? "como a foice do jogo" : "foice do jogo nao achada")}.");
         }
 
         public static Vector3 AjusteEsq() => Ajuste(CfgAjusteEsq);
@@ -149,6 +166,9 @@ namespace CeifadoraObsidiana
     {
         public Quaternion Base = Quaternion.identity;
         public bool NasCostas;
+        public Quaternion BaseSuporte = Quaternion.identity;
+        public bool TemSuporte;
+        bool _noSuporte;
 
         Animator _anim;
         Transform _r, _l, _rd, _r2, _r3, _ri, _rt, _l1, _l2, _l3, _li, _lt, _ro, _rc, _lo, _lc, _peito;
@@ -179,6 +199,15 @@ namespace CeifadoraObsidiana
                 transform.localScale = Vector3.one * (Escala / ps);
                 return;
             }
+            if (_noSuporte && TemSuporte)
+            {
+                // pendurada num suporte: orientacao da foice do jogo, mais os ajustes do .cfg
+                transform.localScale = Vector3.one * Escala * AjusteFoice.CfgTamanhoSuporte.Value;
+                var rs = BaseSuporte * Quaternion.AngleAxis(AjusteFoice.CfgGiroSuporte.Value, Vector3.up);
+                transform.localRotation = rs;
+                transform.localPosition = -(rs * Vector3.up) * (AjusteFoice.CfgPegadaSuporte.Value * AjusteFoice.CfgTamanhoSuporte.Value);
+                return;
+            }
             transform.localScale = Vector3.one * Escala;
             var rot = Base * Quaternion.AngleAxis(AjusteFoice.CfgGiro.Value, Vector3.up);
             transform.localRotation = rot;
@@ -188,6 +217,7 @@ namespace CeifadoraObsidiana
         void Procurar()
         {
             _procurou = true;
+            _noSuporte = GetComponentInParent<ItemStand>() != null;
             _dono = GetComponentInParent<Character>();
             _anim = GetComponentInParent<Animator>();
             if (_anim == null || !_anim.isHuman) return;
