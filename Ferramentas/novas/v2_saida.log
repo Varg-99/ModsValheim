@@ -1,0 +1,20 @@
+13:03:01 | INFO: Data are loaded, start creating Blender stuff
+13:03:01 | INFO: Blender create Mesh node node_0
+13:03:03 | INFO: glTF import finished in 2.59s
+ferro: juntou 838775 -> 749896 vertices; 1499956 -> 39994 triangulos; 32698 vertices finais
+13:03:25 | INFO: Data are loaded, start creating Blender stuff
+13:03:25 | INFO: Blender create Mesh node node_0
+13:03:28 | INFO: glTF import finished in 2.51s
+Metal_negro: juntou 809197 -> 749998 vertices; 1500000 -> 39998 triangulos; 29159 vertices finais
+13:03:50 | INFO: Data are loaded, start creating Blender stuff
+13:03:50 | INFO: Blender create Mesh node node_0
+13:03:53 | INFO: glTF import finished in 2.66s
+flametal: juntou 828687 -> 749930 vertices; 1500000 -> 79992 triangulos; 60116 vertices finais
+13:04:16 | INFO: Data are loaded, start creating Blender stuff
+13:04:16 | INFO: Blender create Mesh node node_0
+13:04:18 | INFO: glTF import finished in 1.83s
+obsidiana: juntou 605928 -> 548824 vertices; 1097790 -> 32994 triangulos; 24785 vertices finais
+RESULTADO: OK
+Blender 5.2.3 LTS (hash e13b728c6880 built 2026-10-22 01:37:16)
+
+Blender quit

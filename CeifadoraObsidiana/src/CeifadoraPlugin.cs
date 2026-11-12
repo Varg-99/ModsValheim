@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.6.3";
+        public const string PluginVersion = "3.6.4";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -40,6 +40,7 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<float> CfgPenasMola;
         public static ConfigEntry<float> CfgRastroTempo;
         public static ConfigEntry<bool> CfgRastroMachado, CfgLog, CfgTexturaPixel;
+        public static ConfigEntry<float> CfgLisura, CfgRelevo;
         public static ConfigEntry<float> CfgRastroMachadoBase, CfgRastroMachadoPonta;
         public static ConfigEntry<string> CfgRastroCor;
         public static Color CorRastro()
@@ -78,6 +79,8 @@ namespace CeifadoraObsidiana
             CfgRastroLamina = Config.Bind("Visual", "RastroDaLamina", true, "Faixa que liga a base a ponta da lamina durante o golpe (mostra o angulo do corte). Substitui a linha fina.");
             CfgPenas = Config.Bind("Visual", "PenasBalancam", true, "Foice de flametal: as penas balancam com o movimento.");
             CfgPenasMola = Config.Bind("Visual", "RigidezDasPenas", 60f, "Quanto maior, mais duras as penas (30 = bem soltas, 120 = firmes).");
+            CfgLisura = Config.Bind("Visual", "LisuraDoMetal", 0.45f, "Quanto o metal da foice e liso/espelhado (1 = como antes). Menor = menos pontinhos de reflexo piscando. Precisa reiniciar.");
+            CfgRelevo = Config.Bind("Visual", "ForcaDoRelevo", 0.5f, "Forca do relevo fino da textura (1 = como antes). Menor = superficie mais lisa, sem cintilar. Precisa reiniciar.");
             CfgTexturaPixel = Config.Bind("Visual", "TexturaPixel", false, "Textura em quadradinhos, no estilo das texturas do proprio Valheim, em vez da textura detalhada. Precisa reiniciar.");
             CfgRastroMachado = Config.Bind("Visual", "RastroDoMachado", true, "Usa o rastro do proprio machado de duas maos (o jogo liga e desliga no golpe e alisa a curva). Desliga os outros rastros da foice. Precisa reiniciar.");
             CfgRastroMachadoBase = Config.Bind("Visual", "RastroDoMachadoInicio", 0.2f, "Onde o rastro do machado comeca na lamina: 0 = no alto da haste, 1 = na ponta da lamina. Muda com o jogo aberto.");

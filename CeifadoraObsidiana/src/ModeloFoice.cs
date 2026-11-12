@@ -37,7 +37,8 @@ namespace CeifadoraObsidiana
             }
             t.name = Path.GetFileNameWithoutExtension(arq);
             t.wrapMode = TextureWrapMode.Repeat;
-            t.anisoLevel = 4;
+            t.anisoLevel = 8;
+            t.filterMode = FilterMode.Trilinear;
             return t;
         }
 
@@ -106,8 +107,7 @@ namespace CeifadoraObsidiana
             var nor = Textura(Path.Combine(pasta, "foice_normal" + suf + ".png"), true);
             var met = Textura(Path.Combine(pasta, "foice_metal" + suf + ".png"), true);
             if (pixel)
-                foreach (var t in new[] { cor, nor, met })
-                    if (t != null) { t.filterMode = FilterMode.Point; t.anisoLevel = 0; }
+                if (cor != null) { cor.filterMode = FilterMode.Point; cor.anisoLevel = 0; } // so a cor fica em quadradinhos; relevo e brilho suaves (sem cintilar)
             if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
             // sem recorte por transparencia (a textura nova e opaca)
             if (mat.HasProperty("_Cutoff")) mat.SetFloat("_Cutoff", 0f);
@@ -121,7 +121,21 @@ namespace CeifadoraObsidiana
             if (nor != null && mat.HasProperty("_BumpMap")) { mat.SetTexture("_BumpMap", nor); mat.EnableKeyword("_NORMALMAP"); }
             if (met != null && mat.HasProperty("_MetallicGlossMap")) { mat.SetTexture("_MetallicGlossMap", met); mat.EnableKeyword("_METALLICGLOSSMAP"); }
             if (mat.HasProperty("_Metallic")) mat.SetFloat("_Metallic", 0.6f);
-            if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.6f);
+            // Pontinhos "transparentes": o relevo fino da textura + metal muito liso fazia cada pixel refletir
+            // o ceu ou o chao (pontos claros e escuros piscando). Menos lisura e relevo mais suave tiram isso.
+            float lisura = CeifadoraPlugin.CfgLisura.Value, relevo = CeifadoraPlugin.CfgRelevo.Value;
+            // tambem direto na textura (canal de lisura), para valer em qualquer shader
+            if (met != null && lisura < 0.999f)
+            {
+                var px = met.GetPixels32();
+                for (int k = 0; k < px.Length; k++) px[k].a = (byte)(px[k].a * Mathf.Clamp01(lisura));
+                met.SetPixels32(px); met.Apply(true);
+            }
+            if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.6f * lisura);
+            if (mat.HasProperty("_GlossMapScale")) mat.SetFloat("_GlossMapScale", lisura);
+            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.6f * lisura);
+            if (mat.HasProperty("_BumpScale")) mat.SetFloat("_BumpScale", relevo);
+            if (mat.HasProperty("_GlossyReflections") && lisura < 0.5f) mat.SetFloat("_GlossyReflections", 0f);
             // Brilho leve da propria textura (detalhes vermelhos visiveis a noite).
             float brilho = CeifadoraPlugin.CfgBrilho.Value;
             if (mat.HasProperty("_EmissionColor"))
