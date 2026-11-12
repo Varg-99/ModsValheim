@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.3.2";
+        public const string PluginVersion = "3.3.3";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -450,6 +450,7 @@ namespace CeifadoraObsidiana
                 if (at != null && f.FieldExists()) f.SetValue(SemSangue(f.GetValue<EffectList>()));
             }
             if (v.Sangue) AdicionarSangue(shared);
+            Icone(shared, pastaV, v.Prefab);
             ItemManager.Instance.AddItem(item);
             Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
         }
@@ -478,6 +479,19 @@ namespace CeifadoraObsidiana
             bc.center = caixa.center;
             bc.size = Vector3.Max(caixa.size, Vector3.one * 0.08f);
             Jotunn.Logger.LogInfo($"[{PluginName}] {prefab.name}: colisao do item no lugar do modelo (centro {caixa.center}, tamanho {caixa.size}; {desligados} colisao(oes) da foice do jogo desligada(s)).");
+        }
+
+        /// Icone proprio (icone.png na pasta do modelo): desenho da foice com contorno colorido, para achar no bau.
+        private static void Icone(ItemDrop.ItemData.SharedData shared, string pasta, string nome)
+        {
+            var arq = Path.Combine(pasta, "icone.png");
+            if (!File.Exists(arq)) { Jotunn.Logger.LogWarning($"[{PluginName}] {nome}: icone.png nao encontrado em {pasta}."); return; }
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = nome + "_icone" };
+            if (!tex.LoadImage(File.ReadAllBytes(arq))) return;
+            tex.wrapMode = TextureWrapMode.Clamp; tex.filterMode = FilterMode.Bilinear;
+            var sp = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+            sp.name = nome + "_icone";
+            shared.m_icons = new[] { sp };
         }
 
         /// Tremida de tela no acerto (a mesma das armas do jogo), se a lista ainda nao tiver.
