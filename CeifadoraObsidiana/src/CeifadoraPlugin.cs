@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.3.0";
+        public const string PluginVersion = "3.3.1";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -417,6 +417,7 @@ namespace CeifadoraObsidiana
             if (modelo != null)
             {
                 AjusteFoice.Alinhar(modelo, pegada.gameObject, false);
+                AjustarColisor(item.ItemPrefab, modelo);
                 // Nas costas no mesmo lugar da atgeir.
                 var atgeir = PrefabManager.Instance.GetPrefab("AtgeirBlackmetal") ?? pegada.gameObject;
                 var ov = Traverse.Create(atgeir.GetComponent<ItemDrop>().m_itemData.m_shared).Field("m_attachOverride");
@@ -443,6 +444,32 @@ namespace CeifadoraObsidiana
             if (v.Sangue) AdicionarSangue(shared);
             ItemManager.Instance.AddItem(item);
             Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
+        }
+
+        /// A caixa de colisao do item (usada para pegar do chao) vinha da foice de colheita do jogo, num lugar
+        /// diferente do modelo novo. Troca por uma caixa do tamanho e no lugar do modelo da foice.
+        private static void AjustarColisor(GameObject prefab, Transform modelo)
+        {
+            bool tem = false; var caixa = new Bounds();
+            var raiz = prefab.transform.worldToLocalMatrix;
+            foreach (var mf in modelo.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null) continue;
+                var b = mf.sharedMesh.bounds; var m = raiz * mf.transform.localToWorldMatrix;
+                for (int i = 0; i < 8; i++)
+                {
+                    var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    var p = m.MultiplyPoint3x4(c);
+                    if (!tem) { caixa = new Bounds(p, Vector3.zero); tem = true; } else caixa.Encapsulate(p);
+                }
+            }
+            if (!tem) return;
+            int desligados = 0;
+            foreach (var c in prefab.GetComponentsInChildren<Collider>(true)) if (!c.isTrigger) { c.enabled = false; desligados++; }
+            var bc = prefab.AddComponent<BoxCollider>();
+            bc.center = caixa.center;
+            bc.size = Vector3.Max(caixa.size, Vector3.one * 0.08f);
+            Jotunn.Logger.LogInfo($"[{PluginName}] {prefab.name}: colisao do item no lugar do modelo (centro {caixa.center}, tamanho {caixa.size}; {desligados} colisao(oes) da foice do jogo desligada(s)).");
         }
 
         /// Tremida de tela no acerto (a mesma das armas do jogo), se a lista ainda nao tiver.
