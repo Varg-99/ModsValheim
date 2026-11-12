@@ -144,7 +144,7 @@ namespace CeifadoraObsidiana
                     if (p.Length >= 2) { float.TryParse(p[0], System.Globalization.NumberStyles.Float, ci, out PenasRaiz); float.TryParse(p[1], System.Globalization.NumberStyles.Float, ci, out PenasPonta); }
                 }
                 AdicionarPenas(Modelo);
-                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Penas: {Penas_.vertexCount} vertices (raiz {PenasRaiz:0.00}, ponta {PenasPonta:0.00}).");
+                CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Penas: {Penas_.vertexCount} vertices (raiz {PenasRaiz:0.00}, ponta {PenasPonta:0.00}).");
             }
 
             // Rastro: o rastro do jogo (faixa larga) e desligado; fica uma linha fina que sai do fio da lamina.
@@ -187,8 +187,8 @@ namespace CeifadoraObsidiana
             for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
                 if (mat.shader.GetPropertyType(i) == ShaderPropertyType.Float || mat.shader.GetPropertyType(i) == ShaderPropertyType.Range)
                     flt.Add(mat.shader.GetPropertyName(i) + "=" + mat.GetFloat(mat.shader.GetPropertyName(i)).ToString("0.##"));
-            Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Material: " + string.Join(" ", flt) + " | keywords: " + string.Join(" ", mat.shaderKeywords));
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Modelo novo: {mesh.vertexCount} vertices, {ComprimentoOriginal:0.00} m; shader {mat.shader.name} ({string.Join(",", props)}).");
+            CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Material: " + string.Join(" ", flt) + " | keywords: " + string.Join(" ", mat.shaderKeywords));
+            CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Modelo novo: {mesh.vertexCount} vertices, {ComprimentoOriginal:0.00} m; shader {mat.shader.name} ({string.Join(",", props)}).");
             return Modelo;
         }
 
@@ -232,7 +232,7 @@ namespace CeifadoraObsidiana
             costas.SetSiblingIndex(0);
             ModeloCostas = CriarModelo(costas, Malha_, Mat_);
             AdicionarPenas(ModeloCostas);
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Foice nas costas criada (referencia: {referencia.name}, attach_back da referencia: {(referencia.transform.Find("attach_back") != null ? "sim" : "nao")}).");
+            CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Foice nas costas criada (referencia: {referencia.name}, attach_back da referencia: {(referencia.transform.Find("attach_back") != null ? "sim" : "nao")}).");
         }
 
         static Transform CriarModelo(Transform pai, Mesh mesh, Material mat)
@@ -326,7 +326,6 @@ namespace CeifadoraObsidiana
         void LateUpdate()
         {
             if (_go == null) return;
-            if (CeifadoraPlugin.CfgRastroArco.Value) { Arco(); return; }
             float agora = Time.time, vida = Mathf.Max(0.05f, CeifadoraPlugin.CfgRastroTempo.Value);
             bool liga = _dono != null && _dono.InAttack();
             if (liga)
@@ -361,108 +360,6 @@ namespace CeifadoraObsidiana
             _mesh.Clear();
             _mesh.vertices = _v; _mesh.colors = _c; _mesh.triangles = _i;
             _mesh.RecalculateBounds();
-        }
-
-        // ---- rastro "de mentira" em arco perfeito (como o do machado) ----
-        // So aparece quando a ponta da lamina passa de uma velocidade (a parte rapida do golpe).
-        // Os pontos da ponta sao guardados no espaco do personagem; a cada quadro um circulo e ajustado
-        // a eles (plano + centro + raio) e o rastro e desenhado sobre esse circulo, nao sobre a lamina.
-        readonly System.Collections.Generic.List<Vector3> _arcoP = new System.Collections.Generic.List<Vector3>();
-        readonly System.Collections.Generic.List<Vector3> _arcoB = new System.Collections.Generic.List<Vector3>();
-        Vector3 _ultLocal; bool _temUlt; bool _riscando; float _fimRisco = -99f; float _velSuave;
-        // ultimo arco calculado (espaco do personagem)
-        Vector3 _c0, _e1, _e2; float _r, _rIn, _ang0, _ang1; bool _temArco;
-
-        void Arco()
-        {
-            float agora = Time.time, dt = Mathf.Max(Time.deltaTime, 1e-4f);
-            float vida = Mathf.Max(0.05f, CeifadoraPlugin.CfgRastroTempo.Value);
-            var raiz = _dono.transform;
-            var ponta = raiz.InverseTransformPoint(transform.TransformPoint(Ponta));
-            var baseL = raiz.InverseTransformPoint(transform.TransformPoint(Base));
-            float vel = _temUlt ? (ponta - _ultLocal).magnitude / dt : 0f;
-            _ultLocal = ponta; _temUlt = true;
-            _velSuave = Mathf.Lerp(_velSuave, vel, 1f - Mathf.Exp(-25f * dt));
-            bool atacando = _dono.InAttack();
-            float vMin = CeifadoraPlugin.CfgRastroVelMin.Value;
-            bool rapido = atacando && _velSuave > vMin;
-            // histerese: comeca acima de vMin, termina abaixo de 60% dele
-            if (!_riscando && rapido) { _riscando = true; _arcoP.Clear(); _arcoB.Clear(); _temArco = false; }
-            else if (_riscando && (!atacando || _velSuave < vMin * 0.6f || vel > 60f)) { _riscando = false; _fimRisco = agora; }
-            if (_riscando)
-            {
-                _arcoP.Add(ponta); _arcoB.Add(baseL);
-                if (_arcoP.Count > 90) { _arcoP.RemoveAt(0); _arcoB.RemoveAt(0); }
-                AjustarCirculo();
-            }
-            float fade = _riscando ? 1f : 1f - (agora - _fimRisco) / vida;
-            if (!_temArco || fade <= 0f) { _mesh.Clear(); return; }
-
-            // desenha: cauda transparente -> cabeca opaca
-            float maxAng = CeifadoraPlugin.CfgRastroArcoMax.Value * Mathf.Deg2Rad;
-            float a1 = _ang1, a0 = _ang0;
-            if (Mathf.Abs(a1 - a0) > maxAng) a0 = a1 - Mathf.Sign(a1 - a0) * maxAng;
-            int n = Mathf.Clamp(Mathf.CeilToInt(Mathf.Abs(a1 - a0) / (4f * Mathf.Deg2Rad)) + 1, 2, 120);
-            if (_v.Length != n * 2) { _v = new Vector3[n * 2]; _c = new Color[n * 2]; }
-            var cor = CeifadoraPlugin.CorRastro();
-            for (int q = 0; q < n; q++)
-            {
-                float u = q / (float)(n - 1);
-                float a = Mathf.Lerp(a0, a1, u);
-                var dir = _e1 * Mathf.Cos(a) + _e2 * Mathf.Sin(a);
-                _v[2 * q] = raiz.TransformPoint(_c0 + dir * _rIn);
-                _v[2 * q + 1] = raiz.TransformPoint(_c0 + dir * _r);
-                float al = cor.a * u * u * fade;
-                _c[2 * q] = new Color(cor.r, cor.g, cor.b, 0f);
-                _c[2 * q + 1] = new Color(cor.r, cor.g, cor.b, al);
-            }
-            Desenhar(n);
-        }
-
-        void AjustarCirculo()
-        {
-            int n = _arcoP.Count;
-            if (n < 4) { _temArco = false; return; }
-            // plano: normal = soma dos produtos vetoriais entre passos seguidos (sentido do giro)
-            var nor = Vector3.zero;
-            for (int q = 1; q < n - 1; q++) nor += Vector3.Cross(_arcoP[q] - _arcoP[q - 1], _arcoP[q + 1] - _arcoP[q]);
-            if (nor.sqrMagnitude < 1e-10f) { _temArco = false; return; }
-            nor.Normalize();
-            var m = Vector3.zero; foreach (var p in _arcoP) m += p; m /= n;
-            var e1 = Vector3.ProjectOnPlane(_arcoP[0] - m, nor);
-            if (e1.sqrMagnitude < 1e-8f) e1 = Vector3.ProjectOnPlane(Vector3.forward, nor);
-            e1.Normalize();
-            var e2 = Vector3.Cross(nor, e1);
-            // circulo por minimos quadrados (Kasa): x2+y2 + D x + E y + F = 0
-            double sxx = 0, sxy = 0, syy = 0, sx = 0, sy = 0, sxz = 0, syz = 0, sz = 0;
-            foreach (var p in _arcoP)
-            {
-                var d = p - m; double x = Vector3.Dot(d, e1), y = Vector3.Dot(d, e2), z = x * x + y * y;
-                sxx += x * x; sxy += x * y; syy += y * y; sx += x; sy += y; sxz += x * z; syz += y * z; sz += z;
-            }
-            // [sxx sxy sx][D]   [-sxz]
-            // [sxy syy sy][E] = [-syz]
-            // [sx  sy  n ][F]   [-sz ]
-            double a11 = sxx, a12 = sxy, a13 = sx, a22 = syy, a23 = sy, a33 = n;
-            double det = a11 * (a22 * a33 - a23 * a23) - a12 * (a12 * a33 - a23 * a13) + a13 * (a12 * a23 - a22 * a13);
-            if (System.Math.Abs(det) < 1e-12) { _temArco = false; return; }
-            double b1 = -sxz, b2 = -syz, b3 = -sz;
-            double D = (b1 * (a22 * a33 - a23 * a23) - a12 * (b2 * a33 - a23 * b3) + a13 * (b2 * a23 - a22 * b3)) / det;
-            double Ee = (a11 * (b2 * a33 - a23 * b3) - b1 * (a12 * a33 - a23 * a13) + a13 * (a12 * b3 - b2 * a13)) / det;
-            double F = (a11 * (a22 * b3 - b2 * a23) - a12 * (a12 * b3 - b2 * a13) + b1 * (a12 * a23 - a22 * a13)) / det;
-            double cx = -D / 2, cy = -Ee / 2, rr = cx * cx + cy * cy - F;
-            if (rr <= 0) { _temArco = false; return; }
-            float r = (float)System.Math.Sqrt(rr);
-            if (r < 0.25f || r > 3.5f) { _temArco = false; return; }
-            var c = m + e1 * (float)cx + e2 * (float)cy;
-            // angulos (desenrolados) da primeira e da ultima amostra
-            float Ang(Vector3 p) { var d = p - c; return Mathf.Atan2(Vector3.Dot(d, e2), Vector3.Dot(d, e1)); }
-            float a0 = Ang(_arcoP[0]), ac = a0, prev = a0;
-            for (int q = 1; q < n; q++) { float a = Ang(_arcoP[q]); ac += Mathf.DeltaAngle(prev * Mathf.Rad2Deg, a * Mathf.Rad2Deg) * Mathf.Deg2Rad; prev = a; }
-            // largura: distancia media da base da lamina ao centro
-            float rb = 0f; foreach (var b in _arcoB) rb += Vector3.ProjectOnPlane(b - c, nor).magnitude; rb /= _arcoB.Count;
-            float larg = Mathf.Clamp(r - rb, 0.08f, 0.6f);
-            _c0 = c; _e1 = e1; _e2 = e2; _r = r; _rIn = r - larg; _ang0 = a0; _ang1 = ac; _temArco = true;
         }
     }
 
@@ -502,7 +399,7 @@ namespace CeifadoraObsidiana
             var r = go.AddComponent<RastroMachado>();
             r.Topo = topo; r.PontaLamina = ponta; r.B = b; r.T = t;
             r.Posicionar();
-            Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Rastro do machado copiado (" + string.Join(", ", log) + ").");
+            CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Rastro do machado copiado (" + string.Join(", ", log) + ").");
         }
 
         public void Posicionar()

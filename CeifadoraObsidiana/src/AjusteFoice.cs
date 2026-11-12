@@ -41,34 +41,34 @@ namespace CeifadoraObsidiana
             CfgGiroLaminaMixamo = c.Bind("Encaixe", "GiroDaLaminaNoCorte", 0f, "Ajuste extra (graus) da lamina nesses golpes, se ficar virada errado. Ex.: 180.");
             CfgEsqParado = c.Bind("Encaixe", "MaoEsquerdaNaHasteParado", true, "Parado ou andando: a mao esquerda tambem segura a haste (false = como a atgeir, so a direita).");
             CfgPalma = c.Bind("Encaixe", "PontoDaPalma", 0.6f, "Onde a haste passa na mao direita: 0 = pulso, 1 = nos dos dedos.");
-            CfgAjusteDir = c.Bind("Encaixe", "AjusteMaoDireita", "0,0,0",
+            CfgAjusteDir = c.Bind("Encaixe", "AjusteMaoDireita", "-3,0,-3",
                 "Ajuste fino do ponto da mao direita, em centimetros: para os dedos, para o polegar, para a palma. Valor positivo leva o ponto para la, e a mao vai para o lado contrario. Muda com o jogo aberto.");
-            CfgAjusteEsq = c.Bind("Encaixe", "AjusteMaoEsquerda", "0,0,0",
+            CfgAjusteEsq = c.Bind("Encaixe", "AjusteMaoEsquerda", "-5,0,-3",
                 "Ajuste fino do ponto da mao esquerda, em centimetros: para os dedos, para o polegar, para a palma. Ex.: 2,0,1");
-            CfgGiroMaoDir = c.Bind("Encaixe", "RotacaoMaoDireita", "0,0,0",
+            CfgGiroMaoDir = c.Bind("Encaixe", "RotacaoMaoDireita", "0,-10,0",
                 "Gira a mao direita para encaixar a pegada, em graus: em volta da linha dos dedos, em volta da linha do polegar, em volta da palma (torce o pulso). Ex.: 0,15,-10. A mao continua no cabo. Muda com o jogo aberto.");
-            CfgGiroMaoEsq = c.Bind("Encaixe", "RotacaoMaoEsquerda", "0,0,0",
+            CfgGiroMaoEsq = c.Bind("Encaixe", "RotacaoMaoEsquerda", "10,0,25",
                 "Gira a mao esquerda para encaixar a pegada, em graus: em volta da linha dos dedos, em volta da linha do polegar, em volta da palma (torce o pulso). Ex.: 0,15,-10. A mao continua no cabo. Muda com o jogo aberto.");
             CfgLaminaSegue = c.Bind("Encaixe", "LaminaNaFrenteNosGiros", true,
                 "Nos giros a foice fica para fora do corpo, nas duas maos, com a ponta da lamina indo na frente.");
             CfgGiroEspecial = c.Bind("Encaixe", "GiroDaLaminaNosGiros", 0f,
                 "Ajuste extra (graus) da lamina nos giros, se ainda ficar virada errado. Ex.: 180.");
-            CfgAfastarGiro = c.Bind("Encaixe", "AfastarMaosDoPeitoNosGiros", 0.22f, "Nos giros, quanto as maos ficam a frente do peito (m).");
+            CfgAfastarGiro = c.Bind("Encaixe", "AfastarMaosDoPeitoNosGiros", 0.52f, "Nos giros, quanto as maos ficam a frente do peito (m).");
             CfgVaoMaosGiro = c.Bind("Encaixe", "DistanciaEntreMaosNosGiros", 0.32f, "Nos giros, distancia entre as duas maos na haste (m).");
-            CfgCaboGiro = c.Bind("Encaixe", "CaboAtrasDaMaoNosGiros", 0.3f, "Nos giros, quanto do cabo sobra atras da mao de baixo (m).");
-            CfgAlturaGiro = c.Bind("Encaixe", "AlturaDasMaosNosGiros", -0.3f, "Nos giros, altura das maos em relacao ao peito (m). Negativo = mais baixo.");
+            CfgCaboGiro = c.Bind("Encaixe", "CaboAtrasDaMaoNosGiros", 0.1f, "Nos giros, quanto do cabo sobra atras da mao de baixo (m).");
+            CfgAlturaGiro = c.Bind("Encaixe", "AlturaDasMaosNosGiros", -0.1f, "Nos giros, altura das maos em relacao ao peito (m). Negativo = mais baixo.");
             CfgGiroCostas = c.Bind("Encaixe", "GiroNasCostas", 0f, "Gira a foice nas costas em volta da haste (graus). 180 = lamina para o outro lado.");
             CfgSuavizar = c.Bind("Encaixe", "SuavizarGolpes", true, "Golpes normais (os 4 do combo): tira a tremida da foice com um filtro que suaviza o que e lento e segue o que e rapido.");
             CfgSuavizarMin = c.Bind("Encaixe", "SuavizacaoForca", 4f, "Quanto menor, mais suave (e mais atrasada) a foice fica nas partes lentas do golpe. 2 = bem suave, 8 = quase nada. Muda com o jogo aberto.");
-            CfgSuavizarVel = c.Bind("Encaixe", "SuavizacaoSegueOGolpe", 1f, "Quanto o filtro se abre quando o golpe acelera. Maior = segue o golpe rapido mais de perto (menos atraso), menor = mais suave. Muda com o jogo aberto.");
+            CfgSuavizarVel = c.Bind("Encaixe", "SuavizacaoSegueOGolpe", 3f, "Quanto o filtro se abre quando o golpe acelera. Maior = segue o golpe rapido mais de perto (menos atraso), menor = mais suave. Muda com o jogo aberto.");
             CfgTamanhoSuporte = c.Bind("Encaixe", "TamanhoNoSuporte", 1f, "Suportes de parede/chao: tamanho da foice (1 = normal).");
-            CfgGiroSuporte = c.Bind("Encaixe", "GiroNoSuporte", 0f, "Suportes de parede/chao: gira a foice em volta da haste (graus). 180 = lamina para o outro lado.");
-            CfgPegadaSuporte = c.Bind("Encaixe", "PontoPresoNoSuporte", 0.35f, "Suportes de parede/chao: distancia (m) do fim do cabo ate o ponto preso no suporte. Maior = a foice anda para o lado do cabo.");
-            CfgParaForaCostas = c.Bind("Encaixe", "InclinarParaForaParado", 14f, "Parado: inclina a foice nas costas para fora (a parte de baixo se afasta da capa), em graus. 0 = nao inclina.");
-            CfgAfastarParado = c.Bind("Encaixe", "AfastarMaisParado", 0.08f, "Parado: afasta a foice mais esse tanto (m) das costas, para nao entrar na capa.");
+            CfgGiroSuporte = c.Bind("Encaixe", "GiroNoSuporte", 180f, "Suportes de parede/chao: gira a foice em volta da haste (graus). 180 = lamina para o outro lado.");
+            CfgPegadaSuporte = c.Bind("Encaixe", "PontoPresoNoSuporte", 0.9f, "Suportes de parede/chao: distancia (m) do fim do cabo ate o ponto preso no suporte. Maior = a foice anda para o lado do cabo.");
+            CfgParaForaCostas = c.Bind("Encaixe", "InclinarParaForaParado", 6f, "Parado: inclina a foice nas costas para fora (a parte de baixo se afasta da capa), em graus. 0 = nao inclina.");
+            CfgAfastarParado = c.Bind("Encaixe", "AfastarMaisParado", 0.01f, "Parado: afasta a foice mais esse tanto (m) das costas, para nao entrar na capa.");
             CfgInclinacaoCostas = c.Bind("Encaixe", "InclinacaoNasCostas", 30f, "Inclinacao da foice nas costas (graus). Negativo = para o outro lado.");
             CfgAfastarCostas = c.Bind("Encaixe", "AfastarDasCostas", 0.2f, "Distancia da foice ate as costas (m).");
-            CfgAlturaCostas = c.Bind("Encaixe", "AlturaNasCostas", 0f, "Sobe (+) ou desce (-) a foice nas costas (m).");
+            CfgAlturaCostas = c.Bind("Encaixe", "AlturaNasCostas", -0.1f, "Sobe (+) ou desce (-) a foice nas costas (m).");
         }
 
         static bool Caixa(Transform attach, out Bounds caixa)
@@ -116,7 +116,7 @@ namespace CeifadoraObsidiana
             var enc = modelo.gameObject.AddComponent<EncaixeFoice>();
             enc.NasCostas = costas;
             enc.Comprimento0 = ModeloFoice.ComprimentoOriginal;
-            if (costas) { enc.Aplicar(); Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Encaixe nas costas: preso ao peito."); return; }
+            if (costas) { enc.Aplicar(); CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Encaixe nas costas: preso ao peito."); return; }
 
             BaseDe(arma, out enc.Base);
             // nos suportes (parede/chao): mesma orientacao da foice de colheita do jogo
@@ -124,7 +124,7 @@ namespace CeifadoraObsidiana
             enc.TemSuporte = BaseDe(foiceJogo, out enc.BaseSuporte);
             
             enc.Aplicar();
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Encaixe na mao: base {arma.name}; nos suportes: {(enc.TemSuporte ? "como a foice do jogo" : "foice do jogo nao achada")}.");
+            CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Encaixe na mao: base {arma.name}; nos suportes: {(enc.TemSuporte ? "como a foice do jogo" : "foice do jogo nao achada")}.");
         }
 
         public static Vector3 AjusteEsq() => Ajuste(CfgAjusteEsq);
@@ -640,7 +640,7 @@ namespace CeifadoraObsidiana
             if (!_logou)
             {
                 _logou = true;
-                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Costas: presa ao tronco (pescoco {(_pescoco != null)}, ombros {(_ro != null && _lo != null)}), escala final {transform.lossyScale}.");
+                CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Costas: presa ao tronco (pescoco {(_pescoco != null)}, ombros {(_ro != null && _lo != null)}), escala final {transform.lossyScale}.");
             }
         }
         bool _logou;

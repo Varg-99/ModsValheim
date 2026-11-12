@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.3.3";
+        public const string PluginVersion = "3.5.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -38,8 +38,8 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<float> CfgBrilho;
         public static ConfigEntry<bool> CfgRastro, CfgRastroLamina, CfgPenas;
         public static ConfigEntry<float> CfgPenasMola;
-        public static ConfigEntry<float> CfgRastroTempo, CfgRastroVelMin, CfgRastroArcoMax;
-        public static ConfigEntry<bool> CfgRastroArco, CfgRastroMachado;
+        public static ConfigEntry<float> CfgRastroTempo;
+        public static ConfigEntry<bool> CfgRastroMachado, CfgLog;
         public static ConfigEntry<float> CfgRastroMachadoBase, CfgRastroMachadoPonta;
         public static ConfigEntry<string> CfgRastroCor;
         public static Color CorRastro()
@@ -55,6 +55,7 @@ namespace CeifadoraObsidiana
 
         private void Awake()
         {
+            CfgLog = Config.Bind("Geral", "LogDetalhado", false, "Escreve no LogOutput.log os detalhes do mod (para achar problemas). Deixe desligado no dia a dia.");
             var admin = new ConfigurationManagerAttributes { IsAdminOnly = true };
 
             CfgArmaNormal = Config.Bind("Golpes", "ArmaDoAtaqueNormal", "Battleaxe",
@@ -80,9 +81,6 @@ namespace CeifadoraObsidiana
             CfgRastroMachado = Config.Bind("Visual", "RastroDoMachado", true, "Usa o rastro do proprio machado de duas maos (o jogo liga e desliga no golpe e alisa a curva). Desliga os outros rastros da foice. Precisa reiniciar.");
             CfgRastroMachadoBase = Config.Bind("Visual", "RastroDoMachadoInicio", 0.2f, "Onde o rastro do machado comeca na lamina: 0 = no alto da haste, 1 = na ponta da lamina. Muda com o jogo aberto.");
             CfgRastroMachadoPonta = Config.Bind("Visual", "RastroDoMachadoFim", 1.0f, "Onde o rastro do machado termina: 1 = na ponta da lamina; mais que 1 estica alem da ponta. Muda com o jogo aberto.");
-            CfgRastroArco = Config.Bind("Visual", "RastroEmArcoPerfeito", false, "O rastro e desenhado num arco perfeito (como o do machado), em vez de seguir a lamina ponto a ponto. Muda com o jogo aberto.");
-            CfgRastroVelMin = Config.Bind("Visual", "RastroVelocidadeMinima", 5f, "O rastro so aparece quando a ponta da lamina passa dessa velocidade (m/s): a parte rapida do golpe. Maior = rastro mais curto. Muda com o jogo aberto.");
-            CfgRastroArcoMax = Config.Bind("Visual", "RastroArcoMaximo", 160f, "Tamanho maximo do rastro em graus de arco. Muda com o jogo aberto.");
             CfgRastroTempo = Config.Bind("Visual", "DuracaoDoRastro2", 0.14f, "Quanto tempo (s) o rastro fica visivel.");
             CfgRastroCor = Config.Bind("Visual", "CorDoRastro2", "#FFFFFF66", "Cor do rastro (RGBA em hexadecimal).");
 
@@ -105,7 +103,6 @@ namespace CeifadoraObsidiana
             Golpes.Init(Config);
             Golpes.InitModo4(Config);
             UmAcertoPorGolpe.CfgLigado = Config.Bind("Combo4", "UmAcertoPorInimigo", true, "Cada inimigo leva dano no maximo uma vez por golpe (outros inimigos podem ser acertados no mesmo golpe).");
-            Impacto.Init(Config);
             Sons.Init(Config);
             Golpe3.CfgClipe = Config.Bind("Golpes", "ClipeDoGolpe3", "auto",
                 "Animacao do 3o golpe dentro do pacote ceifadora_golpes. auto = usa a do Mixamo se houver, senao Ceifadora_Golpe3. Precisa reiniciar.");
@@ -146,7 +143,7 @@ namespace CeifadoraObsidiana
                 { "item_ceifadora", "Ceifadora Obsidiana" },
                 { "item_ceifadora_desc", "Uma foice longa de lamina negra como vidro vulcanico. Cada corte deixa uma trilha vermelha." },
                 { "item_ceifadora_flametal", "Ceifadora de Flametal" },
-                { "item_ceifadora_flametal_desc", "Foice de flametal com cabo de madeira de cinzas, osso carbonizado e couro de asksvin. As penas dancam a cada golpe." },
+                { "item_ceifadora_flametal_desc", "Foice de flametal com cabo de madeira de cinzas, osso carbonizado e couro de asksvin. A lamina envenena quem corta, e as penas dancam a cada golpe." },
                 { "item_ceifadora_ferro", "Ceifadora de Ferro" },
                 { "item_ceifadora_ferro_desc", "Uma foice de ferro forjada com casca antiga do pantano. Pesada e confiavel." },
                 { "item_ceifadora_metalnegro", "Ceifadora de Metal Negro" },
@@ -159,7 +156,7 @@ namespace CeifadoraObsidiana
                 { "item_ceifadora", "Obsidian Reaper" },
                 { "item_ceifadora_desc", "A long scythe with a blade black as volcanic glass. Every cut leaves a red trail." },
                 { "item_ceifadora_flametal", "Flametal Reaper" },
-                { "item_ceifadora_flametal_desc", "A flametal scythe with an ashwood haft, charred bone and asksvin leather. Its feathers dance with every swing." },
+                { "item_ceifadora_flametal_desc", "A flametal scythe with an ashwood haft, charred bone and asksvin leather. Its blade poisons what it cuts, and its feathers dance with every swing." },
                 { "item_ceifadora_ferro", "Iron Reaper" },
                 { "item_ceifadora_ferro_desc", "An iron scythe forged with ancient bark from the swamp. Heavy and reliable." },
                 { "item_ceifadora_metalnegro", "Black Metal Reaper" },
@@ -208,7 +205,7 @@ namespace CeifadoraObsidiana
             foreach (var go in PrefabManager.Cache.GetPrefabs(typeof(GameObject)).Values.OfType<GameObject>())
             {
                 var at = go.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_attack;
-                if (at != null && filtro(at)) { Jotunn.Logger.LogInfo($"[{PluginName}] ataque de {go.name}: {at.m_attackAnimation}"); return at; }
+                if (at != null && filtro(at)) { CeifadoraPlugin.Detalhe($"[{PluginName}] ataque de {go.name}: {at.m_attackAnimation}"); return at; }
             }
             Jotunn.Logger.LogWarning($"[{PluginName}] ataque nao achado ({nome}).");
             return null;
@@ -230,6 +227,8 @@ namespace CeifadoraObsidiana
             public RequirementConfig[] Itens;
             public float Corte, CortePorNivel, Durabilidade = 200f, Peso = 3.5f;
             public bool Sangue; // sangramento + respingo de sangue
+            public float Veneno, Estamina = 16f, EstaminaEspecial = 26f;
+            public string[] RefMachado = { "Battleaxe" }, RefAtgeir = { "AtgeirIron" }; // estamina igual a essas armas do jogo
         }
         public static readonly System.Collections.Generic.HashSet<string> Prefabs = new System.Collections.Generic.HashSet<string>();
         public static ConfigEntry<bool> CfgNoTopo;
@@ -243,7 +242,7 @@ namespace CeifadoraObsidiana
             if (nossas.Count == 0) return;
             foreach (var r in nossas) db.m_recipes.Remove(r);
             db.m_recipes.InsertRange(0, nossas);
-            Jotunn.Logger.LogInfo($"[{PluginName}] {nossas.Count} receitas de foice no topo da lista.");
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {nossas.Count} receitas de foice no topo da lista.");
         }
 
         System.Collections.Generic.IEnumerable<Variante> Variantes()
@@ -259,7 +258,8 @@ namespace CeifadoraObsidiana
                     new RequirementConfig("YggdrasilWood", 10, 5), new RequirementConfig("Obsidian", 10, 5),
                     new RequirementConfig("Bloodbag", 10, 5),
                 },
-                Corte = Mathf.Max(CfgSlash.Value, 125f), CortePorNivel = CfgSlashPerLevel.Value, Sangue = true,
+                Corte = 120f, CortePorNivel = 5f, Sangue = true, Estamina = 22f, EstaminaEspecial = 32f,
+                RefMachado = new[] { "BattleaxeBlackmetal" }, RefAtgeir = new[] { "AtgeirHimminAfl", "AtgeirBlackmetal" },
             };
             // Metal negro: mesmos itens do Machado de Batalha de Metal Negro (Forja nivel 4).
             yield return new Variante
@@ -267,7 +267,8 @@ namespace CeifadoraObsidiana
                 Prefab = "CeifadoraMetalNegro", Chave = "item_ceifadora_metalnegro", Pasta = "modelo_metalnegro", Nivel = 4,
                 ReceitaDoJogo = "BattleaxeBlackmetal",
                 Itens = new[] { new RequirementConfig("FineWood", 10, 0), new RequirementConfig("BlackMetal", 30, 15), new RequirementConfig("LinenThread", 5, 5) },
-                Corte = 110f, CortePorNivel = 6f, Durabilidade = 200f,
+                Corte = 105f, CortePorNivel = 5f, Durabilidade = 200f, Estamina = 20f, EstaminaEspecial = 30f,
+                RefMachado = new[] { "BattleaxeBlackmetal" }, RefAtgeir = new[] { "AtgeirBlackmetal" },
             };
             // Flametal (Terras de Cinzas): flametal, madeira de cinzas, osso carbonizado e couro de asksvin. Forja Negra 3.
             yield return new Variante
@@ -276,14 +277,15 @@ namespace CeifadoraObsidiana
                 Estacao = CraftingStations.BlackForge, Nivel = 3,
                 Itens = new[] { new RequirementConfig("FlametalNew", 30, 15), new RequirementConfig("Blackwood", 10, 5),
                                 new RequirementConfig("CharredBone", 10, 5), new RequirementConfig("AskHide", 4, 2) },
-                Corte = 140f, CortePorNivel = 6f, Durabilidade = 300f, Sangue = true,
+                Corte = 135f, CortePorNivel = 5f, Durabilidade = 300f, Veneno = 40f, Estamina = 26f, EstaminaEspecial = 36f,
+                RefMachado = new[] { "BattleaxeBlackmetal" }, RefAtgeir = new[] { "AtgeirFlametal", "AtgeirHimminAfl", "AtgeirBlackmetal" },
             };
             // Ferro: itens da Lanca de Casca Antiga (pantano), em quantidade de arma de duas maos (Forja nivel 3).
             yield return new Variante
             {
                 Prefab = "CeifadoraFerro", Chave = "item_ceifadora_ferro", Pasta = "modelo_ferro", Nivel = 3,
                 Itens = new[] { new RequirementConfig("ElderBark", 20, 5), new RequirementConfig("Iron", 30, 15), new RequirementConfig("TrollHide", 4, 2) },
-                Corte = 75f, CortePorNivel = 6f, Durabilidade = 175f, Peso = 4f,
+                Corte = 70f, CortePorNivel = 5f, Durabilidade = 175f, Peso = 4f, Estamina = 16f, EstaminaEspecial = 26f,
             };
         }
 
@@ -314,12 +316,12 @@ namespace CeifadoraObsidiana
             // acha a receita pelo item que ela faz (o nome da receita muda entre versoes)
             var r = PrefabManager.Cache.GetPrefabs(typeof(Recipe)).Values.OfType<Recipe>()
                 .FirstOrDefault(x => x != null && x.m_item != null && x.m_item.name == v.ReceitaDoJogo);
-            if (r == null || r.m_resources == null || r.m_resources.Length == 0) { Jotunn.Logger.LogInfo($"[{PluginName}] receita {v.ReceitaDoJogo} nao achada; usando a padrao."); return; }
+            if (r == null || r.m_resources == null || r.m_resources.Length == 0) { CeifadoraPlugin.Detalhe($"[{PluginName}] receita {v.ReceitaDoJogo} nao achada; usando a padrao."); return; }
             v.Itens = r.m_resources.Where(q => q?.m_resItem != null)
                 .Select(q => new RequirementConfig(q.m_resItem.name, q.m_amount, q.m_amountPerLevel)).ToArray();
             if (r.m_craftingStation != null) v.Estacao = r.m_craftingStation.name;
             if (r.m_minStationLevel > 0) v.Nivel = r.m_minStationLevel;
-            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab}: receita de {v.ReceitaDoJogo}: " + string.Join(", ", v.Itens.Select(i => i.Item + " x" + i.Amount)) + $" ({v.Estacao} {v.Nivel})");
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {v.Prefab}: receita de {v.ReceitaDoJogo}: " + string.Join(", ", v.Itens.Select(i => i.Item + " x" + i.Amount)) + $" ({v.Estacao} {v.Nivel})");
         }
 
         private void CreateWeapon(StatusEffect bleed, Variante v)
@@ -360,8 +362,19 @@ namespace CeifadoraObsidiana
             shared.m_skillType = Skills.SkillType.Polearms;
             shared.m_maxQuality = 4;
 
-            shared.m_damages = new HitData.DamageTypes { m_slash = v.Corte };
-            shared.m_damagesPerLevel = new HitData.DamageTypes { m_slash = v.CortePorNivel };
+            // balanco (dano e estamina) por foice, ajustavel no .cfg em [Balanco] (precisa reiniciar)
+            float corte = Config.Bind("Balanco", v.Prefab + "_DanoCorte", v.Corte, "Dano de corte base desta foice.").Value;
+            float porNivel = Config.Bind("Balanco", v.Prefab + "_DanoPorNivel", v.CortePorNivel, "Dano de corte a mais por nivel de melhoria.").Value;
+            float veneno = v.Veneno > 0f ? Config.Bind("Balanco", v.Prefab + "_Veneno", v.Veneno, "Dano de veneno (aplica envenenamento no alvo).").Value : 0f;
+            // estamina: golpe normal igual ao machado de guerra da mesma fase, especial igual ao da atgeir
+            float est = Config.Bind("Balanco", v.Prefab + "_EstaminaGolpe", -1f, "Estamina de cada golpe normal. -1 = igual ao machado de guerra da mesma fase do jogo.").Value;
+            float estEsp = Config.Bind("Balanco", v.Prefab + "_EstaminaDoEspecial", -1f, "Estamina do especial. -1 = igual ao especial da atgeir da mesma fase do jogo.").Value;
+            string refM = "", refA = "";
+            if (est < 0f) { var a = AtaqueDe(v.RefMachado, false, out refM); est = a != null ? a.m_attackStamina : v.Estamina; }
+            if (estEsp < 0f) { var a = AtaqueDe(v.RefAtgeir, true, out refA); estEsp = a != null ? a.m_attackStamina : v.EstaminaEspecial; }
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {v.Prefab}: estamina golpe {est} ({(refM == "" ? "cfg" : refM)}), especial {estEsp} ({(refA == "" ? "cfg" : refA)}).");
+            shared.m_damages = new HitData.DamageTypes { m_slash = corte, m_poison = veneno };
+            shared.m_damagesPerLevel = new HitData.DamageTypes { m_slash = porNivel, m_poison = veneno > 0f ? 5f : 0f };
             shared.m_attackForce = 70f;
             shared.m_backstabBonus = 3f;
             shared.m_blockPower = 45f;
@@ -400,8 +413,11 @@ namespace CeifadoraObsidiana
                     sec.m_attackStamina = especial.m_itemData.m_shared.m_secondaryAttack.m_attackStamina / 2f;
                     shared.m_secondaryAttack = sec;
                 }
-                Jotunn.Logger.LogInfo($"[{PluginName}] Combo4: normal '{shared.m_attack.m_attackAnimation}' x{shared.m_attack.m_attackChainLevels}, especial '{shared.m_secondaryAttack.m_attackAnimation}' x{shared.m_secondaryAttack.m_attackChainLevels}.");
+                CeifadoraPlugin.Detalhe($"[{PluginName}] Combo4: normal '{shared.m_attack.m_attackAnimation}' x{shared.m_attack.m_attackChainLevels}, especial '{shared.m_secondaryAttack.m_attackAnimation}' x{shared.m_secondaryAttack.m_attackChainLevels}.");
             }
+
+            shared.m_attack.m_attackStamina = est;
+            shared.m_secondaryAttack.m_attackStamina = Golpes.CfgModo4.Value && Golpes.CfgEspecial3.Value && shared.m_secondaryAttack.m_attackChainLevels == 3 ? estEsp / 2f : estEsp;
 
             if (v.Sangue)
             {
@@ -440,10 +456,10 @@ namespace CeifadoraObsidiana
                 var cs = PrefabManager.Instance.GetPrefab("fx_block_camshake") ?? PrefabManager.Instance.GetPrefab("fx_hit_camshake");
                 if (cs != null) shared.m_blockEffect.m_effectPrefabs = shared.m_blockEffect.m_effectPrefabs.Concat(new[] { new EffectList.EffectData { m_prefab = cs, m_enabled = true } }).ToArray();
             }
-            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} efeitos de defesa: " + string.Join(", ", shared.m_blockEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {v.Prefab} efeitos de defesa: " + string.Join(", ", shared.m_blockEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));
             GarantirTremida(shared.m_hitEffect);
             Sons.TirarSomDaFoice(shared);
-            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} efeitos de acerto: " + string.Join(", ", shared.m_hitEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {v.Prefab} efeitos de acerto: " + string.Join(", ", shared.m_hitEffect.m_effectPrefabs.Where(e => e.m_prefab != null).Select(e => e.m_prefab.name)));
             foreach (var at in new[] { shared.m_attack, shared.m_secondaryAttack })
             {
                 var f = Traverse.Create(at).Field("m_hitEffect");
@@ -452,7 +468,7 @@ namespace CeifadoraObsidiana
             if (v.Sangue) AdicionarSangue(shared);
             Icone(shared, pastaV, v.Prefab);
             ItemManager.Instance.AddItem(item);
-            Jotunn.Logger.LogInfo($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
         }
 
         /// A caixa de colisao do item (usada para pegar do chao) vinha da foice de colheita do jogo, num lugar
@@ -478,7 +494,7 @@ namespace CeifadoraObsidiana
             var bc = prefab.AddComponent<BoxCollider>();
             bc.center = caixa.center;
             bc.size = Vector3.Max(caixa.size, Vector3.one * 0.08f);
-            Jotunn.Logger.LogInfo($"[{PluginName}] {prefab.name}: colisao do item no lugar do modelo (centro {caixa.center}, tamanho {caixa.size}; {desligados} colisao(oes) da foice do jogo desligada(s)).");
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {prefab.name}: colisao do item no lugar do modelo (centro {caixa.center}, tamanho {caixa.size}; {desligados} colisao(oes) da foice do jogo desligada(s)).");
         }
 
         /// Icone proprio (icone.png na pasta do modelo): desenho da foice com contorno colorido, para achar no bau.
@@ -492,8 +508,26 @@ namespace CeifadoraObsidiana
             var sp = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
             sp.name = nome + "_icone";
             shared.m_icons = new[] { sp };
-            Jotunn.Logger.LogInfo($"[{PluginName}] {nome}: icone carregado ({tex.width}x{tex.height}).");
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {nome}: icone carregado ({tex.width}x{tex.height}).");
         }
+
+        /// Ataque (normal ou especial) da primeira arma do jogo que existir na lista.
+        private static Attack AtaqueDe(string[] nomes, bool especial, out string achada)
+        {
+            achada = "";
+            foreach (var n in nomes ?? new string[0])
+            {
+                var go = PrefabManager.Instance.GetPrefab(n);
+                var sh = go != null ? go.GetComponent<ItemDrop>()?.m_itemData?.m_shared : null;
+                if (sh == null) continue;
+                achada = n;
+                return especial ? sh.m_secondaryAttack : sh.m_attack;
+            }
+            return null;
+        }
+
+        /// Mensagem de detalhe no log (so com [Geral] LogDetalhado = true).
+        public static void Detalhe(string msg) { if (CfgLog == null || CfgLog.Value) Jotunn.Logger.LogInfo(msg); }
 
         /// Tremida de tela no acerto (a mesma das armas do jogo), se a lista ainda nao tiver.
         private static void GarantirTremida(EffectList fx)
@@ -523,7 +557,7 @@ namespace CeifadoraObsidiana
             var todos = PrefabManager.Cache.GetPrefabs(typeof(GameObject));
             var sangue = todos.Keys.Where(k => k.StartsWith("vfx_", System.StringComparison.OrdinalIgnoreCase)
                                                && k.IndexOf("blood", System.StringComparison.OrdinalIgnoreCase) >= 0).OrderBy(k => k).ToList();
-            Jotunn.Logger.LogInfo($"[{PluginName}] Efeitos de sangue do jogo: {string.Join(", ", sangue)}");
+            CeifadoraPlugin.Detalhe($"[{PluginName}] Efeitos de sangue do jogo: {string.Join(", ", sangue)}");
             if (nome != "auto") fx = PrefabManager.Instance.GetPrefab(nome);
             else
             {
@@ -537,7 +571,7 @@ namespace CeifadoraObsidiana
             var lista = (shared.m_hitEffect.m_effectPrefabs ?? new EffectList.EffectData[0]).ToList();
             lista.Add(new EffectList.EffectData { m_prefab = fx, m_enabled = true });
             shared.m_hitEffect.m_effectPrefabs = lista.ToArray();
-            Jotunn.Logger.LogInfo($"[{PluginName}] Efeito de sangue no acerto: {fx.name}");
+            CeifadoraPlugin.Detalhe($"[{PluginName}] Efeito de sangue no acerto: {fx.name}");
         }
 
         /// Deixa o modelo preto vitreo com um brilho vermelho.

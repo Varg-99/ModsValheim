@@ -1,0 +1,27 @@
+CEIFADORAS (mod para Valheim) - por Fabiano
+=============================================
+
+Quatro foices de duas maos, uma para cada fase do jogo:
+  - Ceifadora de Ferro ........ Forja nivel 3 (pantano)
+  - Ceifadora de Metal Negro .. Forja nivel 4 (planicies)
+  - Ceifadora Obsidiana ....... Forja Negra nivel 2 (brumas) - causa sangramento
+  - Ceifadora de Flametal ..... Forja Negra nivel 3 (cinzas) - causa envenenamento
+
+Combo de 4 golpes (o 3o e o 4o giram em volta do personagem e acertam todos em volta)
+e especial giratorio. Um acerto por inimigo em cada golpe.
+
+PRECISA TER INSTALADO
+  - BepInExPack Valheim
+  - Jotunn (JotunnLib)
+Todos os jogadores do servidor precisam ter o mod.
+
+COMO INSTALAR
+  Abra a pasta do Valheim (Steam > Valheim > Gerenciar > Procurar arquivos locais)
+  e copie a pasta "BepInEx" deste .zip para dentro dela, juntando com a que ja existe.
+  Fica assim:  Valheim\BepInEx\plugins\CeifadoraObsidiana\CeifadoraObsidiana.dll
+
+AJUSTES
+  Depois de abrir o jogo uma vez, aparece o arquivo:
+    Valheim\BepInEx\config\fabiano.ceifadoraobsidiana.cfg
+  Da para mudar dano, estamina, sons, rastro e o encaixe da foice na mao.
+  Varios ajustes mudam com o jogo aberto (e so salvar o arquivo).

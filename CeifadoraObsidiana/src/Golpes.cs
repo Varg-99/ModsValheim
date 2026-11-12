@@ -42,9 +42,9 @@ namespace CeifadoraObsidiana
                 "DualAxes Attack 1=BattleAxe1; DualAxes Attack 2 2=BattleAxe2; DualAxes Attack 3 2=Golpe_Mixamo_360; DualAxes Attack 4=Golpe_Mixamo_4; " +
                 "Greatsword BaseAttack (1)=Especial_1; Greatsword BaseAttack (2)=Especial_2; Greatsword BaseAttack (3)=Especial_3",
                 "Qual animacao entra em cada golpe (original=nova). Precisa reiniciar.");
-            CfgAcertos4 = c.Bind("Combo4", "Acertos4", "Golpe_Mixamo_360=0.92; Golpe_Mixamo_4=0.68; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
+            CfgAcertos4 = c.Bind("Combo4", "Acertos4", "Golpe_Mixamo_360=1.1; Golpe_Mixamo_4=0.8; Especial_1=0.90; Especial_2=0.55; Especial_3=0.30",
                 "Segundo do dano em cada animacao do Mixamo. Pode mudar com o jogo aberto: salve o arquivo e o proximo golpe ja usa o valor novo.");
-            CfgVelMixamo = c.Bind("Combo4", "VelocidadeMixamo", 1.15f, "Velocidade dos golpes 3, 4 e do especial.");
+            CfgVelMixamo = c.Bind("Combo4", "VelocidadeMixamo", 0.92f, "Velocidade dos golpes 3, 4 e do especial.");
             CfgDano3 = c.Bind("Combo4", "Dano3oGolpe", 1.3f, "Multiplicador de dano do 3o golpe.");
             CfgDano4 = c.Bind("Combo4", "Dano4oGolpe", 2.0f, "Multiplicador de dano do 4o golpe (o ultimo).");
             CfgEmpurrao3 = c.Bind("Combo4", "Empurrao3oGolpe", 0.2f, "Empurrao do 3o golpe nos inimigos (1 = normal, 0.2 = bem pouco), para o 4o golpe ainda acertar.");
@@ -66,7 +66,7 @@ namespace CeifadoraObsidiana
 
         public static void Init(ConfigFile c)
         {
-            CfgVelNormal = c.Bind("Golpes", "VelocidadeGolpes", 1.25f, "Velocidade dos golpes normais (1 = como o machado do jogo; 1.25 = 25% mais rapido).");
+            CfgVelNormal = c.Bind("Golpes", "VelocidadeGolpes", 1f, "Velocidade dos golpes normais (1 = como o machado do jogo; 1.25 = 25% mais rapido).");
             CfgTrocarUltimo = c.Bind("Golpes", "UltimoGolpeGiratorio", true, "O ultimo golpe do combo vira um giro em volta do personagem.");
             CfgVelGiro = c.Bind("Golpes", "VelocidadeGiro", 1.4f, "Velocidade do giro do ultimo golpe.");
             CfgEspelhar = c.Bind("Golpes", "GiroNoSentidoContrario", true, "O giro do ultimo golpe vai no sentido contrario do giro do especial.");
@@ -139,9 +139,8 @@ namespace CeifadoraObsidiana
             if (CfgAcertos4.Value != _ultAcertos || CfgMapa4.Value != _ultMapa)
             {
                 _ultAcertos = CfgAcertos4.Value; _ultMapa = CfgMapa4.Value; _remontar = true;
-                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Acertos4 recarregado: " + _ultAcertos);
+                CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Acertos4 recarregado: " + _ultAcertos);
             }
-            p.Message(MessageHud.MessageType.TopLeft, "Ceifadora: configuracao recarregada");
         }
 
         public static void Atualizar(Player p)
@@ -160,7 +159,7 @@ namespace CeifadoraObsidiana
             {
                 _listou = true;
                 var nomes = anim.runtimeAnimatorController.animationClips.Select(c => c.name).Distinct().OrderBy(n => n);
-                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Clipes do personagem: " + string.Join(", ", nomes));
+                CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Clipes do personagem: " + string.Join(", ", nomes));
             }
             bool com = ComFoice(p) && (Modo4 || (CfgTrocarUltimo.Value && (Proprio || !string.IsNullOrEmpty(ClipeAlvo))));
             bool trocado = _originais.ContainsKey(anim);
@@ -183,7 +182,7 @@ namespace CeifadoraObsidiana
                         }
                     ovr.ApplyOverrides(pares);
                     _cache[orig] = ovr;
-                    Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Ultimo golpe: {CfgClipeUltimo.Value} -> {(giro ? giro.name : "(clipe do giro nao achado)")} ({n} troca).");
+                    CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Ultimo golpe: {CfgClipeUltimo.Value} -> {(giro ? giro.name : "(clipe do giro nao achado)")} ({n} troca).");
                 }
                 _originais[anim] = orig;
                 TrocarMantendo(anim, ovr);
@@ -218,7 +217,7 @@ namespace CeifadoraObsidiana
                 log.Add(pares[i].Key.name + " -> " + novo.name + " " + novo.length.ToString("0.00") + "s");
             }
             ovr.ApplyOverrides(pares);
-            Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Combo4: " + string.Join("; ", log));
+            CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Combo4: " + string.Join("; ", log));
         }
 
         static void TrocarMantendo(Animator a, RuntimeAnimatorController novo)
@@ -273,12 +272,10 @@ namespace CeifadoraObsidiana
                 else if (Mathf.Abs(Golpes.AcumAtgeir) > 90f && Mathf.Abs(Golpes.AcumGolpe2) > 15f)
                     Golpes.EspelharAvanco = Mathf.Sign(Golpes.AcumAtgeir) != Mathf.Sign(Golpes.AcumGolpe2);
                 Golpes.AvancoPendente = Vector3.zero;
-                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] avanco: giro do especial {Golpes.AcumAtgeir:0}, fim do 2o golpe {Golpes.AcumGolpe2:0} -> {(Golpes.EspelharAvanco ? "espelhado" : "normal")}");
             }
             var anim = Golpes.AnimatorDe(p);
             float m = Golpes.Mult(p);
             if (anim != null) anim.speed = m;
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] golpe {(sec ? "especial" : "normal")} nivel {Golpes.Nivel(a)}, velocidade {m:0.00}{(Golpes.GiroAtivo ? (Golpes.Proprio ? ", golpe 3 proprio" : Golpes.Ceifada ? ", ceifada" : Golpes.Avanco ? ", avanco" : ", giro") : "")}");
         }
     }
 
@@ -343,7 +340,6 @@ namespace CeifadoraObsidiana
             __instance.m_attackAngle = 360f;
             __instance.m_attackRange += Golpes.CfgAlcanceExtraGiro.Value;
             if (Golpes.Avanco || Golpes.Proprio) __instance.m_damageMultiplier *= Mathf.Max(0.1f, Golpes.CfgDanoAvanco.Value);
-            if (Impacto.Ligado) Impacto.Antes(__instance);
         }
 
         [HarmonyPostfix]
@@ -354,8 +350,6 @@ namespace CeifadoraObsidiana
             __instance.m_attackRange = __state.y;
             __instance.m_damageMultiplier = __state.z;
             if (_forca >= 0f) { Traverse.Create(__instance).Field("m_forceMultiplier").SetValue(_forca); _forca = -1f; }
-            var h = Traverse.Create(__instance).Field("m_character").GetValue<Humanoid>();
-            if (h is Player p && Impacto.Ligado) Impacto.Depois(__instance, p);
         }
     }
 
@@ -367,7 +361,6 @@ namespace CeifadoraObsidiana
         {
             if (__instance != Player.m_localPlayer) return;
             Golpes.Atualizar(__instance);
-            Espelho.Atualizar(__instance);
         }
     }
 

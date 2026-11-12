@@ -30,19 +30,19 @@ namespace CeifadoraObsidiana
             try
             {
                 var arq = Directory.GetFiles(pastaPlugin, Pacote, SearchOption.AllDirectories).FirstOrDefault();
-                if (arq == null) { Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Golpe 3 proprio: pacote '{Pacote}' nao encontrado (usa o avanco)."); return; }
+                if (arq == null) { CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Golpe 3 proprio: pacote '{Pacote}' nao encontrado (usa o avanco)."); return; }
                 var b = AssetBundle.LoadFromFile(arq);
                 if (b == null) { Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Golpe 3 proprio: nao consegui abrir o pacote."); return; }
                 var todos = b.LoadAllAssets<AnimationClip>().Where(c => !c.name.StartsWith("__")).ToArray();
                 foreach (var c in todos) Bundle[c.name] = c;
-                Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Golpe 3: animacoes no pacote: " + string.Join(", ", todos.Select(c => c.name + " (" + c.length.ToString("0.00") + "s)")));
+                CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Golpe 3: animacoes no pacote: " + string.Join(", ", todos.Select(c => c.name + " (" + c.length.ToString("0.00") + "s)")));
                 var pedido = (CfgClipe?.Value ?? "auto").Trim();
                 if (!string.Equals(pedido, "auto", System.StringComparison.OrdinalIgnoreCase))
                     Clipe = todos.FirstOrDefault(c => string.Equals(c.name, pedido, System.StringComparison.OrdinalIgnoreCase));
                 if (Clipe == null) Clipe = todos.FirstOrDefault(c => c.name == "Golpe_Mixamo_360") ?? todos.FirstOrDefault(c => c.name != NomeClipe) ?? todos.FirstOrDefault(c => c.name == NomeClipe);
                 var t = Path.Combine(Path.Combine(pastaPlugin, "modelo"), "golpe3_trilha.txt");
                 if (File.Exists(t)) LerTrilha(t);
-                Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] Golpe 3 proprio: clipe {(Clipe ? Clipe.name + " " + Clipe.length.ToString("0.00") + "s, humano " + Clipe.humanMotion : "NAO achado")}, trilha {_g.Count} quadros, acerto {Acerto:0.00}s.");
+                CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Golpe 3 proprio: clipe {(Clipe ? Clipe.name + " " + Clipe.length.ToString("0.00") + "s, humano " + Clipe.humanMotion : "NAO achado")}, trilha {_g.Count} quadros, acerto {Acerto:0.00}s.");
             }
             catch (System.Exception e) { Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Golpe 3 proprio: " + e.Message); }
         }
@@ -132,7 +132,7 @@ namespace CeifadoraObsidiana
                         evs[i].time = Mathf.Max(evs[i].time, fimChain);
                 novo.events = evs;
             }
-            Jotunn.Logger.LogInfo($"[CeifadoraObsidiana] eventos {orig.name} ({orig.length:0.00}s) -> {novo.name} ({novo.length:0.00}s): " +
+            CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] eventos {orig.name} ({orig.length:0.00}s) -> {novo.name} ({novo.length:0.00}s): " +
                 string.Join(", ", novo.events.Select(e => e.functionName + "@" + e.time.ToString("0.00"))));
         }
     }

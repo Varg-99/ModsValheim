@@ -89,7 +89,7 @@ namespace CeifadoraObsidiana
                     log.Add($"{_sons.Count} = {p.name}/{c.name}");
                 }
             }
-            Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Sons do machado: " + (log.Count > 0 ? string.Join("; ", log) : "(nenhum)"));
+            CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Sons do machado: " + (log.Count > 0 ? string.Join("; ", log) : "(nenhum)"));
         }
 
         static int SomDoGolpe(int nivel)
