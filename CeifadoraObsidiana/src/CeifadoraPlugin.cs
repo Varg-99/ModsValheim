@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.2.9";
+        public const string PluginVersion = "3.3.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -39,7 +39,8 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<bool> CfgRastro, CfgRastroLamina, CfgPenas;
         public static ConfigEntry<float> CfgPenasMola;
         public static ConfigEntry<float> CfgRastroTempo, CfgRastroVelMin, CfgRastroArcoMax;
-        public static ConfigEntry<bool> CfgRastroArco;
+        public static ConfigEntry<bool> CfgRastroArco, CfgRastroMachado;
+        public static ConfigEntry<float> CfgRastroMachadoBase, CfgRastroMachadoPonta;
         public static ConfigEntry<string> CfgRastroCor;
         public static Color CorRastro()
         {
@@ -76,7 +77,10 @@ namespace CeifadoraObsidiana
             CfgRastroLamina = Config.Bind("Visual", "RastroDaLamina", true, "Faixa que liga a base a ponta da lamina durante o golpe (mostra o angulo do corte). Substitui a linha fina.");
             CfgPenas = Config.Bind("Visual", "PenasBalancam", true, "Foice de flametal: as penas balancam com o movimento.");
             CfgPenasMola = Config.Bind("Visual", "RigidezDasPenas", 60f, "Quanto maior, mais duras as penas (30 = bem soltas, 120 = firmes).");
-            CfgRastroArco = Config.Bind("Visual", "RastroEmArcoPerfeito", true, "O rastro e desenhado num arco perfeito (como o do machado), em vez de seguir a lamina ponto a ponto. Muda com o jogo aberto.");
+            CfgRastroMachado = Config.Bind("Visual", "RastroDoMachado", true, "Usa o rastro do proprio machado de duas maos (o jogo liga e desliga no golpe e alisa a curva). Desliga os outros rastros da foice. Precisa reiniciar.");
+            CfgRastroMachadoBase = Config.Bind("Visual", "RastroDoMachadoInicio", 0.2f, "Onde o rastro do machado comeca na lamina: 0 = no alto da haste, 1 = na ponta da lamina. Muda com o jogo aberto.");
+            CfgRastroMachadoPonta = Config.Bind("Visual", "RastroDoMachadoFim", 1.0f, "Onde o rastro do machado termina: 1 = na ponta da lamina; mais que 1 estica alem da ponta. Muda com o jogo aberto.");
+            CfgRastroArco = Config.Bind("Visual", "RastroEmArcoPerfeito", false, "O rastro e desenhado num arco perfeito (como o do machado), em vez de seguir a lamina ponto a ponto. Muda com o jogo aberto.");
             CfgRastroVelMin = Config.Bind("Visual", "RastroVelocidadeMinima", 5f, "O rastro so aparece quando a ponta da lamina passa dessa velocidade (m/s): a parte rapida do golpe. Maior = rastro mais curto. Muda com o jogo aberto.");
             CfgRastroArcoMax = Config.Bind("Visual", "RastroArcoMaximo", 160f, "Tamanho maximo do rastro em graus de arco. Muda com o jogo aberto.");
             CfgRastroTempo = Config.Bind("Visual", "DuracaoDoRastro2", 0.14f, "Quanto tempo (s) o rastro fica visivel.");

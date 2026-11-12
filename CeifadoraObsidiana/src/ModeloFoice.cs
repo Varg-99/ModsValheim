@@ -167,6 +167,8 @@ namespace CeifadoraObsidiana
             Vector3 vPonta = Vector3.zero, vTopo = Vector3.zero;
             foreach (var vv in mesh.vertices) { if (vv.z > vPonta.z) vPonta = vv; if (vv.y > vTopo.y) vTopo = vv; }
             rl.Ponta = vPonta; rl.Base = Vector3.Lerp(vTopo, vPonta, 0.6f);
+            // rastro do proprio machado de duas maos (faixa lisa do jogo), esticado sobre a lamina da foice
+            RastroMachado.Criar(Modelo, vTopo, vPonta);
 
             var props = new System.Collections.Generic.List<string>();
             for (int i = 0; i < mat.shader.GetPropertyCount(); i++)
@@ -299,7 +301,7 @@ namespace CeifadoraObsidiana
         void Start()
         {
             _dono = GetComponentInParent<Player>();
-            if (_dono == null || !CeifadoraPlugin.CfgRastroLamina.Value) { enabled = false; return; }
+            if (_dono == null || !CeifadoraPlugin.CfgRastroLamina.Value || CeifadoraPlugin.CfgRastroMachado.Value) { enabled = false; return; }
             _go = new GameObject("rastro_lamina");
             _mesh = new Mesh { name = "rastro_lamina" }; _mesh.MarkDynamic();
             _go.AddComponent<MeshFilter>().sharedMesh = _mesh;
@@ -454,6 +456,60 @@ namespace CeifadoraObsidiana
         }
     }
 
+    /// Copia o rastro (MeleeWeaponTrail) do machado de duas maos para a foice. O jogo liga e desliga esse
+    /// rastro sozinho nos eventos TrailOn/TrailOff do golpe, e ele mesmo alisa a curva (por isso parece reto).
+    public class RastroMachado : MonoBehaviour
+    {
+        public Vector3 Topo, PontaLamina;
+        public Transform B, T;
+
+        public static void Criar(Transform modelo, Vector3 topo, Vector3 ponta)
+        {
+            var machado = Jotunn.Managers.PrefabManager.Instance.GetPrefab("Battleaxe");
+            var orig = machado != null ? machado.GetComponentInChildren<MeleeWeaponTrail>(true) : null;
+            if (orig == null) { Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Rastro do machado nao encontrado."); return; }
+            var go = new GameObject("rastro_machado");
+            go.transform.SetParent(modelo, false);
+            var b = new GameObject("rastro_base").transform; b.SetParent(go.transform, false);
+            var t = new GameObject("rastro_ponta").transform; t.SetParent(go.transform, false);
+            var mw = go.AddComponent<MeleeWeaponTrail>();
+            // copia os ajustes do rastro do machado (material, cores, larguras, tempo de vida, suavizacao)
+            var log = new System.Collections.Generic.List<string>();
+            foreach (var f in typeof(MeleeWeaponTrail).GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic))
+            {
+                var ft = f.FieldType;
+                bool copia = ft.IsPrimitive || ft.IsEnum || ft == typeof(Material) || ft == typeof(Color) || ft == typeof(Vector3)
+                             || ft == typeof(Color[]) || ft == typeof(float[]) || ft == typeof(Gradient) || ft == typeof(AnimationCurve);
+                if (!copia || f.Name == "_emit") continue;
+                var v = f.GetValue(orig);
+                if (v is System.Array arr) v = arr.Clone();
+                f.SetValue(mw, v);
+                log.Add(f.Name);
+            }
+            var tr = HarmonyLib.Traverse.Create(mw);
+            tr.Field("_base").SetValue(b); tr.Field("_tip").SetValue(t);
+            var r = go.AddComponent<RastroMachado>();
+            r.Topo = topo; r.PontaLamina = ponta; r.B = b; r.T = t;
+            r.Posicionar();
+            Jotunn.Logger.LogInfo("[CeifadoraObsidiana] Rastro do machado copiado (" + string.Join(", ", log) + ").");
+        }
+
+        public void Posicionar()
+        {
+            if (B == null || T == null) return;
+            B.localPosition = Vector3.LerpUnclamped(Topo, PontaLamina, CeifadoraPlugin.CfgRastroMachadoBase.Value);
+            T.localPosition = Vector3.LerpUnclamped(Topo, PontaLamina, CeifadoraPlugin.CfgRastroMachadoPonta.Value);
+        }
+
+        void Start()
+        {
+            var mw = GetComponent<MeleeWeaponTrail>();
+            if (mw != null) mw.enabled = CeifadoraPlugin.CfgRastroMachado.Value && GetComponentInParent<Character>() != null;
+        }
+
+        void LateUpdate() => Posicionar(); // muda com o jogo aberto
+    }
+
     [DefaultExecutionOrder(600)]
     public class RastroFio : MonoBehaviour
     {
@@ -471,7 +527,7 @@ namespace CeifadoraObsidiana
             // procura o rastro do jogo dentro da mesma arma (sobe ate o "attach")
             var t = transform.parent;
             for (int i = 0; i < 3 && t != null && _mw == null; i++) { _mw = t.GetComponentInChildren<MeleeWeaponTrail>(true); t = t.parent; }
-            if (!CeifadoraPlugin.CfgRastro.Value || CeifadoraPlugin.CfgRastroLamina.Value) _tr.enabled = false;
+            if (!CeifadoraPlugin.CfgRastro.Value || CeifadoraPlugin.CfgRastroLamina.Value || CeifadoraPlugin.CfgRastroMachado.Value) _tr.enabled = false;
         }
 
         void LateUpdate()
