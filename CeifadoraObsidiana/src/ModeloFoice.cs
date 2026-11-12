@@ -16,6 +16,16 @@ namespace CeifadoraObsidiana
             System.Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule")
                 ?.GetMethod("LoadImage", new[] { typeof(Texture2D), typeof(byte[]) });
 
+        /// Imagem simples (sem mipmaps), para icones.
+        public static Texture2D Imagem(string arq)
+        {
+            if (!File.Exists(arq)) return null;
+            var t = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!(_loadImage?.Invoke(null, new object[] { t, File.ReadAllBytes(arq) }) is bool ok) || !ok) return null;
+            t.wrapMode = TextureWrapMode.Clamp; t.filterMode = FilterMode.Bilinear;
+            return t;
+        }
+
         static Texture2D Textura(string arq, bool linear)
         {
             if (!File.Exists(arq)) return null;

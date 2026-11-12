@@ -486,12 +486,13 @@ namespace CeifadoraObsidiana
         {
             var arq = Path.Combine(pasta, "icone.png");
             if (!File.Exists(arq)) { Jotunn.Logger.LogWarning($"[{PluginName}] {nome}: icone.png nao encontrado em {pasta}."); return; }
-            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = nome + "_icone" };
-            if (!tex.LoadImage(File.ReadAllBytes(arq))) return;
-            tex.wrapMode = TextureWrapMode.Clamp; tex.filterMode = FilterMode.Bilinear;
+            var tex = ModeloFoice.Imagem(arq);
+            if (tex == null) { Jotunn.Logger.LogWarning($"[{PluginName}] {nome}: nao consegui ler {arq}."); return; }
+            tex.name = nome + "_icone";
             var sp = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
             sp.name = nome + "_icone";
             shared.m_icons = new[] { sp };
+            Jotunn.Logger.LogInfo($"[{PluginName}] {nome}: icone carregado ({tex.width}x{tex.height}).");
         }
 
         /// Tremida de tela no acerto (a mesma das armas do jogo), se a lista ainda nao tiver.
