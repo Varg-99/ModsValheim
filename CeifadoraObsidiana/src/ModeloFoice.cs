@@ -112,6 +112,11 @@ namespace CeifadoraObsidiana
             // sem recorte por transparencia (a textura nova e opaca)
             if (mat.HasProperty("_Cutoff")) mat.SetFloat("_Cutoff", 0f);
             mat.DisableKeyword("_ALPHATEST_ON");
+            // A malha ja vem com os dois lados (triangulos duplicados e virados). Se o material tambem desenha
+            // as faces de tras, as duas copias brigam pela mesma profundidade e aparecem buracos ("transparente")
+            // em alguns angulos. Mesma correcao do mod das adagas: descartar as faces de tras.
+            if (mat.HasProperty("_Cull")) mat.SetFloat("_Cull", 2f);
+            if (mat.HasProperty("_CullMode")) mat.SetFloat("_CullMode", 2f);
             if (cor != null && mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", cor);
             if (nor != null && mat.HasProperty("_BumpMap")) { mat.SetTexture("_BumpMap", nor); mat.EnableKeyword("_NORMALMAP"); }
             if (met != null && mat.HasProperty("_MetallicGlossMap")) { mat.SetTexture("_MetallicGlossMap", met); mat.EnableKeyword("_METALLICGLOSSMAP"); }
