@@ -25,22 +25,27 @@ namespace CeifadoraObsidiana
         }
     }
 
-    /// Mao e costas: VisEquipment.AttachItem(itemHash, variant, joint, ...) devolve o objeto criado.
-    [HarmonyPatch]
-    static class Estilo_NaMao
+    /// Mao e costas: o jogo so guarda o estilo do item da mao ESQUERDA (escudos). Arma de duas maos vai na
+    /// direita, sem estilo. Entao o dono do personagem grava o estilo no proprio personagem (vale tambem no
+    /// multiplayer) e o modelo da foice le de la (EstiloFoice.LateUpdate).
+    [HarmonyPatch(typeof(Humanoid), "SetupVisEquipment")]
+    static class Estilo_NoPersonagem
     {
-        static MethodBase _m; static int _iv = -1;
-        static bool Prepare()
+        public static readonly int HMao = "ceifadora_estilo_mao".GetStableHashCode();
+        public static readonly int HCostas = "ceifadora_estilo_costas".GetStableHashCode();
+        static readonly FieldInfo _dir = AccessTools.Field(typeof(Humanoid), "m_rightItem");
+        static readonly FieldInfo _escDir = AccessTools.Field(typeof(Humanoid), "m_hiddenRightItem");
+        static readonly FieldInfo _nview = AccessTools.Field(typeof(Character), "m_nview");
+
+        static void Postfix(Humanoid __instance)
         {
-            _m = AccessTools.GetDeclaredMethods(typeof(VisEquipment)).FirstOrDefault(m => m.Name == "AttachItem" && m.ReturnType == typeof(GameObject));
-            _iv = _m != null ? Estilos.Indice(_m, "variant") : -1;
-            if (_iv < 0) Jotunn.Logger.LogWarning("[CeifadoraObsidiana] Estilos: VisEquipment.AttachItem nao encontrado; estilo na mao desligado.");
-            return _iv >= 0;
-        }
-        static MethodBase TargetMethod() => _m;
-        static void Postfix(GameObject __result, object[] __args)
-        {
-            if (__result != null && __args[_iv] is int v) Estilos.Aplicar(__result, v);
+            var nv = _nview?.GetValue(__instance) as ZNetView;
+            if (nv == null || !nv.IsValid() || !nv.IsOwner()) return;
+            var zdo = nv.GetZDO();
+            int mao = (_dir?.GetValue(__instance) as ItemDrop.ItemData)?.m_variant ?? 0;
+            int costas = (_escDir?.GetValue(__instance) as ItemDrop.ItemData)?.m_variant ?? 0;
+            if (zdo.GetInt(HMao, 0) != mao) zdo.Set(HMao, mao);
+            if (zdo.GetInt(HCostas, 0) != costas) zdo.Set(HCostas, costas);
         }
     }
 

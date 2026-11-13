@@ -525,7 +525,7 @@ namespace CeifadoraObsidiana
     {
         public string[] Pastas;
         int _atual; bool _recebido;
-        ItemDrop _drop;
+        ItemDrop _drop; ZNetView _pers; bool _costas;
 
         public void Setup(int style) { _recebido = true; Aplicar(style); }
 
@@ -533,12 +533,26 @@ namespace CeifadoraObsidiana
         {
             _drop = GetComponentInParent<ItemDrop>();
             if (!_recebido && _drop != null && _drop.m_itemData != null) Aplicar(_drop.m_itemData.m_variant);
+            // na mao/costas de um personagem: o estilo vem gravado no personagem (Estilos.cs)
+            var vis = _drop == null ? GetComponentInParent<VisEquipment>() : null;
+            if (vis != null)
+            {
+                _pers = vis.GetComponent<ZNetView>();
+                var enc = GetComponent<EncaixeFoice>();
+                _costas = enc != null && enc.NasCostas;
+                LateUpdate();
+            }
         }
 
-        // no chao o estilo pode chegar depois (carregado da rede/salvamento)
+        // no chao o estilo pode chegar depois (carregado da rede/salvamento); no personagem pode mudar a qualquer hora
         void LateUpdate()
         {
             if (_drop != null && _drop.m_itemData != null && _drop.m_itemData.m_variant != _atual) Aplicar(_drop.m_itemData.m_variant);
+            if (_pers != null && _pers.IsValid())
+            {
+                int v = _pers.GetZDO().GetInt(_costas ? Estilo_NoPersonagem.HCostas : Estilo_NoPersonagem.HMao, 0);
+                if (v != _atual) Aplicar(v);
+            }
         }
 
         void Aplicar(int estilo)
