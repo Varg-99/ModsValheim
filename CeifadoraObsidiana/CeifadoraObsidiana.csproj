@@ -42,6 +42,7 @@
     <Copy SourceFiles="@(ModeloMetalNegro)" DestinationFolder="$(BepInExDir)\plugins\CeifadoraObsidiana\modelo_metalnegro" />
     <ItemGroup><ModeloFlametal Include="modelo_flametal\*.*" /></ItemGroup>
     <Copy SourceFiles="@(ModeloFlametal)" DestinationFolder="$(BepInExDir)\plugins\CeifadoraObsidiana\modelo_flametal" />
+    <Copy SourceFiles="animacoes\ceifadora_golpes" DestinationFolder="$(BepInExDir)\plugins\CeifadoraObsidiana" Condition="Exists('animacoes\ceifadora_golpes')" />
   </Target>
 
 </Project>
