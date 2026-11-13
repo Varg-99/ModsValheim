@@ -517,10 +517,11 @@ namespace CeifadoraObsidiana
 
 namespace CeifadoraObsidiana
 {
-    /// Estilos da foice (como os escudos): o jogo chama Setup(estilo) com o estilo escolhido na bancada,
-    /// tanto na mao quanto nas costas, no chao e nos suportes. 0 = a propria foice; os outros sao as foices
+    /// Estilos da foice (como os escudos). O "IEquipmentVisual" do jogo e interno (mod nao pode usar),
+    /// entao o Setup(estilo) e chamado pelos patches em Estilos.cs: na mao, nas costas e nos suportes.
+    /// No chao o estilo e lido do proprio item. 0 = a propria foice; os outros sao as foices
     /// anteriores (Ferro, Metal Negro, Obsidiana).
-    public class EstiloFoice : MonoBehaviour, IEquipmentVisual
+    public class EstiloFoice : MonoBehaviour
     {
         public string[] Pastas;
         int _atual; bool _recebido;

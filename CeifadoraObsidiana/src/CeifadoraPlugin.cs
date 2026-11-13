@@ -538,6 +538,10 @@ namespace CeifadoraObsidiana
             }
             if (sprites.Count == 0) return;
             shared.m_icons = sprites.ToArray();
+            // a bancada so abre a escolha de estilo quando m_variants > 1 (igual aos escudos)
+            var nv = Traverse.Create(shared).Field("m_variants");
+            if (nv.FieldExists()) nv.SetValue(sprites.Count);
+            else Jotunn.Logger.LogWarning($"[{PluginName}] Estilos: campo m_variants nao encontrado; a bancada pode nao mostrar a escolha.");
             CeifadoraPlugin.Detalhe($"[{PluginName}] {nome}: {sprites.Count} estilo(s)/icone(s).");
         }
 
