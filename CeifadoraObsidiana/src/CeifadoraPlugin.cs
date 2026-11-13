@@ -29,7 +29,7 @@ namespace CeifadoraObsidiana
     {
         public const string PluginGUID = "fabiano.ceifadoraobsidiana";
         public const string PluginName = "CeifadoraObsidiana";
-        public const string PluginVersion = "3.6.4";
+        public const string PluginVersion = "3.7.0";
 
         public const string ItemPrefabName = "CeifadoraObsidiana";
         public const string BleedSEName = "SE_SangramentoObsidiana";
@@ -39,7 +39,7 @@ namespace CeifadoraObsidiana
         public static ConfigEntry<bool> CfgRastro, CfgRastroLamina, CfgPenas;
         public static ConfigEntry<float> CfgPenasMola;
         public static ConfigEntry<float> CfgRastroTempo;
-        public static ConfigEntry<bool> CfgRastroMachado, CfgLog, CfgTexturaPixel;
+        public static ConfigEntry<bool> CfgRastroMachado, CfgLog, CfgTexturaPixel, CfgEstilos;
         public static ConfigEntry<float> CfgLisura, CfgRelevo;
         public static ConfigEntry<float> CfgRastroMachadoBase, CfgRastroMachadoPonta;
         public static ConfigEntry<string> CfgRastroCor;
@@ -81,6 +81,7 @@ namespace CeifadoraObsidiana
             CfgPenasMola = Config.Bind("Visual", "RigidezDasPenas", 60f, "Quanto maior, mais duras as penas (30 = bem soltas, 120 = firmes).");
             CfgLisura = Config.Bind("Visual", "LisuraDoMetal", 0.45f, "Quanto o metal da foice e liso/espelhado (1 = como antes). Menor = menos pontinhos de reflexo piscando. Precisa reiniciar.");
             CfgRelevo = Config.Bind("Visual", "ForcaDoRelevo", 0.5f, "Forca do relevo fino da textura (1 = como antes). Menor = superficie mais lisa, sem cintilar. Precisa reiniciar.");
+            CfgEstilos = Config.Bind("Visual", "Estilos", true, "Cada foice pode usar a aparencia das foices anteriores (escolha o estilo na bancada, como nos escudos). Ferro: so a dela; Metal Negro: + Ferro; Obsidiana: + Ferro e Metal Negro; Flametal: todas. Precisa reiniciar.");
             CfgTexturaPixel = Config.Bind("Visual", "TexturaPixel", false, "Textura em quadradinhos, no estilo das texturas do proprio Valheim, em vez da textura detalhada. Precisa reiniciar.");
             CfgRastroMachado = Config.Bind("Visual", "RastroDoMachado", true, "Usa o rastro do proprio machado de duas maos (o jogo liga e desliga no golpe e alisa a curva). Desliga os outros rastros da foice. Precisa reiniciar.");
             CfgRastroMachadoBase = Config.Bind("Visual", "RastroDoMachadoInicio", 0.2f, "Onde o rastro do machado comeca na lamina: 0 = no alto da haste, 1 = na ponta da lamina. Muda com o jogo aberto.");
@@ -433,7 +434,8 @@ namespace CeifadoraObsidiana
             // a "travadinha" no acerto fica como nas outras armas do jogo
 
             var pasta = pastaV;
-            var modelo = ModeloFoice.Trocar(item.ItemPrefab, pasta);
+            var estilos = PastasDosEstilos(v.Pasta);
+            var modelo = ModeloFoice.Trocar(item.ItemPrefab, pasta, estilos);
             if (modelo != null)
             {
                 AjusteFoice.Alinhar(modelo, pegada.gameObject, false);
@@ -470,7 +472,7 @@ namespace CeifadoraObsidiana
                 if (at != null && f.FieldExists()) f.SetValue(SemSangue(f.GetValue<EffectList>()));
             }
             if (v.Sangue) AdicionarSangue(shared);
-            Icone(shared, pastaV, v.Prefab);
+            Icone(shared, estilos, v.Prefab);
             ItemManager.Instance.AddItem(item);
             CeifadoraPlugin.Detalhe($"[{PluginName}] {v.Prefab} adicionada: normal={normal.name}, especial={especial.name}, empunhadura={pegada.name}.");
         }
@@ -501,18 +503,42 @@ namespace CeifadoraObsidiana
             CeifadoraPlugin.Detalhe($"[{PluginName}] {prefab.name}: colisao do item no lugar do modelo (centro {caixa.center}, tamanho {caixa.size}; {desligados} colisao(oes) da foice do jogo desligada(s)).");
         }
 
-        /// Icone proprio (icone.png na pasta do modelo): desenho da foice com contorno colorido, para achar no bau.
-        private static void Icone(ItemDrop.ItemData.SharedData shared, string pasta, string nome)
+        /// Ordem das foices, da mais fraca para a mais forte. Cada uma ganha como estilo as anteriores
+        /// (como os escudos): Ferro so a dela; Metal Negro + Ferro; Obsidiana + as duas; Flametal todas.
+        static readonly string[] OrdemDasPastas = { "modelo_ferro", "modelo_metalnegro", "modelo", "modelo_flametal" };
+
+        /// Pastas dos estilos desta foice: a propria primeiro (estilo 0), depois as anteriores, da mais forte para a mais fraca.
+        private static string[] PastasDosEstilos(string pasta)
         {
-            var arq = Path.Combine(pasta, "icone.png");
-            if (!File.Exists(arq)) { Jotunn.Logger.LogWarning($"[{PluginName}] {nome}: icone.png nao encontrado em {pasta}."); return; }
-            var tex = ModeloFoice.Imagem(arq);
-            if (tex == null) { Jotunn.Logger.LogWarning($"[{PluginName}] {nome}: nao consegui ler {arq}."); return; }
-            tex.name = nome + "_icone";
-            var sp = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
-            sp.name = nome + "_icone";
-            shared.m_icons = new[] { sp };
-            CeifadoraPlugin.Detalhe($"[{PluginName}] {nome}: icone carregado ({tex.width}x{tex.height}).");
+            var raiz = Path.GetDirectoryName(typeof(CeifadoraPlugin).Assembly.Location);
+            var lista = new System.Collections.Generic.List<string> { Path.Combine(raiz, pasta) };
+            int i = System.Array.IndexOf(OrdemDasPastas, pasta);
+            if (CfgEstilos.Value)
+                for (int k = i - 1; k >= 0; k--)
+                {
+                    var p = Path.Combine(raiz, OrdemDasPastas[k]);
+                    if (File.Exists(Path.Combine(p, "foice.malha"))) lista.Add(p);
+                }
+            return lista.ToArray();
+        }
+
+        /// Icones (icone.png de cada pasta): um por estilo, na mesma ordem. Mais de um icone = escolha de estilo na bancada.
+        private static void Icone(ItemDrop.ItemData.SharedData shared, string[] pastas, string nome)
+        {
+            var sprites = new System.Collections.Generic.List<Sprite>();
+            foreach (var pasta in pastas)
+            {
+                var arq = Path.Combine(pasta, "icone.png");
+                var tex = File.Exists(arq) ? ModeloFoice.Imagem(arq) : null;
+                if (tex == null) { Jotunn.Logger.LogWarning($"[{PluginName}] {nome}: icone nao encontrado/lido em {pasta}."); if (sprites.Count == 0) return; continue; }
+                tex.name = nome + "_icone" + sprites.Count;
+                var sp = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+                sp.name = tex.name;
+                sprites.Add(sp);
+            }
+            if (sprites.Count == 0) return;
+            shared.m_icons = sprites.ToArray();
+            CeifadoraPlugin.Detalhe($"[{PluginName}] {nome}: {sprites.Count} estilo(s)/icone(s).");
         }
 
         /// Ataque (normal ou especial) da primeira arma do jogo que existir na lista.

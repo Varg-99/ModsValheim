@@ -77,29 +77,29 @@ namespace CeifadoraObsidiana
             }
         }
 
-        /// Esconde a foice do jogo e poe o modelo novo dentro do "attach". Devolve o objeto do modelo.
-        public static Transform Trocar(GameObject prefab, string pasta)
+        /// Tudo que muda de um estilo para outro: malha, material, penas, tamanho e pontos da lamina.
+        public class Visual
         {
-            var attach = prefab.transform.Find("attach");
-            string arq = Path.Combine(pasta, "foice.malha");
-            if (attach == null || !File.Exists(arq))
-            {
-                Jotunn.Logger.LogWarning($"[CeifadoraObsidiana] Modelo novo nao encontrado ({arq}); usando a foice do jogo.");
-                return null;
-            }
-            var mesh = Malha(arq);
-            if (mesh == null) return null;
+            public Mesh Malha, Penas; public Material Mat;
+            public float Comprimento = 1f, PenasRaiz = 0.9f, PenasPonta = 0.65f;
+            public Vector3 Topo, Ponta;
+        }
+        static readonly System.Collections.Generic.Dictionary<string, Visual> _visuais = new System.Collections.Generic.Dictionary<string, Visual>();
+        static Material _matBase;
 
-            Material baseMat = null;
-            foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
-            {
-                if (baseMat == null && (r is MeshRenderer || r is SkinnedMeshRenderer) && r.sharedMaterial != null
-                    && !r.sharedMaterial.shader.name.Contains("Particle"))
-                    baseMat = r.sharedMaterial;
-                r.enabled = false;
-            }
-            var mat = baseMat != null ? new Material(baseMat) : new Material(Shader.Find("Standard"));
-            mat.name = "foice_ceifadora";
+        /// Carrega (uma vez so) o visual de uma pasta de modelo. Usado pela propria foice e pelos estilos.
+        public static Visual Carregar(string pasta)
+        {
+            if (string.IsNullOrEmpty(pasta)) return null;
+            if (_visuais.TryGetValue(pasta, out var pronto)) return pronto;
+            string arq = Path.Combine(pasta, "foice.malha");
+            if (!File.Exists(arq)) { _visuais[pasta] = null; return null; }
+            var mesh = Malha(arq);
+            if (mesh == null) { _visuais[pasta] = null; return null; }
+            var vis = new Visual { Malha = mesh, Comprimento = ComprimentoOriginal };
+
+            var mat = _matBase != null ? new Material(_matBase) : new Material(Shader.Find("Standard"));
+            mat.name = "foice_ceifadora_" + Path.GetFileName(pasta);
             // [Visual] TexturaPixel: versao "quadradinhos" no estilo das texturas do Valheim (arquivos *_pixel.png)
             bool pixel = CeifadoraPlugin.CfgTexturaPixel.Value && File.Exists(Path.Combine(pasta, "foice_albedo_pixel.png"));
             string suf = pixel ? "_pixel" : "";
@@ -149,28 +149,55 @@ namespace CeifadoraObsidiana
                 else mat.SetColor("_EmissionColor", Color.black);
             }
 
-            Malha_ = mesh; Mat_ = mat;
-            Modelo = CriarModelo(attach, mesh, mat);
+            vis.Mat = mat;
 
             // Penas (penduricalhos) separadas do resto: balancam com o movimento da arma.
-            Penas_ = null;
             var arqP = Path.Combine(pasta, "penas.malha");
             if (File.Exists(arqP))
             {
-                float c0 = ComprimentoOriginal;
-                Penas_ = Malha(arqP);
-                ComprimentoOriginal = c0;
-                PenasRaiz = 0.9f; PenasPonta = 0.65f;
+                vis.Penas = Malha(arqP);
                 var txt = Path.Combine(pasta, "penas.txt");
                 if (File.Exists(txt))
                 {
                     var p = File.ReadAllText(txt).Trim().Split(' ');
                     var ci = System.Globalization.CultureInfo.InvariantCulture;
-                    if (p.Length >= 2) { float.TryParse(p[0], System.Globalization.NumberStyles.Float, ci, out PenasRaiz); float.TryParse(p[1], System.Globalization.NumberStyles.Float, ci, out PenasPonta); }
+                    if (p.Length >= 2) { float.TryParse(p[0], System.Globalization.NumberStyles.Float, ci, out vis.PenasRaiz); float.TryParse(p[1], System.Globalization.NumberStyles.Float, ci, out vis.PenasPonta); }
                 }
-                AdicionarPenas(Modelo);
-                CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Penas: {Penas_.vertexCount} vertices (raiz {PenasRaiz:0.00}, ponta {PenasPonta:0.00}).");
             }
+            ComprimentoOriginal = vis.Comprimento;
+            // ponta da lamina = vertice mais a frente (+Z); topo = vertice mais alto (+Y)
+            foreach (var vv in mesh.vertices) { if (vv.z > vis.Ponta.z) vis.Ponta = vv; if (vv.y > vis.Topo.y) vis.Topo = vv; }
+            _visuais[pasta] = vis;
+            CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Visual carregado de {Path.GetFileName(pasta)}: {mesh.vertexCount} vertices, {vis.Comprimento:0.00} m{(vis.Penas != null ? ", com penas" : "")}.");
+            return vis;
+        }
+
+        /// Esconde a foice do jogo e poe o modelo novo dentro do "attach". Devolve o objeto do modelo.
+        /// estilos: pastas dos estilos que podem ser escolhidos na bancada (0 = a propria foice).
+        public static Transform Trocar(GameObject prefab, string pasta, string[] estilos = null)
+        {
+            var attach = prefab.transform.Find("attach");
+            if (attach == null || !File.Exists(Path.Combine(pasta, "foice.malha")))
+            {
+                Jotunn.Logger.LogWarning($"[CeifadoraObsidiana] Modelo novo nao encontrado ({pasta}); usando a foice do jogo.");
+                return null;
+            }
+            foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
+            {
+                if (_matBase == null && (r is MeshRenderer || r is SkinnedMeshRenderer) && r.sharedMaterial != null
+                    && !r.sharedMaterial.shader.name.Contains("Particle"))
+                    _matBase = r.sharedMaterial;
+                r.enabled = false;
+            }
+            var vis = Carregar(pasta);
+            if (vis == null) return null;
+            Estilos = estilos ?? new[] { pasta };
+            foreach (var e in Estilos) Carregar(e); // ja deixa os outros estilos prontos
+            var mesh = vis.Malha; var mat = vis.Mat;
+            Malha_ = mesh; Mat_ = mat; Penas_ = vis.Penas; PenasRaiz = vis.PenasRaiz; PenasPonta = vis.PenasPonta;
+            ComprimentoOriginal = vis.Comprimento;
+            Modelo = CriarModelo(attach, mesh, mat);
+            AdicionarPenas(Modelo);
 
             // Rastro: o rastro do jogo (faixa larga) e desligado; fica uma linha fina que sai do fio da lamina.
             Material matRastro = null;
@@ -199,8 +226,7 @@ namespace CeifadoraObsidiana
             // faixa entre a base e a ponta da lamina: mostra o plano do corte
             var rl = Modelo.gameObject.AddComponent<RastroLamina>();
             // ponta da lamina = vertice mais a frente (+Z); topo = vertice mais alto (+Y)
-            Vector3 vPonta = Vector3.zero, vTopo = Vector3.zero;
-            foreach (var vv in mesh.vertices) { if (vv.z > vPonta.z) vPonta = vv; if (vv.y > vTopo.y) vTopo = vv; }
+            Vector3 vPonta = vis.Ponta, vTopo = vis.Topo;
             rl.Ponta = vPonta; rl.Base = Vector3.Lerp(vTopo, vPonta, 0.6f);
             // rastro do proprio machado de duas maos (faixa lisa do jogo), esticado sobre a lamina da foice
             RastroMachado.Criar(Modelo, vTopo, vPonta);
@@ -214,9 +240,11 @@ namespace CeifadoraObsidiana
                     flt.Add(mat.shader.GetPropertyName(i) + "=" + mat.GetFloat(mat.shader.GetPropertyName(i)).ToString("0.##"));
             CeifadoraPlugin.Detalhe("[CeifadoraObsidiana] Material: " + string.Join(" ", flt) + " | keywords: " + string.Join(" ", mat.shaderKeywords));
             CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Modelo novo: {mesh.vertexCount} vertices, {ComprimentoOriginal:0.00} m; shader {mat.shader.name} ({string.Join(",", props)}).");
+            Modelo.gameObject.AddComponent<EstiloFoice>().Pastas = Estilos;
             return Modelo;
         }
 
+        public static string[] Estilos;
         public static Transform Modelo, ModeloCostas;
         static Mesh Malha_, Penas_;
         static Material Mat_;
@@ -225,6 +253,11 @@ namespace CeifadoraObsidiana
         static void AdicionarPenas(Transform modelo)
         {
             if (Penas_ == null || modelo == null) return;
+            CriarPenas(modelo, Penas_, Mat_, PenasRaiz, PenasPonta);
+        }
+
+        public static GameObject CriarPenas(Transform modelo, Mesh Penas_, Material Mat_, float PenasRaiz, float PenasPonta)
+        {
             var go = new GameObject("penas");
             go.layer = modelo.gameObject.layer;
             go.transform.SetParent(modelo, false);
@@ -234,6 +267,7 @@ namespace CeifadoraObsidiana
             mr.shadowCastingMode = ShadowCastingMode.On;
             var pm = go.AddComponent<PenasMoles>();
             pm.Raiz = PenasRaiz; pm.Ponta = PenasPonta;
+            return go;
         }
 
         /// Nas costas (tecla R): o jogo procura um "attach_back" na arma. A foice do jogo nao tem,
@@ -257,6 +291,7 @@ namespace CeifadoraObsidiana
             costas.SetSiblingIndex(0);
             ModeloCostas = CriarModelo(costas, Malha_, Mat_);
             AdicionarPenas(ModeloCostas);
+            ModeloCostas.gameObject.AddComponent<EstiloFoice>().Pastas = Estilos;
             CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Foice nas costas criada (referencia: {referencia.name}, attach_back da referencia: {(referencia.transform.Find("attach_back") != null ? "sim" : "nao")}).");
         }
 
@@ -476,6 +511,52 @@ namespace CeifadoraObsidiana
             if (_temPos && (pos - _ultPos).sqrMagnitude > 0.8f * 0.8f) _tr.Clear();
             _ultPos = pos; _temPos = true;
             _tr.emitting = liga;
+        }
+    }
+}
+
+namespace CeifadoraObsidiana
+{
+    /// Estilos da foice (como os escudos): o jogo chama Setup(estilo) com o estilo escolhido na bancada,
+    /// tanto na mao quanto nas costas, no chao e nos suportes. 0 = a propria foice; os outros sao as foices
+    /// anteriores (Ferro, Metal Negro, Obsidiana).
+    public class EstiloFoice : MonoBehaviour, IEquipmentVisual
+    {
+        public string[] Pastas;
+        int _atual; bool _recebido;
+        ItemDrop _drop;
+
+        public void Setup(int style) { _recebido = true; Aplicar(style); }
+
+        void Start()
+        {
+            _drop = GetComponentInParent<ItemDrop>();
+            if (!_recebido && _drop != null && _drop.m_itemData != null) Aplicar(_drop.m_itemData.m_variant);
+        }
+
+        // no chao o estilo pode chegar depois (carregado da rede/salvamento)
+        void LateUpdate()
+        {
+            if (_drop != null && _drop.m_itemData != null && _drop.m_itemData.m_variant != _atual) Aplicar(_drop.m_itemData.m_variant);
+        }
+
+        void Aplicar(int estilo)
+        {
+            if (Pastas == null || Pastas.Length == 0) return;
+            if (estilo < 0 || estilo >= Pastas.Length) estilo = 0;
+            if (estilo == _atual) return;
+            var vis = ModeloFoice.Carregar(Pastas[estilo]);
+            if (vis == null) return;
+            _atual = estilo;
+            var mf = GetComponent<MeshFilter>(); if (mf != null) mf.sharedMesh = vis.Malha;
+            var mr = GetComponent<MeshRenderer>(); if (mr != null) mr.sharedMaterial = vis.Mat;
+            var penas = transform.Find("penas");
+            if (penas != null) { penas.gameObject.SetActive(false); Destroy(penas.gameObject); }
+            if (vis.Penas != null) ModeloFoice.CriarPenas(transform, vis.Penas, vis.Mat, vis.PenasRaiz, vis.PenasPonta);
+            var enc = GetComponent<EncaixeFoice>(); if (enc != null) enc.Comprimento0 = vis.Comprimento;
+            var rl = GetComponent<RastroLamina>(); if (rl != null) { rl.Ponta = vis.Ponta; rl.Base = Vector3.Lerp(vis.Topo, vis.Ponta, 0.6f); }
+            foreach (var rm in GetComponentsInChildren<RastroMachado>(true)) { rm.Topo = vis.Topo; rm.PontaLamina = vis.Ponta; rm.Posicionar(); }
+            CeifadoraPlugin.Detalhe($"[CeifadoraObsidiana] Estilo {estilo} ({System.IO.Path.GetFileName(Pastas[estilo])}) aplicado em {name}.");
         }
     }
 }
