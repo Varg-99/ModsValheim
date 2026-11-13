@@ -6,7 +6,7 @@ echo ==== %date% %time% ==== > build.log
 
 rem --- Versao 2 (simples): guarda a versao do Wukong fora do projeto (so na 1a vez) ---
 set "ARQ=%~dp0..\Arquivo\Ceifadora_Wukong_v1.12"
-set "PLUG=C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana"
+set "PLUG=F:\SteamLibrary\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana"
 set "VELHO=%~dp0..\Animacoes\plugin_wukong"
 if not exist "%ARQ%\src" mkdir "%ARQ%\src"
 for %%f in (AnimacoesCustom Avanco Bastao Carga EldenheimCompat Empunhadura Fotos TrilhaArma) do (
@@ -19,7 +19,7 @@ for %%f in (ceifadora_anims golpes.txt) do (
 for %%d in (trilhas fotos) do (
   if exist "%PLUG%\%%d" move /y "%PLUG%\%%d" "%VELHO%\%%d" >> build.log
 )
-set "CFG=C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\config\fabiano.ceifadoraobsidiana.cfg"
+set "CFG=F:\SteamLibrary\steamapps\common\Valheim\BepInEx\config\fabiano.ceifadoraobsidiana.cfg"
 if exist "%CFG%" if not exist "%VELHO%\config_wukong.cfg" move /y "%CFG%" "%VELHO%\config_wukong.cfg" >> build.log
 
 where dotnet >> build.log 2>&1

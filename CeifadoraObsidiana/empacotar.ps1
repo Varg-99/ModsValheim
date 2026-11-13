@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$plug = 'C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana'
+$plug = 'F:\SteamLibrary\steamapps\common\Valheim\BepInEx\plugins\CeifadoraObsidiana'
 $ver  = (Select-String -Path "$PSScriptRoot\src\CeifadoraPlugin.cs" -Pattern 'PluginVersion = "([0-9.]+)"').Matches[0].Groups[1].Value
 $tmp  = Join-Path $env:TEMP 'ceifadora_pacote'
 if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
