@@ -19,6 +19,16 @@ Four two-handed scythes, one for each stage of the game, with their own models, 
 [*]Battleaxe sounds, screen shake on hit and parry, and the battleaxe weapon trail.
 [/list]
 
+[b]Styles[/b]
+Like shields, each scythe can be crafted with the look of the earlier scythes — pick the style at the workbench.
+[list]
+[*]Iron: its own look
+[*]Black Metal: + Iron
+[*]Obsidian: + Iron and Black Metal
+[*]Flametal: all four
+[/list]
+The style only changes the look; damage and effects stay those of the scythe you crafted.
+
 [b]Requirements[/b]
 [list]
 [*]BepInExPack Valheim
@@ -31,7 +41,7 @@ Extract the [i]BepInEx[/i] folder from the zip into your Valheim folder (Steam >
 It should end up as: Valheim\BepInEx\plugins\CeifadoraObsidiana\CeifadoraObsidiana.dll
 
 [b]Configuration[/b]
-BepInEx\config\fabiano.ceifadoraobsidiana.cfg (created on first launch). Damage and stamina per scythe, sounds, trail and how the scythe sits in the hands. Many settings apply while the game is running — just save the file.
+BepInEx\config\fabiano.ceifadoraobsidiana.cfg (created on first launch). Damage and stamina per scythe, sounds, trail, styles, pixel textures and how the scythe sits in the hands. Many settings apply while the game is running — just save the file.
 
 [line]
-[b]Português:[/b] quatro foices de duas mãos (Ferro, Metal Negro, Obsidiana com sangramento e Flametal com veneno), combo de 4 golpes com giro, especial giratório e efeitos do machado de guerra. Precisa de BepInEx e Jotunn, e todos do servidor precisam ter o mod.
+[b]Português:[/b] quatro foices de duas mãos (Ferro, Metal Negro, Obsidiana com sangramento e Flametal com veneno), combo de 4 golpes com giro, especial giratório e efeitos do machado de guerra, e estilos como nos escudos (cada foice pode usar a aparencia das anteriores). Precisa de BepInEx e Jotunn, e todos do servidor precisam ter o mod.
